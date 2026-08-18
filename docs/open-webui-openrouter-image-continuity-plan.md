@@ -181,7 +181,48 @@
 
 ---
 
-## 10. 参考链接
+## 10. 图像模型测试与全员开放记录（2026-08-18）
+
+### 测试结果
+
+| 用户名称 | 实例模型 ID | 出图测试 | 全员可读 |
+|----------|-------------|----------|----------|
+| GPT Image 2 | `openai.gpt-image-2` | ✅ 约 14s | ✅ 已开放 |
+| Nano Banana Pro | `google.gemini-3-pro-image` | ✅ 约 15s | ✅ 已开放 |
+| Nano Banana 2 | `google.gemini-3.1-flash-image` | ✅ 约 23s | ✅ 已开放 |
+| GPT-5.4 Image 2 | `openai.gpt-5.4-image-2` | ✅ 约 100s | ✅ 已开放 |
+| Qwen Image 3.0 Pro | `qwen.qwen-image-3-pro` | ✅ 约 44s | ✅ 已开放 |
+| MAI-Image-2.6 | `microsoft.mai-image-2.5-pro`（OpenRouter 无 2.6） | ✅ 约 29s | ✅ 已开放 |
+| Grok Imagine 2.0 | `x-ai.grok-imagine-image-2.0` | ✅ 约 31s | ✅ 已开放 |
+| Seedream 5.0 Pro | `bytedance-seed.seedream-5-0-pro` | ❌ Provider 报错 | ❌ 未开放 |
+| Reve 2.1 | — | ❌ 实例中无此模型 | ❌ |
+
+前缀均为 `open_webui_openrouter_integration.`。
+
+### 开放方式
+
+对通过测试的模型调用 `POST /api/v1/models/model/access/update`，设置：
+
+```json
+{
+  "access_grants": [
+    { "principal_type": "user", "principal_id": "*", "permission": "read" }
+  ]
+}
+```
+
+Pipe 默认将纯图像模型设为仅管理员可见；上述 7 个模型已显式设为所有用户可读。
+
+### 待处理
+
+- **Seedream 5.0 Pro**：OpenRouter Provider 错误，需查 OpenRouter 侧可用性或 Pipe 配置。
+- **Reve 2.1**：当前 OpenRouter Pipe 目录中无此模型（Reve 主要在 fal.ai）；若需接入需单独集成。
+- **MAI-Image-2.6**：OpenRouter 仅有 `mai-image-2.5` / `mai-image-2.5-pro`，已用 Pro 替代测试并开放。
+- **Nano Banana Pro Preview**（`gemini-3-pro-image-preview`）：与正式版并列存在，未单独复测（API 限流）；正式版已测通并开放。
+
+---
+
+## 11. 参考链接
 
 - OpenRouter Pipe 帖子：https://openwebui.com/posts/openrouter_integration_gpt_52_o3_o1_350_models_wit_9ac806c5
 - Pipe GitHub：https://github.com/rbb-dev/Open-WebUI-OpenRouter-pipe
