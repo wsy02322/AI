@@ -1,0 +1,17 @@
+{
+  "name": "AI",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "server",
+      "command": "npm run dev",
+      "description": "AI demo web server (Express) on port 3000 with file-watch auto-reload."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 3000
+    }
+  ]
+}
