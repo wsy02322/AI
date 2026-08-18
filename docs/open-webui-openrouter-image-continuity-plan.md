@@ -224,6 +224,17 @@ Pipe 默认将纯图像模型设为仅管理员可见；上述 7 个模型已显
 1. `_is_openrouter_images_api_model` 增加 `seedream-5` 匹配。
 2. `_chat_payload_to_images_payload` 将 `image_config.image_size` 映射为 Images API 的 `resolution`；对 Seedream 5.x 将非法 `4K` 降为 `2K`。
 
+### 多轮对话 131072 token 溢出（2026-08-18 修复）
+
+**现象**：多轮图像对话（尤其先由其他模型出大图再切到 Nano Banana 2 翻译/编辑）偶发：
+`The input token count exceeds the maximum number of tokens allowed 131072.`
+
+**根因**：历史消息中多张高分辨率图（`data:image` 或 `/api/v1/files/`）整段重复送入 Google；Pipe 的 `context-compression` 仅作用于 `/responses`，`/chat/completions` 回退路径原先无压缩。
+
+**修复**：
+1. 新建全局 Filter `openrouter_image_context_guard`（已启用）：仅保留「当前用户消息 + 紧邻上一轮 assistant 图」，其余历史图片替换为占位文本。
+2. Pipe 补丁 `apply_chat_context_transforms`：在 `/chat/completions` 路径自动加 `transforms: ["middle-out"]` 与 `context-compression` 插件。
+
 ### 待处理
 - **Reve 2.1**：当前 OpenRouter Pipe 目录中无此模型（Reve 主要在 fal.ai）；若需接入需单独集成。
 - **MAI-Image-2.6**：OpenRouter 仅有 `mai-image-2.5` / `mai-image-2.5-pro`，已用 Pro 替代测试并开放。
