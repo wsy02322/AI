@@ -194,7 +194,8 @@
 | Qwen Image 3.0 Pro | `qwen.qwen-image-3-pro` | ✅ 约 44s | ✅ 已开放 |
 | MAI-Image-2.6 | `microsoft.mai-image-2.5-pro`（OpenRouter 无 2.6） | ✅ 约 29s | ✅ 已开放 |
 | Grok Imagine 2.0 | `x-ai.grok-imagine-image-2.0` | ✅ 约 31s | ✅ 已开放 |
-| Seedream 5.0 Pro | `bytedance-seed.seedream-5-0-pro` | ❌ Provider 报错 | ❌ 未开放 |
+| Seedream 5.0 Pro | `bytedance-seed.seedream-5-0-pro` | ✅ 已修复（Images API 路由） | ✅ 已开放 |
+| Seedream 5.0 Lite | `bytedance-seed.seedream-5-0-lite` | ✅ 同上 | ✅ 已开放 |
 | Reve 2.1 | — | ❌ 实例中无此模型 | ❌ |
 
 前缀均为 `open_webui_openrouter_integration.`。
@@ -213,9 +214,17 @@
 
 Pipe 默认将纯图像模型设为仅管理员可见；上述 7 个模型已显式设为所有用户可读。
 
-### 待处理
+### Seedream 5.0 修复（2026-08-18）
 
-- **Seedream 5.0 Pro**：OpenRouter Provider 错误，需查 OpenRouter 侧可用性或 Pipe 配置。
+**现象**：`bytedance-seed/seedream-5-0-pro` 走 `chat/completions` 时 OpenRouter 返回 500 Internal Server Error；`seedream-4.5` 同路径正常。
+
+**根因**：Seedream 5.x 在 OpenRouter 上应走专用 **Images API**（`/api/v1/images`），与 `gpt-image-*` 类似；Pipe 原先仅将 `gpt-image-*` 路由到 Images API。
+
+**修复**（`open_webui_openrouter_integration` Pipe 补丁）：
+1. `_is_openrouter_images_api_model` 增加 `seedream-5` 匹配。
+2. `_chat_payload_to_images_payload` 将 `image_config.image_size` 映射为 Images API 的 `resolution`；对 Seedream 5.x 将非法 `4K` 降为 `2K`。
+
+### 待处理
 - **Reve 2.1**：当前 OpenRouter Pipe 目录中无此模型（Reve 主要在 fal.ai）；若需接入需单独集成。
 - **MAI-Image-2.6**：OpenRouter 仅有 `mai-image-2.5` / `mai-image-2.5-pro`，已用 Pro 替代测试并开放。
 - **Nano Banana Pro Preview**（`gemini-3-pro-image-preview`）：与正式版并列存在，未单独复测（API 限流）；正式版已测通并开放。
