@@ -242,7 +242,31 @@ Pipe 默认将纯图像模型设为仅管理员可见；上述 7 个模型已显
 
 ---
 
-## 11. 参考链接
+## 11. 方案 A：隐藏聊天 Integrations（2026-08-19）
+
+**目标**：简约稳定。搜索用两档 Sonar，作图用专用图像模型；聊天栏不再露出 `OR Web Tools` / `OR Image Gen` / `Web Search`。
+
+**已在实例应用**：
+
+| 项 | 结果 |
+|----|------|
+| Pipe `AUTO_ATTACH_WEB_TOOLS_FILTER` / `AUTO_ATTACH_IMAGE_GEN_FILTER` | False |
+| Pipe `AUTO_INSTALL_*` 对应两项 | False（防自动覆盖/重新启用） |
+| Pipe `ENABLE_WEB_SEARCH` / `ENABLE_DATETIME` | False |
+| Pipe `UPDATE_MODEL_CAPABILITIES` | False（防止 catalog 把 `web_search` 能力写回） |
+| Filter `openrouter_web_tools` / `openrouter_image_gen` | 停用，未删除 |
+| OWUI 原生 `ENABLE_WEB_SEARCH` | False |
+| 全部 Pipe 模型 `filterIds` | 已剥离上述两 Filter；保留 `openrouter_direct_uploads` 与图像 native filter |
+
+**可重复脚本**：`scripts/apply_plan_a_hide_integrations.py`（更新 valves 必须 merge，勿丢掉 `API_KEY`）。
+
+**验证（API）**：Sonar Pro Search 与 Claude Opus 5 `POST /api/chat/completions` 均 200；样本模型 Integrations 仅 Direct Uploads（图像模型另有 generic/gemini image filter）。
+
+**用户侧**：硬刷新或重新登录后，Sonar 聊天 Integrations 不应再出现 Web Tools / Image Gen / Web Search。
+
+---
+
+## 12. 参考链接
 
 - OpenRouter Pipe 帖子：https://openwebui.com/posts/openrouter_integration_gpt_52_o3_o1_350_models_wit_9ac806c5
 - Pipe GitHub：https://github.com/rbb-dev/Open-WebUI-OpenRouter-pipe
