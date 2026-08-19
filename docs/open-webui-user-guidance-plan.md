@@ -1,10 +1,9 @@
 # In-app user guidance (English) — reviewed plan
 
-> **Status**: Reviewed; waiting for approval before writing to the live instance  
+> **Status**: Applied to the live instance (2026-08-19)  
 > **Updated**: 2026-08-19  
-> **User-facing language**: **English only** for banners, prompt suggestions, model descriptions, overlays, watermarks, and any other instructional UI copy  
-> **Internal notes** (this file, PR, admin chat): Chinese is fine  
-> **Related**: `docs/open-webui-openrouter-image-continuity-plan.md`
+> **User-facing language**: **English only**  
+> **Prominence**: Two **non-dismissible** banners (model picker + Reasoning depth), English model descriptions, English empty-chat chips
 
 ---
 
