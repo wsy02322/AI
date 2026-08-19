@@ -1,200 +1,199 @@
-# Open WebUI 普通用户使用指引 — 规划稿
+# Open WebUI 界面内使用指引 — 规划稿
 
-> **状态**：规划已记录，待用户确认后分阶段落地  
+> **状态**：规划已记录，待用户确认后落地到 **Admin 界面配置**（非仓库长文档）  
 > **最后更新**：2026-08-19  
-> **关联**：`docs/open-webui-openrouter-image-continuity-plan.md`（技术修复与图像连续性）  
-> **目标**：在 **简约稳定** 前提下，把「用户不知道但极影响结果」的用法写清楚，并尽量在 **产品界面** 里可见，而不只靠长文档。
+> **用户意图**：指引要出现在 **使用界面**（General UI Banners 等），让普通用户 **不用读文档** 也能选对模型、调 Reasoning。  
+> **关联技术文档**：`docs/open-webui-openrouter-image-continuity-plan.md`
 
 ---
 
-## 1. 为什么先做指引，而不是再加功能
+## 1. 目标与原则
 
-当前实例 **模型能力已接近或超过 ChatGPT Pro 单模型上限**，但普通用户常因以下原因体验打折：
-
-| 用户不知道的事 | 实际后果 |
-|----------------|----------|
-| 用 Sonar 做日常闲聊 / 写稿 | 慢、贵、风格像搜索摘要，不像对话助手 |
-| 用 Opus/Sol 做「今天新闻」 | 无联网或弱于 Sonar，觉得「不如 ChatGPT」 |
-| 不调整 **推理强度（Reasoning）** | 简单题也深度想 → 慢；难题用弱档 → 浅 |
-| 在同一对话里指望「聊完再画图」 | 需 **换模型**；且多轮改图会 **全图漂移** |
-| 深度研报没耐心等 | 以为卡住，刷新或换模型 → 失败 |
-| Integrations 里乱开开关（历史问题） | tool 404；方案 A 已隐藏大部分开关 |
-
-**结论**：下一阶段的「体验 game changer」主要是 **指引 + 默认档 + 少量界面提示**，而不是恢复 `OR Web Tools` / `Web Search` 等开关。
-
----
-
-## 2. 指引设计原则
-
-1. **三条以内记住**：日常对话 / 快搜 / 深度 / 作图 — 先建立肌肉记忆，再展开细节。  
-2. **先告诉「用哪个」再告诉「怎么调」**：模型选择比参数微调更重要。  
-3. **界面短句 > 长文档**：模型下拉旁一行说明、首次气泡、置顶区副标题。  
-4. **与方案 A 一致**：不引导用户打开已隐藏的 Web Tools / Image Gen / Web Search。  
-5. **诚实写等待时间**：Deep Research 2–10 分钟是正常，不是故障。  
-6. **中文为主**，模型名保留界面上的英文显示名（如 Sonar Pro Search）。
-
----
-
-## 3. 核心指引内容（待写成用户可见文案）
-
-### 3.1 四格入口 — 「什么时候用谁」
-
-| 你想做的事 | 选这个模型（界面显示名） | 一句话 |
-|------------|--------------------------|--------|
-| 日常聊天、写稿、推理、代码、分析文件 | **OpenAI: GPT-5.6 Sol Pro** 或 **Anthropic: Claude Opus 5** | 默认助手，**不要**用 Sonar |
-| 查最新资讯、快速事实、带引用短答 | **Perplexity: Sonar Pro Search** | 快搜，通常几十秒内 |
-| 行业研报、多源综述、长报告 | **Perplexity: Sonar Deep Research** | 深度档，**保持页面打开 2–10 分钟** |
-| 生成或修改图片 | **Google: Nano Banana Pro**（主）/ **OpenAI: GPT Image 2**（备） | **先换到作图模型**再描述画面 |
-
-**记忆口诀（给用户）**：  
-「聊天 Sol/Opus，快搜 Sonar Search，研报 Sonar Deep，画图 Banana。」
-
-### 3.2 Reasoning（推理强度）— 最容易被忽略
-
-**是什么**：同一模型下，让 AI「想多久、想多深」。强推理更慢更贵，但难题明显更好。
-
-**用户该怎么感知**：
-
-- 聊天栏 **设置（滑块图标）** 或模型 **Advanced / Parameters** 里常有 **Reasoning effort**（如 low / medium / high）或类似项（以实例 UI 为准）。
-- **简单任务**（翻译、格式整理、短问答）：用 **低～中**，更快。  
-- **复杂任务**（多步逻辑、长代码、合同条款、数学证明）：用 **高** 或模型默认高档。  
-- **不要**在 Sonar 上纠结 reasoning — Sonar 是搜索模型，不是深度推理档。
-
-**待核实后写入终稿**：Sol Pro / Opus 5 在当前 Pipe 下参数项的 **确切名称与位置**（Admin 与 User 视图各测一次）。
-
-**界面提示草案**（模型设置旁）：  
-> 复杂问题请提高 **推理强度**；简单问题用低档可更快完成。
-
-### 3.3 信息搜索 — 没有「一个 Sonar 包办」
-
-| 场景 | 用 | 不要用 |
-|------|-----|--------|
-| 「今天某某新闻」「股价/政策最新」 | Sonar Pro Search | Opus 纯聊天 |
-| 「写一份 8000 字行业分析 + 引用」 | Sonar Deep Research | Sonar Pro Search（会偏短） |
-| 「帮我想营销文案」 | Sol Pro / Opus | 任意 Sonar |
-
-**深度档专用提示**（选 Deep Research 时首条系统气泡或模型描述）：  
-> 正在搜集与整理资料，通常需要 **2–10 分钟**。请勿刷新或切换模型；完成后会一次性返回长文与引用。
-
-### 3.4 作图 — 换模型 + 合理预期
-
-1. **必须先选图像模型**（Banana Pro / GPT Image 2 等），在对话模型里说「画一只猫」往往 **不会出图**。  
-2. **连续改图**（加人物、改夜景）：可以，但可能出现 **整体色调/细节漂移**；要「只改一处」需后续工程能力（蒙版），当前不要承诺像素级锁定。  
-3. 图像模型 Integrations 里 **比例/质量** 滤镜可调；**不要**寻找已隐藏的「OR Image Gen」。  
-4. 大图、多轮编辑后若报错 token 过多：开 **新对话** 或只保留最近一轮图。
-
-### 3.5 Integrations（方案 A 之后）
-
-当前普通用户通常 **只看到**：
-
-- **OR Direct Uploads**：把上传的文件/图片直接交给 OpenRouter 模型读（PDF、图等）。需要分析附件时保持开启即可。
-
-**已隐藏、请勿引导用户寻找**：OR Web Tools、OR Image Gen、Web Search（与 Sonar / 专用模型重复，且易引发错误）。
-
-### 3.6 其他常见误区
-
-| 误区 | 正确做法 |
-|------|----------|
-| 模型列表里几百个名字不知道选 | 只用 **置顶/前几项**；其余当高级目录 |
-| 深度研报中途换模型 | 同一对话坚持到底或放弃重来 |
-| 觉得「不如 ChatGPT」 | 对照上表是否 **用错模型类型** |
-| 登录后仍看到旧 Integrations | **硬刷新**（Ctrl+Shift+R）或重新登录 |
-
----
-
-## 4. 指引放在哪里（产品化路线图）
-
-按 **投入小 → 体感大** 排序：
-
-### 阶段 G1 — 立刻可做（无代码 / 低代码）
-
-| 载体 | 内容 | 负责 |
-|------|------|------|
-| **置顶模型 `description`** | 每格 1～2 行：用途 + 等待时间 | Admin 改模型元数据（若 API 500 则 Admin UI 手改） |
-| **Admin → Settings → 默认提示词 / Prompt suggestions** | 4 条示例：快搜、深度、作图、推理 | Admin |
-| **本仓库用户简版** | 一页纸《四格用法》（从 §3 压缩） | 文档 + 可贴到 Notion/飞书 |
-| **对话分享链接旁说明** | 新用户 onboarding 消息 | 可选 |
-
-### 阶段 G2 — 短文案进界面（轻量配置）
-
-| 载体 | 内容 |
+| 原则 | 说明 |
 |------|------|
-| **DEFAULT_PINNED_MODELS 顺序 + 显示名** | 副标题式命名：`对话 · Sol Pro` / `快搜` / `深度研报` / `作图`（rename API 若仍 500，用 Workspace 仅改名或 Admin UI） |
-| **默认新对话模型** | 设为 Sol Pro 或 Opus，**而非 Sonar** |
-| **Sonar Deep 模型描述** | 固定文案含「2–10 分钟」 |
-| **图像模型描述** | 「请在此模型下描述画面；连续编辑可能轻微漂移」 |
+| **界面优先** | Banners、首页示例、模型描述 > Markdown 文档 |
+| **短、可扫** | 每条 banner 一行标题 + 一两句；可折叠详情 |
+| **与方案 A 一致** | 不引导用户寻找已隐藏的 OR Web Tools / Image Gen / Web Search |
+| **可关闭** | 除「常驻简版」外，其余 `dismissible: true` |
+| **中文为主** | HTML 内容；模型名保留界面英文 |
 
-### 阶段 G3 — 需要一点前端/Filter（可选，确认后再做）
+---
 
-| 方案 | 说明 |
+## 2. Open WebUI 可用的「界面载体」（按优先级）
+
+### 2.1 General UI Banners（**主战场**）
+
+- **位置**：Admin Panel → **Settings → Admin → System → General → Banners**  
+- **API**：`GET/POST /api/v1/configs/banners`，body：`{"banners": [ ... ]}`  
+- **展示**：登录后全局顶部色条，所有页面可见（含聊天）  
+- **格式**：**仅 HTML**（无 Markdown）；支持 `&lt;br&gt;`、`&lt;b&gt;`、`&lt;a&gt;`、`&lt;details&gt;`  
+- **当前实例**：已有 1 条 info banner（英文、仅写 reasoning xhigh），**需替换为成套中文指引**
+
+**局限**：不能按「当前选中模型」切换内容；适合 **总览 + 常驻提醒**，不适合「仅选 Deep Research 时显示」。
+
+### 2.2 Prompt Suggestions（首页空对话示例）
+
+- **配置**：同一 General 区域或 `ui.prompt_suggestions`（当前实例 **为空**）  
+- **API 导出字段**：`ui.prompt_suggestions`（via `GET /api/v1/configs/export`）  
+- **展示**：新对话空状态下的 **可点示例**（如「查今日 AI 新闻」「画一张产品图」）  
+- **价值**：用 **示例隐式教**「快搜用 Sonar」「作图换模型」
+
+### 2.3 模型 Description（模型下拉旁）
+
+- **配置**：Admin → Models → 单模型 **Description**，或 `meta.description`  
+- **展示**：选模型时/模型列表副文案  
+- **价值**：**按模型**写「快搜 / 深度 / 作图 / 聊天」专用一句话（含 Deep 等待时间）  
+- **注意**：`POST /api/v1/models/model/update` 部分字段曾 500；**Admin UI 手改** 为退路
+
+### 2.4 Pending User Overlay（仅待审核用户）
+
+- **字段**：`ui.pending_user_overlay_title` / `content`  
+- **当前**：`DEFAULT_USER_ROLE=pending` 时可用；正式用户 **看不到**  
+- **用途**：新用户首次登录的 **全屏指引**（可选）
+
+### 2.5 其他（次优先 / 不首选）
+
+| 载体 | 说明 |
 |------|------|
-| 选 Sonar Deep 时 **首条助手气泡** | 轻量 Filter outlet 或 OWUI 欢迎语 |
-| 选图像模型时 **参数旁 tooltip** | reasoning / aspect 说明 |
-| **Reasoning 未调高时的软提示** | 检测长问题 + low effort → 一行建议（复杂，优先级低） |
-
-**不建议**：恢复 Integrations 开关来「提示用户可搜可画」— 与方案 A 冲突。
+| Response watermark | 每条回复底部小字，易烦，仅放一句极短提示 |
+| 置顶模型显示名 | 把「Sonar Pro Search」改成「快搜 · Sonar」等（rename API 若不可用则 Admin UI） |
+| Filter / 自定义前端 | 过重，违背简约 |
 
 ---
 
-## 5. 用户简版文案草案（G1 可直接使用）
+## 3. 建议的 Banner 套装（草案 HTML，确认后可 POST）
 
-### 五句话版
+**策略**：2 条 **常驻简版**（可关闭）+ 0～1 条 **详情**（`details` 折叠）。  
+替换现有 reasoning 单条英文 banner（`id` 换新以免用户已 dismiss 的旧条仍残留逻辑混乱）。
 
-1. **平时聊天用 Sol Pro 或 Opus**，别用 Sonar。  
-2. **查最新消息用 Sonar Pro Search**。  
-3. **写长研报用 Sonar Deep Research**，等 2–10 分钟，别刷新。  
-4. **画图先换 Banana Pro 或 GPT Image 2**。  
-5. **难题在设置里把推理强度调高**，简单题用低档更快。
+### Banner A — 总览（`info`，dismissible）
 
-### 深度研报专用
+- **id**：`usage-guide-overview-v1`  
+- **title**：`用哪个模型？`  
+- **content**（HTML 草案）：
 
-> 你选择了 **深度研究** 模式。AI 正在联网阅读多份来源并撰写长文，通常需要 **2～10 分钟**。请保持本页打开，不要刷新或更换模型。
+```html
+<b>聊天</b> Sol Pro / Opus · <b>快搜</b> Sonar Pro Search · <b>深度研报</b> Sonar Deep Research · <b>作图</b> 先换 Banana Pro / GPT Image 2<br>
+日常闲聊不要用 Sonar；画图不要在聊天模型里描述画面。
+```
 
-### Reasoning 专用
+### Banner B — Reasoning（`warning`，dismissible）— **替换现有 xhigh 条**
 
-> **推理强度** 决定 AI 思考深度。写代码、做复杂分析时请选 **高**；翻译、短问答可选 **低/中** 以节省时间。
+- **id**：`usage-reasoning-v1`  
+- **title**：`复杂问题请提高推理强度`  
+- **content**：
+
+```html
+输入框旁 <b>设置（滑块）</b> → <b>Valves</b> → <b>Reasoning depth</b>：简单题用 low/medium，多步逻辑、长代码、难题用 <b>high / xhigh</b>。低档更快，高档更深。
+```
+
+### Banner C — 深度研报（`warning`，dismissible）
+
+- **id**：`usage-deep-research-v1`  
+- **title**：`深度研报需要等待`  
+- **content**：
+
+```html
+选择 <b>Sonar Deep Research</b> 后，通常需 <b>2～10 分钟</b> 联网整理。请保持页面打开，勿刷新或换模型。
+```
+
+### Banner D — 可选折叠详情（`info`，dismissible）
+
+- **id**：`usage-details-v1`  
+- **content**：
+
+```html
+<b>快速对照</b><br>
+<details><summary>展开</summary>
+聊天：GPT-5.6 Sol Pro 或 Claude Opus 5<br>
+快搜：Perplexity Sonar Pro Search<br>
+深度：Perplexity Sonar Deep Research（2～10 分钟）<br>
+作图：Google Nano Banana Pro（主）/ OpenAI GPT Image 2<br>
+连续改图可能轻微漂移；附件分析可开 Direct Uploads。
+</details>
+```
+
+**不建议** 再开第四条常驻 error 级 banner，避免告警疲劳。
 
 ---
 
-## 6. 与「超越 ChatGPT Pro」路线图的关系
+## 4. Prompt Suggestions 草案（首页可点示例）
 
-| 长期能力（技术） | 用户指引（本规划） |
-|------------------|-------------------|
-| 图像画布连续性（Pipe 补丁） | 告知「连续改图可能漂移」+ 新对话减负 |
-| 四入口产品化（默认模型/置顶） | 本规划 §3.1 即产品定义 |
-| 隐藏工具链（方案 A） | §3.5 避免用户找旧开关 |
-| Agent / Fusion | **暂不指引**；未作为默认入口 |
+| title（数组，OWUI 格式） | content（发送内容） | 教会用户 |
+|--------------------------|---------------------|----------|
+| `["快搜","今日 AI 要闻"]` | 用一句话总结今天 AI 领域最重要的一条新闻，并附来源。 | 快搜场景 |
+| `["深度研报","行业分析"]` | 写一份关于 ___ 的行业简报，含数据与引用来源。 | 深度档 |
+| `["作图","产品渲染"]` | （用户先手动选 Banana Pro）一张极简风格的产品渲染图… | 换模型作画 |
+| `["聊天","复杂推理"]` | （用户选 Sol Pro + high reasoning）… | 推理档 |
 
-指引 **不替代** 图像连续性工程，但可立即减少「用错模型」类差评。
-
----
-
-## 7. 落地前待核实清单（执行 G1/G2 前）
-
-- [ ] 置顶 4～8 个模型的 **最终显示名** 与 **public 列表**  
-- [ ] Sol Pro / Opus 参数面板中 **Reasoning** 字段的准确名称与默认值  
-- [ ] 新对话 **默认模型** 当前是哪一个（是否仍是 Sonar）  
-- [ ] `model/update` / `description` 在 Admin UI 是否可编辑（API 500 时的退路）  
-- [ ] 普通用户账号实测：Integrations 是否仅剩 Direct Uploads  
-- [ ] 是否提供 **非英文** 界面（全文案是否需双语）
+格式以 OWUI `prompt_suggestions` 为准（通常为 `title: string[]`, `content: string`）。
 
 ---
 
-## 8. 建议执行顺序（确认后）
+## 5. 模型 Description 一行文案（Admin Models）
 
-1. **G1**：模型 description + 五句话简版 + 默认 prompt suggestions（**本迭代优先**）  
-2. **G2**：默认模型改为 Sol Pro/Opus + 置顶命名优化 + Deep Research 固定描述  
-3. **技术并行**（另文档）：图像画布连续性 — 与指引 §3.4 一致  
-4. **G3**：仅在有明确需求时做自动气泡 / tooltip  
+| 模型显示名 | description 草案 |
+|------------|------------------|
+| Perplexity: Sonar Pro Search | 快搜：最新资讯与短答，带引用。日常聊天请用 Sol Pro / Opus。 |
+| Perplexity: Sonar Deep Research | 深度研报：多源长文，约 2～10 分钟，请勿刷新。 |
+| OpenAI: GPT-5.6 Sol Pro | 默认对话与复杂推理。难题请在设置里提高 Reasoning depth。 |
+| Anthropic: Claude Opus 5 | 强推理与长文；不联网，查新闻请用 Sonar Pro Search。 |
+| Google: Nano Banana Pro | 作图主入口；连续编辑可能轻微漂移。 |
+| OpenAI: GPT Image 2 | 作图备选；适合 OpenAI 图像风格。 |
 
 ---
 
-## 9. 决策项（请用户确认）
+## 6. 落地步骤（确认后执行）
 
-- [ ] G1 文案是否采用 §5 五句话版（可改措辞）  
-- [ ] 默认对话主模型：**Sol Pro** 还是 **Opus 5**  
-- [ ] 作图主入口文案是否以 **Banana Pro** 为准  
-- [ ] G2 是否尝试改显示名（`对话/快搜/深度/作图`）  
-- [ ] 是否增加 **一页飞书/Notion** 对外链接（仓库外）  
+### 阶段 UI-1 — Banners（**建议先做**）
 
-**确认前不修改实例配置。**
+1. Admin → General → Banners：**删除/替换** 现有英文 reasoning 条  
+2. 按 §3 写入 A+B+C（+ 可选 D）  
+3. 或 API：`POST /api/v1/configs/banners` with `{"banners": [...]}`  
+4. 普通账号登录目测：顶部是否过长、手机窄屏是否可读  
+
+### 阶段 UI-2 — Prompt Suggestions
+
+1. 在 General 或 configs export/import 写入 `ui.prompt_suggestions`  
+2. 空对话首页点示例，确认跳到正确用法  
+
+### 阶段 UI-3 — 模型 Description
+
+1. Admin Models 为置顶 6 个模型填 description（§5）  
+2. 模型下拉检查副文案是否显示  
+
+### 阶段 UI-4 — 可选
+
+- Pending overlay：待审核用户 onboarding  
+- 默认新对话模型改为 Sol Pro（与指引一致，另项配置）  
+
+**脚本化**：可新增 `scripts/apply_ui_guidance_banners.py`（只改 banners，不动 Pipe valves）。
+
+---
+
+## 7. 与现有实例状态
+
+| 项 | 当前 | 目标 |
+|----|------|------|
+| Banners | 1 条英文 reasoning 提示 | §3 中文套装 |
+| prompt_suggestions | 空 | §4 四条示例 |
+| 模型 description | 多为 null | §5 置顶模型 |
+| Integrations | 方案 A 已隐藏 Web Tools 等 | Banners **不写** 引导打开 |
+
+---
+
+## 8. 待用户确认
+
+- [ ] Banner 套装：A+B+C 是否足够？是否要 D 折叠详情？  
+- [ ] Banner B 是否保留 **xhigh** 字样（与当前 UI 一致）？  
+- [ ] Prompt Suggestions 是否一起做（UI-2）？  
+- [ ] 模型 description 是否一起做（UI-3）？  
+- [ ] 确认后是否 **由我直接 POST API 写入**（无需你手抄 Admin）？  
+
+**确认前不修改实例 Banners / Suggestions / Description。**
+
+---
+
+## 9. 附录：仓库文档的定位
+
+`docs/` 内文稿仅供 **Admin 维护者** 备份与 PR 记录；**普通用户应以界面 Banners + 首页示例为准**。
