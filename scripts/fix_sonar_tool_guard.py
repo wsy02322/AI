@@ -15,7 +15,7 @@ OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
 
 def _login_candidates() -> list[str]:
     candidates: list[str] = []
-    for value in (os.environ.get("OPENWEBUI_EMAIL"), os.environ.get("OPENWEBUI_USERNAME")):
+    for value in (os.environ.get("OPENWEBUI_USERNAME"), os.environ.get("OPENWEBUI_EMAIL")):
         if value and value not in candidates:
             candidates.append(value)
     return candidates
