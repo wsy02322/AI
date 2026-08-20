@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Live regression: Grok encrypted reasoning must not 404 when replayed to Opus.
+"""Live ST-10 regression: Grok persisted reasoning must not 404 Opus.
 
-Uses /api/chat/completions (no UI). Success = Opus returns 200 after being
-fed Grok's previous assistant turn including reasoning_details.
-Same-model Grok follow-up must also still succeed (persist not globally off).
+The compare 404 is not visible on /api/chat/completions without chat_id.
+OWUI queues those as tasks; the Pipe persists reasoning artifacts and
+embeds an empty-link marker like `[0001…]: #` in the assistant text.
+A later Opus turn in the same chat replays that artifact (Grok ciphertext)
+into /responses input → OpenRouter 404 unless S2′ retries after stripping.
+
+Evidence of retry (not a hard assert): Opus usage.input_tokens ≈ 2× the
+status-line input, because the rejected payload is sent again.
 """
 
 from __future__ import annotations
@@ -12,6 +17,7 @@ import json
 import os
 import sys
 import time
+import uuid
 
 import requests
 
@@ -50,135 +56,91 @@ def headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
-def _message_blob(payload: dict) -> dict:
-    if not isinstance(payload, dict):
-        return {}
-    choices = payload.get("choices")
-    if isinstance(choices, list) and choices:
-        msg = (choices[0] or {}).get("message") or {}
-        if isinstance(msg, dict):
-            return msg
-    data = payload.get("data")
-    if isinstance(data, dict):
-        return data
-    return {}
+class Report:
+    def __init__(self) -> None:
+        self.errors: list[str] = []
+        self.oks: list[str] = []
+
+    def ok(self, msg: str) -> None:
+        self.oks.append(msg)
+        print(f"OK  {msg}")
+
+    def err(self, msg: str) -> None:
+        self.errors.append(msg)
+        print(f"ERR {msg}")
 
 
-def _extract_reasoning_details(payload: dict) -> list:
-    msg = _message_blob(payload)
-    details = msg.get("reasoning_details")
-    if isinstance(details, list) and details:
-        return details
-    for key in ("reasoning_details", "reasoning"):
-        value = payload.get(key)
-        if isinstance(value, list) and value:
-            return value
-    return []
+def _has_artifact_marker(text: str) -> bool:
+    return "]: #" in (text or "")
 
 
-def _extract_text(payload: dict) -> str:
-    msg = _message_blob(payload)
-    content = msg.get("content")
-    if isinstance(content, str) and content.strip():
-        return content
-    if isinstance(content, list):
-        parts = []
-        for block in content:
-            if isinstance(block, dict) and isinstance(block.get("text"), str):
-                parts.append(block["text"])
-            elif isinstance(block, str):
-                parts.append(block)
-        joined = "".join(parts).strip()
-        if joined:
-            return joined
-    if isinstance(payload.get("content"), str):
-        return payload["content"]
-    return (json.dumps(payload)[:400] if payload else "")
+def _cross_model_reject(text: str) -> bool:
+    blob = (text or "").lower()
+    return (
+        "produced under a different model" in blob
+        or "encrypted reasoning" in blob
+        or "compaction content" in blob
+    )
 
 
-def chat(h: dict[str, str], model: str, messages: list, timeout: int = 180) -> tuple[int, dict, str]:
+def _status_input_tokens(msg: dict) -> int | None:
+    for item in msg.get("statusHistory") or []:
+        if not isinstance(item, dict):
+            continue
+        desc = str(item.get("description") or "")
+        if "Input:" not in desc:
+            continue
+        try:
+            after = desc.split("Input:", 1)[1]
+            num = after.split(",", 1)[0].strip().split()[0]
+            return int(num)
+        except (IndexError, ValueError):
+            return None
+    return None
+
+
+def complete_via_chat(
+    h: dict[str, str],
+    chat_id: str,
+    model: str,
+    messages: list,
+    msg_id: str,
+    timeout: int = 180,
+) -> dict:
     resp = requests.post(
         f"{OPENWEBUI_URL}/api/chat/completions",
         headers=h,
         json={
             "model": model,
             "messages": messages,
-            "stream": False,
+            "stream": True,
             "include_reasoning": True,
+            "chat_id": chat_id,
+            "id": msg_id,
+            "session_id": str(uuid.uuid4()),
         },
-        timeout=timeout,
+        timeout=60,
     )
-    try:
-        payload = resp.json()
-    except Exception:
-        payload = {"raw": resp.text[:2000]}
-    text = _extract_text(payload) if resp.status_code == 200 else (resp.text or "")[:800]
-    return resp.status_code, payload, text
-
-
-def _looks_like_cross_model_404(status: int, text: str) -> bool:
-    blob = (text or "").lower()
-    return status in (400, 404) or "produced under a different model" in blob or "encrypted reasoning" in blob
+    if resp.status_code != 200:
+        raise RuntimeError(f"enqueue {model} {resp.status_code} {resp.text[:300]}")
+    deadline = time.time() + timeout
+    last: dict = {}
+    while time.time() < deadline:
+        detail = requests.get(f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}", headers=h, timeout=30).json()
+        hist = ((detail.get("chat") or {}).get("history") or {}).get("messages") or {}
+        last = hist.get(msg_id) or {}
+        content = last.get("content") or ""
+        if last.get("done") and str(content).strip():
+            return last
+        time.sleep(1.5)
+    raise RuntimeError(f"timeout waiting for {model} message {msg_id}: {json.dumps(last)[:400]}")
 
 
 def main() -> int:
     if not OPENWEBUI_URL or not OPENWEBUI_PASSWORD:
         raise SystemExit("Missing OPENWEBUI_URL / OPENWEBUI_PASSWORD")
     h = headers(signin())
-    errors: list[str] = []
-    oks: list[str] = []
-
-    user1 = "What is 17 multiplied by 19? Reply with the integer only."
-    status, grok_payload, grok_text = chat(
-        h,
-        DEFAULT_MODEL_PRIMARY,
-        [{"role": "user", "content": user1}],
-        timeout=240,
-    )
-    if status != 200:
-        errors.append(f"grok turn1 {status} {grok_text[:300]}")
-        print("ERR " + errors[-1])
-        print(f"\ncompare: {len(oks)} ok, {len(errors)} err")
-        return 1
-    oks.append(f"grok turn1 200 text={grok_text[:80]!r}")
-    print("OK  " + oks[-1])
-
-    details = _extract_reasoning_details(grok_payload)
-    print(f"INFO grok reasoning_details n={len(details)} types={[d.get('type') if isinstance(d, dict) else type(d).__name__ for d in details[:6]]}")
-    grok_msg: dict = {"role": "assistant", "content": grok_text or "323"}
-    if details:
-        grok_msg["reasoning_details"] = details
-    else:
-        print("WARN grok returned no reasoning_details; cross-model 404 path may not be exercised")
-
-    user2 = "Reply with the single word OK."
-    history = [
-        {"role": "user", "content": user1},
-        grok_msg,
-        {"role": "user", "content": user2},
-    ]
-
-    opus_status, opus_payload, opus_text = chat(h, DEFAULT_MODEL_SECONDARY, history, timeout=240)
-    blob = json.dumps(opus_payload)[:1200]
-    if opus_status != 200:
-        errors.append(f"opus follow-up {opus_status} {opus_text[:400]}")
-        print("ERR " + errors[-1])
-        if _looks_like_cross_model_404(opus_status, blob + opus_text):
-            print("INFO this is the original compare 404; retry gate did not recover")
-    elif "produced under a different model" in (opus_text + blob).lower():
-        errors.append("opus 200 but error text still contains cross-model reject")
-        print("ERR " + errors[-1])
-    else:
-        oks.append(f"opus follow-up 200 text={opus_text[:80]!r}")
-        print("OK  " + oks[-1])
-
-    grok2_status, _, grok2_text = chat(h, DEFAULT_MODEL_PRIMARY, history, timeout=240)
-    if grok2_status != 200:
-        errors.append(f"grok same-model follow-up {grok2_status} {grok2_text[:300]}")
-        print("ERR " + errors[-1])
-    else:
-        oks.append(f"grok same-model follow-up 200 text={grok2_text[:80]!r}")
-        print("OK  " + oks[-1])
+    r = Report()
 
     persist = requests.get(
         f"{OPENWEBUI_URL}/api/v1/functions/id/{PIPE}/valves",
@@ -187,17 +149,98 @@ def main() -> int:
     )
     if persist.status_code == 200:
         value = persist.json().get("PERSIST_REASONING_TOKENS")
-        if value != "conversation":
-            errors.append(f"PERSIST_REASONING_TOKENS={value} want conversation")
-            print("ERR " + errors[-1])
+        if value not in (None, "", "conversation"):
+            r.err(f"PERSIST_REASONING_TOKENS={value} want conversation (or unset default)")
         else:
-            oks.append("PERSIST_REASONING_TOKENS=conversation")
-            print("OK  " + oks[-1])
+            r.ok(f"PERSIST_REASONING_TOKENS={value or 'unset→conversation'}")
 
-    print(f"\ncompare: {len(oks)} ok, {len(errors)} err")
-    for e in errors:
+    chat = requests.post(
+        f"{OPENWEBUI_URL}/api/v1/chats/new",
+        headers=h,
+        json={
+            "chat": {
+                "title": "st10-compare-cross-model",
+                "models": [DEFAULT_MODEL_PRIMARY, DEFAULT_MODEL_SECONDARY],
+                "history": {"messages": {}, "currentId": None},
+                "messages": [],
+            }
+        },
+        timeout=30,
+    )
+    if chat.status_code != 200:
+        r.err(f"create chat {chat.status_code} {chat.text[:200]}")
+        print(f"\ncompare: {len(r.oks)} ok, {len(r.errors)} err")
+        return 1
+    chat_id = chat.json()["id"]
+    user_text = "Think carefully: 89 multiplied by 97. Reply with the integer only."
+    user_id = str(uuid.uuid4())
+    grok_id = str(uuid.uuid4())
+
+    grok_msg = complete_via_chat(
+        h,
+        chat_id,
+        DEFAULT_MODEL_PRIMARY,
+        [{"role": "user", "content": user_text, "id": user_id}],
+        grok_id,
+    )
+    grok_text = grok_msg.get("content") or ""
+    if not grok_text.strip():
+        r.err("grok turn1 empty")
+    elif not _has_artifact_marker(grok_text):
+        r.err(f"grok turn1 missing persist marker; cannot exercise 404 path: {grok_text[:160]!r}")
+    else:
+        r.ok(f"grok turn1 200 marker=yes text={grok_text.splitlines()[0][:80]!r}")
+
+    if r.errors:
+        print(f"\ncompare: {len(r.oks)} ok, {len(r.errors)} err")
+        for e in r.errors:
+            print(f"  - {e}")
+        return 1
+
+    history = [
+        {"role": "user", "content": user_text, "id": user_id},
+        {
+            "role": "assistant",
+            "content": grok_text,
+            "id": grok_id,
+            "model": DEFAULT_MODEL_PRIMARY,
+        },
+        {"role": "user", "content": "Reply with the single word OK."},
+    ]
+
+    opus_id = str(uuid.uuid4())
+    opus_msg = complete_via_chat(h, chat_id, DEFAULT_MODEL_SECONDARY, history, opus_id)
+    opus_text = opus_msg.get("content") or ""
+    opus_blob = json.dumps(opus_msg)
+    if _cross_model_reject(opus_text + opus_blob):
+        r.err(f"opus follow-up still cross-model reject: {opus_text[:400]!r}")
+    elif not opus_text.strip():
+        r.err("opus follow-up empty")
+    else:
+        r.ok(f"opus follow-up 200 text={opus_text.splitlines()[0][:80]!r}")
+
+    status_in = _status_input_tokens(opus_msg)
+    usage_in = (opus_msg.get("usage") or {}).get("input_tokens")
+    if isinstance(status_in, int) and isinstance(usage_in, int) and status_in > 0:
+        if usage_in == status_in * 2:
+            r.ok(f"opus usage {usage_in} == 2× status input {status_in} (internal retry)")
+        else:
+            print(f"INFO opus usage.input_tokens={usage_in} status_input={status_in} (retry fingerprint optional)")
+
+    grok2_id = str(uuid.uuid4())
+    grok2_msg = complete_via_chat(h, chat_id, DEFAULT_MODEL_PRIMARY, history, grok2_id)
+    grok2_text = grok2_msg.get("content") or ""
+    if _cross_model_reject(grok2_text):
+        r.err(f"grok same-model follow-up reject: {grok2_text[:300]!r}")
+    elif not grok2_text.strip():
+        r.err("grok same-model follow-up empty")
+    else:
+        r.ok(f"grok same-model follow-up 200 text={grok2_text.splitlines()[0][:80]!r}")
+
+    print(f"\ncompare: {len(r.oks)} ok, {len(r.errors)} err")
+    for e in r.errors:
         print(f"  - {e}")
-    return 1 if errors else 0
+    return 1 if r.errors else 0
 
 
 if __name__ == "__main__":
