@@ -8,9 +8,10 @@
 | OWUI | **0.11.0**（`GET /api/version`） |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
-| Pipe content SHA256（前 12） | *apply Wave 0 后由 `verify_stack.py` / 探针填写* |
-| Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms` 应存在 |
-| 上次 `verify_stack.py` | *待跑* |
+| Pipe content SHA256（前 12） | `081c3773444c` |
+| Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms` **均存在** |
+| 上次 `verify_stack.py` | **2026-08-20 全绿**（20 ok / 0 err；Sol Pro + Sonar smoke HTTP 200） |
+| Wave 0 已应用到实例 | capabilities（Sonar/图像关 tool 类开关）；Task 模型 = Pipe Sol Pro |
 
 ## Pipe 更新后
 
