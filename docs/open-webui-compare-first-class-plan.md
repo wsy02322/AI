@@ -1,6 +1,6 @@
 # 多模型对比为一等公民 — 方案（Plan only）
 
-> **状态**：计划 **v2（已 review 修订）**，**确认前不改实例**  
+> **状态**：S2′ **已落地（retry-only）**；S1 全局 `disabled` 不作终态；**S3（真并行分栏）未做，需另确认**  
 > **日期**：2026-08-20  
 > **产品定性**：对比是主干能力，不是单轮评测、也不是「选一个赢家继续」  
 > **三条原则**：强能力（过复杂/极大不稳不强求）· 简单 · 稳定 · **不赶工期**
@@ -113,7 +113,7 @@ U2（文+图2） → 请求 X
 |----|------|------|----------|
 | **S0** | 复现 + 取证（下方 Step 0） | 只读 | 看清 Opus 请求里到底带了什么 |
 | **S1** | `PERSIST_REASONING_TOKENS` → `disabled`（**仅作临时验证**，证明根因） | **零代码** | 双栏两轮两图 **都 200**；单栏多轮仍正常 |
-| **S2′** | 改回 `conversation` + **Pipe 补丁**：仅「本对话含多模型」时剥跨模型密文（详见 §4b） | 小补丁 | 同上，且**单模型对话零影响** |
+| **S2′** | `conversation` 保持 + **Pipe 补丁（retry-only）**：400/404 跨模型密文拒绝时剥密文内部重试 | 小补丁 | 双栏两轮两图都 200，且**单模型对话零影响** |
 | **S3** | 若要求「Opus 只接自己的上轮」（真并行）→ 层 B，OWUI 侧 | 中补丁 | Opus 第二轮不复述 Grok 结论 |
 | **S4** | 回归 + 写入 SPEC / VERSIONS | 文档 | `verify_stack` 全绿 + 对比回归 |
 
@@ -242,4 +242,16 @@ Pipe 有 `__metadata__`（95 处命中），**若**其中能拿到本对话的�
 
 *确认本文件后，执行顺序：**S0 取证 → S1 valve → （必要时）S2 Pipe 补丁 → （仅要求真并行时）S3 OWUI → S4 回归**。*
 
-**待你拍板的一点（v2 修订）**：不建议把全局 `disabled` 当终态（§4b：全局收税修局部 bug）。建议 **S1 仅验证 → S2′ 落地**，使单模型对话质量 **零损失**，对比场景只丢无法回放的密文。若 `__metadata__` 拿不到对话模型列表，再回来权衡 S1 与 S3。
+**已拍板**：S1 不作终态；S2′ 落地为 **retry-only**（见下）。**S3（OWUI 真并行）仍需另确认**，本步不做。
+
+### S2′ 落地细化（相对「多模型就先剥」）
+
+Pipe **没有** per-message 产生模型。若「本对话含多个模型就先剥」，对比里 **Grok 续聊也会丢掉自己的密文**（OpenRouter 本会接受）。这违反「强能力」。
+
+因此落地是扩 `_should_retry_dropping_signed_reasoning()`：
+
+- 状态 **400 或 404**（流式包装可能把 HTTP 404 报成 400）
+- 错误文本含 `produced under a different model` / `encrypted reasoning` / `compaction content`
+- 复用已有 `_strip_replayed_reasoning()`，内部再发一次；用户只应感到略慢，不应再看到永久 404 卡
+
+同模型续聊：OpenRouter 接受密文 → 门不开 → persist 原样。标记：`COMPARE_CROSS_MODEL_REASONING_V1`。脚本：`scripts/patch_pipe_cross_model_reasoning.py`（content-only）。验收：`scripts/verify_compare_cross_model.py`。

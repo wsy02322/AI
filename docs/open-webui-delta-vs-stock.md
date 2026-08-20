@@ -121,6 +121,7 @@
 | Seedream 5.x | `image_config.image_size` → `resolution`；非法 `4K` 降为 `2K` |
 | `apply_chat_context_transforms` | chat 路径增加 `middle-out`、`context-compression` |
 | 图像/视频模型 | Pipe 层对 `image_output` / `video_generation` 禁止发送 tools |
+| `COMPARE_CROSS_MODEL_REASONING_V1` | 扩 `_should_retry_dropping_signed_reasoning`：400/404 跨模型加密 reasoning 拒绝时剥密文内部重试（对比 ST-10；不关 `PERSIST_REASONING_TOKENS`） |
 
 详细错误历史见 `open-webui-openrouter-image-continuity-plan.md` §2、§10。
 

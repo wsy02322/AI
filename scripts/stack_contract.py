@@ -87,6 +87,7 @@ PIPE_PATCH_MARKERS = [
     "seedream-5",
     "middle-out",
     "apply_chat_context_transforms",
+    "COMPARE_CROSS_MODEL_REASONING_V1",
 ]
 
 BANNER_IDS = ["usage-pick-model-v2", "usage-reasoning-depth-v2"]

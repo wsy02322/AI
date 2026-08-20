@@ -19,6 +19,8 @@
 | 脚本 | 何时 |
 |------|------|
 | `scripts/verify_stack.py` | 任何改动后；Pipe 更新后 |
+| `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
+| `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_ui_guidance_banners.py` | Banner / Description / chips / DEFAULT_MODELS |

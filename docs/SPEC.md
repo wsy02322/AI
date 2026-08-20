@@ -37,6 +37,7 @@
 | ST-7 | Sonar / 纯图像：`code_interpreter` 为 false；纯图像额外 `builtin_tools` / `terminal` 为 false。**不**关 Sol Pro 的 code interpreter |
 | ST-8 | 后台 Task 模型 = **Grok 4.6**（与默认聊天同档，低成本） |
 | ST-9 | **全局** `enable_image_generation` / `ENABLE_IMAGE_GENERATION` = false（路线 S；作图只走 Pipe 图像模型） |
+| ST-10 | 对比多轮：跨模型 `encrypted reasoning` 不得让一栏永久 404。Pipe 在 400/404 且错误含 `produced under a different model` / `encrypted reasoning` / `compaction content` 时，剥回放密文并 **内部重试**。`PERSIST_REASONING_TOKENS` 保持 `conversation`（单模型零损失）。**不**把全局 `disabled` 当终态。 |
 
 ## 明确 Later / Don't
 
