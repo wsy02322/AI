@@ -117,7 +117,7 @@ def verify(h: dict[str, str]) -> int:
     if tasks.get("TASK_MODEL") != TASK_MODEL or tasks.get("TASK_MODEL_EXTERNAL") != TASK_MODEL:
         r.err(f"TASK_MODEL={tasks.get('TASK_MODEL')} / {tasks.get('TASK_MODEL_EXTERNAL')} want {TASK_MODEL}")
     else:
-        r.ok("task models Pipe Sol Pro")
+        r.ok(f"task models {TASK_MODEL}")
 
     export = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/export", headers=h, timeout=60).json()
     banners = export.get("ui.banners") or []

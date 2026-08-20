@@ -10,8 +10,8 @@
 | Pipe 名称 | Open WebUI OpenRouter Integration |
 | Pipe content SHA256（前 12） | `081c3773444c` |
 | Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms` **均存在** |
-| 上次 `verify_stack.py` | **2026-08-20 全绿**（20 ok / 0 err；Sol Pro + Sonar smoke HTTP 200） |
-| Wave 0 已应用到实例 | capabilities（Sonar/图像关 tool 类开关）；Task 模型 = Pipe Sol Pro |
+| 上次 `verify_stack.py` | **2026-08-20 全绿**（20 ok / 0 err）；Task 模型后改为 **Grok 4.6** |
+| Wave 0 已应用到实例 | capabilities；Task = **Grok 4.6**；默认聊天 = Sol Pro |
 
 ## Pipe 更新后
 

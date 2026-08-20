@@ -35,7 +35,7 @@
 | ST-5 | `AUTO_INSTALL_*` / `AUTO_ATTACH_*` web_tools & image_gen = false |
 | ST-6 | `UPDATE_MODEL_CAPABILITIES` = false |
 | ST-7 | Sonar / 纯图像：`code_interpreter` 为 false；纯图像额外 `builtin_tools` / `terminal` 为 false。**不**关 Sol Pro 的 code interpreter |
-| ST-8 | 后台 Task 模型（标题/补全）使用 Pipe 文本模型，不用幽灵直连 id |
+| ST-8 | 后台 Task 模型（标题/补全/标签）使用 **Pipe Grok 4.6**（低成本）；**默认聊天**仍为 Sol Pro。不用幽灵直连 id，也不用 Sol Pro 跑后台 |
 
 ## 明确 Later / Don't
 

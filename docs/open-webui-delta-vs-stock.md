@@ -336,7 +336,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 |----|------|
 | `DEFAULT_MODELS` 指向 Pipe Sol Pro | **已修**（2026-08-20） |
 | Prompt suggestions | **4 条**（export `ui.prompt_suggestions`） |
-| Task 模型（标题/补全） | **已改为 Pipe Sol Pro**（Wave 0） |
+| Task 模型（标题/补全） | **Grok 4.6** Pipe（Wave 0 后自 Sol Pro 下调成本） |
 | Sonar / 纯图像 `code_interpreter` 等 | **已关**（Wave 0）；Sol Pro / Opus 的 code interpreter **保留** |
 | `web_tools`/`image_gen` Sonar 早退补丁 | **探针未见**；当前靠停用 + Guard |
 | 图像画布连续性（canonical canvas） | **未实现** — 见 continuity plan §5 |
