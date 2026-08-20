@@ -95,9 +95,8 @@
 
 ### 2.3 能力范围（What we intentionally do NOT promise）
 
-- 同一对话内无感「聊完再画」（需换模型）
+- 同一对话内无感「聊完再画」（需换模型；路线 S）
 - 图像像素级锁定 / 蒙版 inpainting（未实现）
-- 默认新对话 = Sol Pro（**待修**，当前 DEFAULT_MODELS 仍指向非 Pipe id）
 - Reve 2.1 等 OpenRouter 未上架模型
 
 ---
