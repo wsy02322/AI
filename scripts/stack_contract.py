@@ -4,9 +4,12 @@ from __future__ import annotations
 
 PIPE = "open_webui_openrouter_integration"
 
-DEFAULT_MODEL = f"{PIPE}.x-ai.grok-4.6"
-# Background tasks (title, autocomplete, tags): same cheap Pipe model as default chat.
-TASK_MODEL = DEFAULT_MODEL
+# New-chat defaults (comma-separated in OWUI): dual flagship for side-by-side comparison.
+DEFAULT_MODEL_PRIMARY = f"{PIPE}.x-ai.grok-4.6"
+DEFAULT_MODEL_SECONDARY = f"{PIPE}.anthropic.claude-opus-5"
+DEFAULT_MODELS = f"{DEFAULT_MODEL_PRIMARY},{DEFAULT_MODEL_SECONDARY}"
+# Background tasks: cheap model only (not Opus).
+TASK_MODEL = DEFAULT_MODEL_PRIMARY
 
 PINNED_MODELS = [
     f"{PIPE}.perplexity.sonar-pro-search",

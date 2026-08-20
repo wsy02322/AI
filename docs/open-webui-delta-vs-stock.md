@@ -66,10 +66,10 @@
 | 项 | Stock | 本实例 |
 |----|-------|--------|
 | `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
-| `DEFAULT_MODELS` | 自选 | **`open_webui_openrouter_integration.x-ai.grok-4.6`**（日常默认；Sol Pro 仍在置顶四格） |
+| `DEFAULT_MODELS` | 自选 | **`grok-4.6` + `claude-opus-5`**（双默认，便于对比；逗号分隔 Pipe id） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认落在 Pipe Sol Pro（2026-08-20 修复）。`scripts/apply_ui_guidance_banners.py` 会一并写入 `DEFAULT_MODELS`。
+**说明**：新对话默认 Grok 4.6 + Opus 5 双模型（2026-08-20）。后台 Task 仍只用 Grok 4.6。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -342,7 +342,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | 图像画布连续性（canonical canvas） | **未实现** — 见 continuity plan §5 |
 | 蒙版 inpainting / ComfyUI | **未实现** |
 | Reve 2.1 | OpenRouter 无模型 |
-| OpenAI slot 1–5 未启用 | 保留配置，日常不用 |
+| 全局原生 Image Gen | **已关**（`ENABLE_IMAGE_GENERATION=false`；路线 S） |
 | OWUI 核心 fork | **无** |
 
 ---

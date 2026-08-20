@@ -12,7 +12,7 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import (
     CHAT_KEEP_CODE_INTERPRETER,
-    DEFAULT_MODEL,
+    DEFAULT_MODELS,
     IMAGE_MODEL_IDS,
     SONAR_MODEL_IDS,
     TASK_MODEL,
@@ -134,7 +134,7 @@ def apply_default_chat_model(h: dict[str, str]) -> None:
         raise RuntimeError(f"get models config: {models_cfg.status_code}")
     cfg = models_cfg.json()
     payload = {
-        "DEFAULT_MODELS": DEFAULT_MODEL,
+        "DEFAULT_MODELS": DEFAULT_MODELS,
         "DEFAULT_PINNED_MODELS": cfg.get("DEFAULT_PINNED_MODELS"),
         "MODEL_ORDER_LIST": cfg.get("MODEL_ORDER_LIST"),
     }
@@ -184,7 +184,7 @@ def apply_task_models(h: dict[str, str]) -> None:
     saved = resp.json()
     print(f"TASK_MODEL={saved.get('TASK_MODEL')}")
     print(f"TASK_MODEL_EXTERNAL={saved.get('TASK_MODEL_EXTERNAL')}")
-    print(f"DEFAULT_MODEL (unchanged here)={DEFAULT_MODEL}")
+    print(f"DEFAULT_MODEL (task)={TASK_MODEL}")
 
 
 def main() -> int:

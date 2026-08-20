@@ -14,7 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import (
     BANNER_IDS,
     CHAT_KEEP_CODE_INTERPRETER,
-    DEFAULT_MODEL,
+    DEFAULT_MODEL_PRIMARY,
+    DEFAULT_MODEL_SECONDARY,
+    DEFAULT_MODELS,
     DETACH_FILTERS,
     DISABLED_FILTERS,
     GUARDS,
@@ -91,10 +93,10 @@ def verify(h: dict[str, str]) -> int:
     r.ok(f"OWUI version={version.get('version')}")
 
     cfg = requests.get(f"{OPENWEBUI_URL}/api/config", headers=h, timeout=30).json()
-    if cfg.get("default_models") != DEFAULT_MODEL:
-        r.err(f"default_models={cfg.get('default_models')} want {DEFAULT_MODEL}")
+    if cfg.get("default_models") != DEFAULT_MODELS:
+        r.err(f"default_models={cfg.get('default_models')} want {DEFAULT_MODELS}")
     else:
-        r.ok(f"default_models {DEFAULT_MODEL}")
+        r.ok(f"default_models dual {DEFAULT_MODELS}")
     if (cfg.get("features") or {}).get("enable_web_search"):
         r.err("native web search enabled")
     else:
@@ -233,7 +235,8 @@ def verify(h: dict[str, str]) -> int:
 
     if SMOKE:
         for mid, label in (
-            (DEFAULT_MODEL, "default-grok"),
+            (DEFAULT_MODEL_PRIMARY, "default-grok"),
+            (DEFAULT_MODEL_SECONDARY, "default-opus"),
             (f"{PIPE}.openai.gpt-5.6-sol-pro", "sol-pro"),
             (f"{PIPE}.perplexity.sonar-pro-search", "sonar-search"),
         ):

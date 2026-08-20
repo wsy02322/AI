@@ -21,7 +21,7 @@
 | UX-2 | 英文指引：两条 Banner + 关键 Description + 空对话 chips（「Select … first」） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **19 个 public** 维持（对比用）；不缩到 6 |
-| UX-5 | 新对话默认 = `open_webui_openrouter_integration.x-ai.grok-4.6`（日常聊天；难题用置顶 Sol Pro / Opus + Reasoning depth） |
+| UX-5 | 新对话默认 **双模型**：`grok-4.6` + `claude-opus-5`（并排对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
 | UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false |
 
 ## 稳定性（Now）
