@@ -11,6 +11,7 @@ import requests
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 PIPE = "open_webui_openrouter_integration"
+DEFAULT_MODELS = f"{PIPE}.openai.gpt-5.6-sol-pro"
 
 BANNERS = [
     {
@@ -150,6 +151,28 @@ def set_banners(h: dict[str, str]) -> None:
         print(f"  {b.get('id')} type={b.get('type')} dismissible={b.get('dismissible')} title={b.get('title')}")
 
 
+def set_default_models(h: dict[str, str]) -> None:
+    models_cfg = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/models", headers=h, timeout=30)
+    if models_cfg.status_code != 200:
+        raise RuntimeError(f"get models config: {models_cfg.status_code} {models_cfg.text[:300]}")
+    cfg = models_cfg.json()
+    payload = {
+        "DEFAULT_MODELS": DEFAULT_MODELS,
+        "DEFAULT_PINNED_MODELS": cfg.get("DEFAULT_PINNED_MODELS"),
+        "MODEL_ORDER_LIST": cfg.get("MODEL_ORDER_LIST"),
+    }
+    resp = requests.post(
+        f"{OPENWEBUI_URL}/api/v1/configs/models",
+        headers=h,
+        json=payload,
+        timeout=30,
+    )
+    if resp.status_code != 200:
+        raise RuntimeError(f"models config: {resp.status_code} {resp.text[:400]}")
+    saved = resp.json()
+    print(f"DEFAULT_MODELS={saved.get('DEFAULT_MODELS')}")
+
+
 def set_suggestions(h: dict[str, str]) -> None:
     resp = requests.post(
         f"{OPENWEBUI_URL}/api/v1/configs/suggestions",
@@ -246,10 +269,20 @@ def main() -> int:
     if not OPENWEBUI_URL:
         raise SystemExit("OPENWEBUI_URL missing")
     h = headers(signin())
+    set_default_models(h)
     set_banners(h)
     set_suggestions(h)
     set_descriptions(h)
     errors = verify(h)
+    if errors:
+        print(f"verify errors: {errors}")
+        return 1
+    models_cfg = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/models", headers=h, timeout=30).json()
+    if models_cfg.get("DEFAULT_MODELS") != DEFAULT_MODELS:
+        print("ERROR DEFAULT_MODELS", models_cfg.get("DEFAULT_MODELS"))
+        errors += 1
+    else:
+        print("ok DEFAULT_MODELS", models_cfg.get("DEFAULT_MODELS"))
     if errors:
         print(f"verify errors: {errors}")
         return 1

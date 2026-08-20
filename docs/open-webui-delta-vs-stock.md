@@ -66,10 +66,10 @@
 | 项 | Stock | 本实例 |
 |----|-------|--------|
 | `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
-| `DEFAULT_MODELS` | 自选 | **仍为非 Pipe id**：`anthropic/claude-sonnet-4.6`, `x-ai/grok-4.5`, `anthropic/claude-opus-4.8`, `google/gemini-3.1-pro-preview` |
+| `DEFAULT_MODELS` | 自选 | **`open_webui_openrouter_integration.openai.gpt-5.6-sol-pro`**（GPT-5.6 Sol Pro Pipe） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**技术债**：新对话默认模型 **未** 指向 Pipe Sol Pro；用户需手动选模型或依赖置顶列表（见 §10）。
+**说明**：新对话默认落在 Pipe Sol Pro（2026-08-20 修复）。`scripts/apply_ui_guidance_banners.py` 会一并写入 `DEFAULT_MODELS`。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -275,7 +275,9 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 **设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip，均含 “Select … first”。
 
-**探针 2026-08-20**：`GET /api/config` → `ui.prompt_suggestions` **为空**（0 条）。可能未持久化或被清空；**若需恢复** 重跑 `scripts/apply_ui_guidance_banners.py`。
+**存储**：`POST /api/v1/configs/suggestions`；导出键 **`ui.prompt_suggestions`**（flat，非 `export.ui` 嵌套）。`GET /api/config` 的嵌套 `ui.prompt_suggestions` 可能为空，以 export 为准。
+
+**状态（2026-08-20）**：**4 条**已写入；重跑 `scripts/apply_ui_guidance_banners.py` 可恢复。
 
 ### 7.3 用户面向语言
 
@@ -305,7 +307,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 |------|------|
 | `scripts/fix_sonar_tool_guard.py` | Sonar 防 tool 注入：Guard priority、web_tools/image_gen 早退、Sonar filterIds |
 | `scripts/apply_plan_a_hide_integrations.py` | 方案 A 一键：Valves merge、停用 Filter、剥模型 filterIds、关原生 Web Search |
-| `scripts/apply_ui_guidance_banners.py` | Banners + Description + Prompt chips + 校验 |
+| `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + Banners + Description + Prompt chips + 校验 |
 
 **环境变量**：`OPENWEBUI_URL`、`OPENWEBUI_PASSWORD`、`OPENWEBUI_USERNAME`（优先于 email 登录）。
 
@@ -332,8 +334,8 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | 项 | 状态 |
 |----|------|
-| `DEFAULT_MODELS` 指向非 Pipe id | **未修** — 新对话可能默认直连模型 |
-| Prompt suggestions 线上为空 | **待确认/重跑脚本** |
+| `DEFAULT_MODELS` 指向 Pipe Sol Pro | **已修**（2026-08-20） |
+| Prompt suggestions | **4 条**（export `ui.prompt_suggestions`） |
 | `web_tools`/`image_gen` Sonar 早退补丁 | **探针未见**；当前靠停用 + Guard |
 | 图像画布连续性（canonical canvas） | **未实现** — 见 continuity plan §5 |
 | 蒙版 inpainting / ComfyUI | **未实现** |
