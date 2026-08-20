@@ -1,294 +1,247 @@
-# Open WebUI 灾备与从零重建规划
+# Open WebUI 灾备与重建 — 重规划（规格驱动）
 
-> **状态**：规划已记录，待确认后分阶段落地  
-> **最后更新**：2026-08-20  
-> **目的**：  
-> 1. **预防** 服务器崩坏、配置被覆盖、密钥丢失等 **不可逆** 损失；  
-> 2. 让 **其他 AI Agent** 仅凭仓库 + 密钥 + 本规划，**从零重建** 到当前实例已实现的 **全部效果与体验**。  
-> **关联文档**：  
-> - `docs/open-webui-openrouter-image-continuity-plan.md` — 图像修复、方案 A、模型测试  
-> - `docs/open-webui-user-guidance-plan.md` — 英文界面指引（Banners / Description / Chips）
+> **状态**：重规划已记录，待确认后落地  
+> **最后更新**：2026-08-20（v2，替代 v1「全量快照」思路）  
+> **核心转变**：不追求复刻某一天的 **代码与配置字节**，而追求在任何合理新版本上 **复现同一套能力与体验**。  
+> **关联**：`open-webui-openrouter-image-continuity-plan.md`（错误与补丁历史）、`open-webui-user-guidance-plan.md`（界面指引意图）
 
 ---
 
-## 1. 当前「效果与体验」到底包含什么（重建目标清单）
+## 0. 真正要保护的是什么？
 
-重建成功 = 以下 **全部** 可验证通过，而非「能登录、能聊天」。
+| 类别 | 是否重要 | 说明 |
+|------|----------|------|
+| **用户体验契约**（用哪个模型、界面说什么、Integrations 长什么样） | ✅ **最重要** | 可写成验收表，与版本无关 |
+| **稳定性约束**（什么不能做、为何会 404） | ✅ **最重要** | 错误目录 + 根因模式 |
+| **难以发现的工程细节**（merge valves、filter 顺序、API 字段） | ✅ **重要** | 文档化「为什么」，不是贴代码 |
+| **自动验收 / 冒烟探针** | ✅ **重要** | 证明「当前仍达标」的唯一客观依据 |
+| **用户聊天与上传文件** | ✅ **重要**（若业务需要） | 仅此类数据 **真正不可逆** |
+| OpenRouter / Admin **密钥** | ⚪ 低 | 重新填入即可 |
+| **某一版 Function 源码全文** | ⚪ 低 | Pipe 常更新；Agent 可按规格重写 Filter |
+| **466 个模型的完整 metadata** | ⚪ 低 | Pipe 同步会再生；只需 **public 名单 + 置顶** |
+| **完整 configs/export JSON** | ⚪ 中低 | 参考用；版本一变字段即变 |
+| **锁死 OWUI + Pipe 某一版本** | ⚠️ 次要 | 可作 **应急回滚**，不宜作唯一策略 |
 
-### 1.1 产品体验（用户可见）
-
-| # | 体验 | 验收 |
-|---|------|------|
-| E1 | 两条 **常驻英文 Banner**（选模型 + Reasoning depth，不可 dismiss） | 登录聊天页可见蓝/橙条 |
-| E2 | 空对话 **Suggested chips**（4 条，英文，含 “Select … first”） | 新对话可见 |
-| E3 | 置顶模型 **英文 Description**（Sonar / Sol / Opus / 图像） | 选模型时副标题 |
-| E4 | Integrations **仅** Direct Uploads（+ 图像模型 native filter） | 无 Web Tools / Image Gen / Web Search |
-| E5 | 快搜 **Sonar Pro Search**、深度 **Sonar Deep Research** 可用 | chat 200，无 tool 404 |
-| E6 | 旗舰文本 **Sol Pro / Opus 5** 等 public | 普通用户可选 |
-| E7 | 图像模型 public 且可出图（Banana 2/Pro、GPT Image 2、Seedream 5 等） | 见 §1.3 |
-| E8 | 多轮图像对话不常爆 131072 token（context guard） | 长对话图像编辑 |
-
-### 1.2 稳定性与简约（工程约束）
-
-| # | 约束 | 验收 |
-|---|------|------|
-| S1 | Pipe **不** auto-attach Web Tools / Image Gen | valves + filterIds |
-| S2 | OWUI 原生 Web Search **关闭** | `enable_web_search=false` |
-| S3 | Sonar / 图像模型 **无** tool calling 404 | 显式 tools 仍 200 |
-| S4 | 全局 Guard Filters 存在且 active | 见 §3.2 |
-| S5 | Pipe `UPDATE_MODEL_CAPABILITIES=false` | 防止 web_search 被 catalog 写回 |
-| S6 | Direct Connections **关闭** | Admin connections |
-
-### 1.3 已测通能力（2026-08-18～19 记录）
-
-**Public 图像 / 文本（前缀 `open_webui_openrouter_integration.`）**：
-
-- 文本：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro（+ 其他旗舰若仍 public）
-- 图像：GPT Image 2、Nano Banana Pro、Nano Banana 2、GPT-5.4 Image 2、Qwen Image 3 Pro、MAI-Image Pro、Grok Imagine 2.0、Seedream 5.0 Pro/Lite
-
-**Pipe 层补丁（在 OWUI Function 表内，非纯 git）**：
-
-- Images API 路由（gpt-image、seedream-5）
-- `openrouter_web_tools` / `openrouter_image_gen` Sonar 早退
-- 全局：`openrouter_image_tool_guard`、`openrouter_image_context_guard`、`openrouter_search_native_tool_guard`
-
-### 1.4 已知未达成（重建时 **不要** 假装已有）
-
-- 默认新对话模型仍为 **非 Pipe** 的 `DEFAULT_MODELS` 字符串（待修）
-- 图像 **画布连续性**（canonical canvas）Pipe 补丁未做
-- `model/update` 显示名 API 曾 500
-- Reve 2.1 无 OpenRouter 实例
+**结论**：防崩的重点不是「存档一切」，而是 **写清要什么 + 什么会坏 + 怎么验**。
 
 ---
 
-## 2. 不可逆风险登记（为什么要灾备）
+## 1. 三种策略对比
 
-| 风险 | 后果 | 可预防？ |
-|------|------|----------|
-| **整盘 / VM 损坏** 无备份 | OWUI DB、Function 源码补丁、用户数据全丢 | 定期备份 DB + export |
-| **Pipe 自动更新** 覆盖 Filter 补丁 | Sonar 404、图像 tool 404 复发 | `AUTO_INSTALL_*=false` + 版本快照 |
-| **Pipe valves 全量覆盖** | `API_KEY` 被清空，全站不可用 | 永远 **merge** valves |
-| **密钥只存在 valves/环境** 无第二份 | 重建无法调 OpenRouter | Secrets Manager + 恢复流程 |
-| **配置只存在于线上** 未进 git | Agent 无法复现 Banners/模型 public | 定期 export + 脚本 |
-| **误删 Function**（Filter/Pipe） | Guard 消失，稳定性崩塌 | DB 备份 + Function 导出 |
-| **OpenRouter 账户欠费/封禁** | 所有模型失败 | 监控余额（非 OWUI 范畴） |
-| **Google PSE key 在 retrieval config** | Web Search 若误开可能异常 | 方案 A 已关；export 时注意勿泄露 |
+### 方案一：锁死版本 + 全量配置快照
 
----
-
-## 3. 必须保护的资产（分三层）
-
-### 3.1 密钥与身份（**永不进 git**）
-
-| 资产 | 存放 | 重建时需要 |
-|------|------|------------|
-| OpenRouter API Key | Pipe valves `API_KEY` + 备份在 Secrets | 写入 valves merge |
-| OWUI Admin 密码 | 用户密码管理器 | `OPENWEBUI_USERNAME` / `PASSWORD` |
-| 其他直连 API keys | `/openai/config` 等 | 按 export 恢复 |
-
-### 3.2 OWUI 数据库（**真相源**，2026-08-20 约）
-
-- **Pipe** `open_webui_openrouter_integration`：**content**（含图像/Seedream 等补丁）+ **valves**
-- **Filter Functions**（约 38 个）：尤其  
-  - 全局：`openrouter_image_tool_guard`、`openrouter_image_context_guard`、`openrouter_search_native_tool_guard`  
-  - 已补丁：`openrouter_web_tools`、`openrouter_image_gen`（Sonar 早退）  
-  - 已停用：`openrouter_web_tools`、`openrouter_image_gen`（`is_active=false`）
-- **Model 表**：466 Pipe 模型 metadata（`filterIds`、`capabilities`、`access_grants`、`description`）
-- **Config 表**：Banners、prompt_suggestions、`DEFAULT_PINNED_MODELS`、`DEFAULT_MODEL_METADATA` 等
-
-### 3.3 仓库（**可复现逻辑**，当前 `scripts/`）
-
-| 脚本 | 作用 |
+| 优点 | 缺点 |
 |------|------|
-| `scripts/apply_plan_a_hide_integrations.py` | 方案 A：关 auto-attach、停 Filter、剥 filterIds、关 Web Search |
-| `scripts/fix_sonar_tool_guard.py` | 补丁 web_tools/image_gen + guard priority |
-| `scripts/apply_ui_guidance_banners.py` | 英文 Banners + Description + Suggestions |
+| 恢复最快、字节级一致 | Pipe/OWUI **安全更新、新模型** 被锁死 |
+| 适合「博物馆式」冻结 | 快照 **不含** OpenRouter 侧变化；仍会悄悄失效 |
+| | Function 表 + DB 备份 **体积大、难 diff** |
+| | 其他 Agent 只学会「还原文件」，不懂 **为何** |
 
-**缺口**：尚无 **一键 export**、**一键 rebuild**、Filter **源码快照** 入 git。
+**适用**：短期应急回滚（「昨天还能用」），**不适合** 作为长期主策略。
 
----
+### 方案二：明晰功能 + 错误 + 关键细节（规格驱动）
 
-## 4. 预防策略（确认后执行）
-
-### 4.1 备份（推荐节奏）
-
-| 对象 | 方式 | 频率 | 保留 |
-|------|------|------|------|
-| OWUI DB | `sqlite` 或 PG dump | **每日** + 大改前 | 30 天 |
-| `GET /api/v1/configs/export` | JSON 入 git-private 或 S3 | **每周** + 每次 Agent 大改后 | 90 天 |
-| Pipe + 5 个关键 Filter **content** | API 导出到 `snapshots/functions/` | **每次补丁后** | 永久 git |
-| Pipe valves（无 key 版） | JSON 快照 | 同上 | git |
-| 用户上传文件 | OWUI data 目录 | 按业务需求 | — |
-
-### 4.2 变更纪律（避免人为不可逆）
-
-1. **Pipe valves**：只 `merge`，禁止空对象覆盖。  
-2. **Pipe 更新**：更新前跑 `fix_sonar_tool_guard.py`；`AUTO_INSTALL_WEB_TOOLS_FILTER=false`。  
-3. **大改前**：DB dump + `configs/export`。  
-4. **Secrets**：变更后 24h 内验证 Sonar + 一张图像 smoke test。  
-5. **文档**：Agent 每完成一类改动，更新本文件 §1 验收表或 continuity plan。
-
-### 4.3 监控（轻量）
-
-- HTTP `/health` + 登录 smoke（cron）  
-- 每日探针：`sonar-pro-search` + `claude-opus-5` + `gemini-3-pro-image` 各 1 次 chat  
-- 磁盘、内存、DB 大小告警  
-
----
-
-## 5. 给其他 AI Agent 的「从零重建」Runbook（规划）
-
-**前提环境变量**（Agent 不得写入 git）：
-
-```bash
-OPENWEBUI_URL=https://...
-OPENWEBUI_USERNAME=...
-OPENWEBUI_PASSWORD=...   # 或 OPENWEBUI_EMAIL
-OPENROUTER_API_KEY=...   # 仅用于 merge 进 Pipe valves
-```
-
-### Phase 0 — 基础平台
-
-1. 部署 Open WebUI **0.11.0**（与当前一致或兼容）。  
-2. 创建 Admin；关闭 Direct Connections。  
-3. 安装 Pipe：`open_webui_openrouter_integration`（OpenRouter for Open WebUI，与实例同版本）。  
-4. **Merge** Pipe valves：写入 `API_KEY`，设 `ENABLE_DATETIME=false` 等（见 §6.1）。  
-5. 等待 Pipe 同步模型目录（~466 模型）。
-
-### Phase 1 — Filter 层（稳定性）
-
-1. 确认/安装全局 Guards（若 Pipe 未自动创建，从 `snapshots/functions/` 恢复 content）。  
-2. 运行 `python3 scripts/fix_sonar_tool_guard.py`（web_tools/image_gen Sonar 早退 + guard priority）。  
-3. 运行 `python3 scripts/apply_plan_a_hide_integrations.py`（方案 A）。  
-4. 验证 S1–S5（§1.2）。
-
-### Phase 2 — 模型可见性与置顶
-
-1. 对 §1.3 模型执行 `access_grants` public（脚本或 continuity plan §10 API）。  
-2. `POST /api/v1/configs/models`：`DEFAULT_PINNED_MODELS`、`DEFAULT_MODEL_METADATA`（builtin_tools/web_search 等 false）。  
-3. （可选）修正 `DEFAULT_MODELS` → Pipe Sol Pro id。  
-
-### Phase 3 — 用户界面指引（英文）
-
-1. 运行 `python3 scripts/apply_ui_guidance_banners.py`。  
-2. 验证 E1–E3（§1.1）。
-
-### Phase 4 — 端到端验收
-
-运行 **§7 验收脚本**（待实现 `scripts/verify_stack.py`）：  
-Sonar / Opus / Banana 各 1 chat；检查 banners、filterIds、无 tool 404。
-
-### Phase 5 — 图像连续性（可选，未做则跳过）
-
-按 `open-webui-openrouter-image-continuity-plan.md` §5 A–D。
-
----
-
-## 6. 关键配置快照（Agent 照抄，密钥除外）
-
-### 6.1 Pipe valves（merge 目标，2026-08-20 线上）
-
-```json
-{
-  "AUTO_ATTACH_WEB_TOOLS_FILTER": false,
-  "AUTO_ATTACH_IMAGE_GEN_FILTER": false,
-  "AUTO_DEFAULT_WEB_TOOLS_FILTER": false,
-  "AUTO_INSTALL_WEB_TOOLS_FILTER": false,
-  "AUTO_INSTALL_IMAGE_GEN_FILTER": false,
-  "ENABLE_DATETIME": false,
-  "ENABLE_WEB_SEARCH": false,
-  "UPDATE_MODEL_CAPABILITIES": false
-}
-```
-
-### 6.2 置顶模型（`DEFAULT_PINNED_MODELS`）
-
-```
-open_webui_openrouter_integration.perplexity.sonar-pro-search
-open_webui_openrouter_integration.perplexity.sonar-deep-research
-open_webui_openrouter_integration.anthropic.claude-opus-5
-open_webui_openrouter_integration.openai.gpt-5.6-sol-pro
-```
-
-### 6.3 全局 Filters（必须 active + is_global）
-
-- `openrouter_image_tool_guard`
-- `openrouter_image_context_guard`
-- `openrouter_search_native_tool_guard`（priority 100）
-
-### 6.4 应停用但保留的 Filters
-
-- `openrouter_web_tools` → `is_active: false`
-- `openrouter_image_gen` → `is_active: false`
-
-### 6.5 典型模型 `filterIds`（方案 A 后）
-
-- 文本 / Sonar：`["openrouter_direct_uploads"]`
-- 图像（例 Banana Pro）：`["openrouter_direct_uploads", "openrouter_image_filter_generic", "openrouter_image_filter_gemini"]`
-
-### 6.6 Banners（见 `scripts/apply_ui_guidance_banners.py` 内 `BANNERS` 常量）
-
-- `usage-pick-model-v2`（info，non-dismissible）
-- `usage-reasoning-depth-v2`（warning，non-dismissible）
-
----
-
-## 7. 待实现的仓库工件（确认后开发）
-
-| 工件 | 目的 |
+| 优点 | 缺点 |
 |------|------|
-| `scripts/export_instance_state.py` | 拉取 export、functions content、public 模型列表 → `snapshots/` |
-| `scripts/rebuild_from_scratch.py` | 按 Phase 0–4 顺序调用现有脚本 + API |
-| `scripts/verify_stack.py` | §1 验收表自动化 |
-| `snapshots/functions/*.py` | Filter/Pipe 关键源码 **脱敏** 快照 |
-| `snapshots/config/export-YYYYMMDD.json` | 周期性配置（**脱敏**后可选入 private repo） |
-| `AGENTS.md` | Agent 入口：先读本文件 + 跑 verify |
-| `.cursor/environment.json` 或部署说明 | OWUI 版本、数据目录、备份 cron |
+| **跨版本可重建** | 需要写得准；依赖验收脚本兜底 |
+| Agent 理解 **目的**，可换实现路径 | 首次重建比快照慢 |
+| 新 Pipe 版本可 **迁移** 而非整体报废 | 极隐蔽回归需靠探针发现 |
 
-**脱敏规则**：export 中剔除 API keys、Google PSE key、用户 PII；快照进 git 前自动扫描。
+**适用**：本项目的 **主策略**（OpenRouter Pipe 高频更替）。
+
+### 方案三（推荐）：规格 + 验收 + 轻量快照
+
+```
+┌─────────────────────────────────────────┐
+│  Layer 1: 能力规格 + 决策日志 + 错误目录   │  ← 真相源（git）
+├─────────────────────────────────────────┤
+│  Layer 2: verify_stack.py 自动验收        │  ← 是否达标（git）
+├─────────────────────────────────────────┤
+│  Layer 3: 现有 scripts（可选加速器）      │  ← 非真相源（git）
+├─────────────────────────────────────────┤
+│  Layer 4: 轻量快照（仅应急）              │  ← 私有存储，可选
+│           DB 周备 + 用户数据日备          │
+└─────────────────────────────────────────┘
+```
+
+**比方案二更棒之处**：规格写人话，**验收写机器**；快照只防「连规格都来不及读」的灾难。
 
 ---
 
-## 8. 重建时 Agent 易错点（必读）
+## 2. 能力规格（Agent 的「目标清晰」应清晰到什么程度）
 
-1. **不要** 恢复 OR Web Tools / Image Gen 到 filterIds「为了方便」。  
-2. **不要** 全量 POST valves（会清空 `API_KEY`）。  
-3. **不要** 只装 Pipe 不跑三个 `scripts/` — 体验与稳定性会缺一半。  
-4. **不要** 假设 git 里有 Pipe 补丁 — 必须先 export Function content 或跑 fix 脚本。  
-5. **model/update** 需带 `access_grants` 才成功。  
-6. 用户指引 **必须英文**（Banners / Description / Chips）。  
-7. Deep Research 验收要 **≥2 分钟** 超时，不是 30s API 探针。
+重建成功 = **§2.1 体验** + **§2.2 约束** 全部通过 `verify_stack.py`（待写），而非与 2026-08-19 字节一致。
+
+### 2.1 用户体验（What users should see）
+
+| ID | 规格 |
+|----|------|
+| UX-1 | **四格能力**：Chat（Sol Pro / Opus）、Quick search（Sonar Pro Search）、Deep report（Sonar Deep Research）、Images（Banana Pro / GPT Image 2）— **换模型即换能力** |
+| UX-2 | **英文指引**：两条常驻 Banner（pick model + Reasoning depth）+ 关键模型 Description +（可选）空对话 chips 带 “Select … first” |
+| UX-3 | **Integrations 简约**：日常聊天 **不出现** OR Web Tools、OR Image Gen、OWUI Web Search；保留 Direct Uploads；图像模型保留 native image filter |
+| UX-4 | **Reasoning depth** 在 UI 有可见说明：难题 high/xhigh，简单题 low/medium |
+| UX-5 | Deep Research：**2–10 分钟** 等待写在 Deep 模型说明或 Banner 中 |
+
+### 2.2 稳定性约束（What must NOT happen）
+
+| ID | 规格 |
+|----|------|
+| ST-1 | Sonar / 纯图像模型：**不得** 向 OpenRouter 发送 tool calling（含 `get_current_timestamp`）→ 无 404 |
+| ST-2 | **不得** 依赖 per-model Web Tools 做搜索（Sonar 自带搜索；双搜易坏） |
+| ST-3 | `gpt-image-*`、`seedream-5*`：**必须** 走 Images API，非 chat/completions |
+| ST-4 | Pipe valves 更新：**必须 merge**，禁止空覆盖（防 API_KEY 丢失） |
+| ST-5 | Pipe auto-install web_tools/image_gen：**应关闭**，防更新覆盖补丁 |
+| ST-6 | `UPDATE_MODEL_CAPABILITIES`：**应 false**，防 catalog 把 `web_search` 写回 |
+
+### 2.3 能力范围（What we intentionally do NOT promise）
+
+- 同一对话内无感「聊完再画」（需换模型）
+- 图像像素级锁定 / 蒙版 inpainting（未实现）
+- 默认新对话 = Sol Pro（**待修**，当前 DEFAULT_MODELS 仍指向非 Pipe id）
+- Reve 2.1 等 OpenRouter 未上架模型
 
 ---
 
-## 9. 分阶段落地建议（对你确认）
+## 3. 错误目录（Agent 按「现象 → 根因 → 修复模式」重建）
 
-| 阶段 | 内容 | 风险 |
+**不要** 死记某次补丁的 diff；记 **模式**。详细历史见 `open-webui-openrouter-image-continuity-plan.md` §2。
+
+| 现象 | 根因模式 | 修复模式（版本无关） |
+|------|----------|----------------------|
+| `No endpoints found that support tool use` + `get_current_timestamp` | 向 **不支持 tools** 的模型注入了 OWUI builtin / OR server tools | 全局 Guard 剥离 tools；Sonar 上 web_tools/image_gen **早退或停用**；`builtin_tools` 默认 false |
+| Sonar 上开了 Web Tools 仍 404 | Perplexity **不支持** chat completions tools | **不要** 引导用户开 Web Tools；方案 A 隐藏 |
+| `gpt-image-*` chat endpoint 错误 | 图像模型走错 API | Pipe 或等价逻辑：**Images API 路由** |
+| `seedream-5` OpenRouter 500 | 同左 | `_is_openrouter_images_api_model` 类逻辑 + resolution 映射 |
+| 多轮图像 131072 token | 历史多图整段进上下文 | image **context guard** + chat 路径 context compression |
+| Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑 guard 逻辑 |
+| `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
+| valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |
+
+**Agent 重建时**：先读错误表 → 实现 **等价约束** → 跑验收，而非找旧 `content` 粘贴。
+
+---
+
+## 4. 难以发现的细节（ worth documenting, not freezing code）
+
+| 细节 | 为何难发现 |
+|------|------------|
+| Filter **priority 越低越先执行**（inlet）；Guard 要 **最后** 剥 tools | per-model Filter 会在 Guard 之后 **再注入** server_tools |
+| `POST /api/v1/configs/banners` body 是 `{"banners":[...]}` | 不是裸数组 |
+| `POST /api/v1/configs/suggestions` body 是 `{"suggestions":[...]}` | |
+| Prompt chips **不会** 自动切换模型 | chip 文案必须写 “Select X first” |
+| Banner 仅 **HTML**，无 Markdown | |
+| 登录用 `OPENWEBUI_USERNAME` 未必等于 email | 本实例 username 更稳 |
+| Public 模型：`access_grants` principal `*` | Pipe 默认图像模型仅 admin |
+| OpenRouter Pipe 模型 id 前缀 `open_webui_openrouter_integration.` | |
+
+这些应进 **`AGENTS.md` + 错误目录**，不必进 Function 源码快照。
+
+---
+
+## 5. 决策日志（为何这样设计 — Agent 勿擅自改回）
+
+| 决策 | 原因 | 若回退会怎样 |
+|------|------|--------------|
+| **方案 A**：隐藏 Web Tools / Image Gen / Web Search | 简约 + Sonar/图像 tool 404 | 用户误开 → 404；双搜 |
+| **两档 Sonar** 负责搜索，不用 Workspace 包装 | 同家族换模型即深度 | 多余入口 |
+| **不装** 第二套 Pipe / admirito | 冲突与维护成本 | |
+| 界面指引 **英文** | 用户要求 | |
+| Banners **non-dismissible**（当前） | 彰显 game changer | 用户关掉后仍误用 |
+| `scripts/` 是加速器，**非** 唯一真相源 | Pipe 版本变仍可重写 | |
+
+---
+
+## 6. 什么值得备份（缩小后的「不可逆」清单）
+
+| 资产 | 频率 | 说明 |
 |------|------|------|
-| **D1** | `export_instance_state.py` + 首次快照入 private 存储 | 低 |
-| **D2** | `verify_stack.py` + 每日 cron smoke | 低 |
-| **D3** | DB 自动备份 + 恢复演练（季度） | 中 |
-| **D4** | `rebuild_from_scratch.py` 在 **空 OWUI** 上试跑 | 中 |
-| **D5** | `AGENTS.md` + 修正 DEFAULT_MODELS | 低 |
+| **用户 chats / 上传文件** | 日备 | 真正难再现 |
+| **OWUI DB** | 周备 + 大改前 | 恢复「昨天状态」应急；**非** 重建主路径 |
+| **git：规格 + verify + scripts** | 每次合并 | 主重建路径 |
+| configs/export **脱敏摘要**（非全量） | 可选月备 | 仅当 diff 规格是否漂移 |
+| Function 源码全量 | **一般不备** | 除非做法一应急包 |
 
-**本规划确认前**：不自动改线上备份策略、不跑重建试炼。
-
----
-
-## 10. 决策项
-
-- [ ] 备份存放：本机 / S3 / 私有 git repo？  
-- [ ] DB 类型与路径（sqlite vs Postgres）— Agent 需写入 §3.2  
-- [ ] 是否允许 `snapshots/` 脱敏后进 **本仓库** 还是仅私有存储？  
-- [ ] 重建验收：是否以 §1 全部 E+S 项为 **必须**？  
-- [ ] 是否先做 **D1+D2**（export + verify）作为下一迭代？  
+**密钥**：不入库；重建时人工或 Secret 注入即可。
 
 ---
 
-## 11. 文档地图（给 Agent 的阅读顺序）
+## 7. 给其他 Agent 的重建流程（规格驱动，非抄快照）
 
-1. **本文件** — 灾备 + 重建总览  
-2. `open-webui-openrouter-image-continuity-plan.md` — 图像补丁细节、public 模型列表、勿重复操作  
-3. `open-webui-user-guidance-plan.md` — 界面英文指引定义  
-4. `scripts/*.py` — 可执行恢复步骤  
-5. （待写）`AGENTS.md` — 单页入口  
+### Step 1 — 读规格（15 min）
+
+1. 本文件 §2–§5  
+2. `open-webui-openrouter-image-continuity-plan.md`（图像错误与测试列表）  
+3. `open-webui-user-guidance-plan.md`（界面英文意图）
+
+### Step 2 — 搭平台（版本可新）
+
+1. 安装 OWUI + 安装 **当前** OpenRouter Pipe（记录版本号入 `docs/VERSIONS.md`）  
+2. **Merge** Pipe valves：API_KEY + §2.2 约束相关 false  
+3. 关闭 Direct Connections  
+
+### Step 3 — 实现稳定性（按模式，非按旧代码）
+
+1. 全局 Guards：剥 tools / 图像 context / Sonar search-native  
+2. web_tools & image_gen：Sonar/图像 **inlet 早退** 或停用 + 不 attach  
+3. 方案 A：剥 filterIds、关 OWUI Web Search、`UPDATE_MODEL_CAPABILITIES=false`  
+4. 图像：Images API 路由（gpt-image、seedream-5）— 若新 Pipe 未内置则补  
+
+**可用** `scripts/*.py` **若仍兼容**；不兼容则按 §3 重写。
+
+### Step 4 — 产品与指引
+
+1. Public + 置顶（§2.1 四格 + 已测图像列表）  
+2. 英文 Banners / Description / Chips（§2.1 UX-2；可复制 `apply_ui_guidance_banners.py` 内 **文案常量**，非依赖其代码结构）  
+
+### Step 5 — 验收
+
+运行 `verify_stack.py`（待实现）：  
+- ST-1～ST-6 探针  
+- UX-1～UX-5 抽样（API + 可选 UI）  
+- 全绿 = 重建完成；**不必** 与历史快照 diff  
+
+---
+
+## 8. 仓库待建设（确认后优先级）
+
+| 优先级 | 工件 | 作用 |
+|--------|------|------|
+| **P0** | `docs/SPEC.md`（或本文件 §2 独立化） | 能力规格单一页 |
+| **P0** | `scripts/verify_stack.py` | 机器验收 = 防崩核心 |
+| **P1** | `AGENTS.md` | Agent 入口：读 SPEC → verify → 按需跑 scripts |
+| **P1** | `docs/VERSIONS.md` | 记录「上次验通过的 OWUI / Pipe 版本」；**不锁死** |
+| **P2** | `scripts/*.py` 改为「实现参考」，头部注明 **规格见 SPEC** | |
+| **P3** | 周备 DB + 用户数据（运维，非 Agent 文档重点） | 应急 only |
+| **弃用倾向** | 全量 `export` 入 git、`snapshots/functions` 全文 | 除非做法一应急包 |
+
+---
+
+## 9. 方案一 vs 方案二 vs 推荐混合（一句话）
+
+- **只锁版本（方案一）**：像备份一台 **特定日期的整机** — 快，但很快过期。  
+- **只写文档（方案二）**：像 **建筑图纸** — 耐久，但需 **验收** 防止图纸与现场不符。  
+- **推荐混合（方案三）**：**图纸 + 自动巡检 + 用户数据备份**；代码与密钥随时可再填。
+
+对本项目（Pipe 高频更新、大量 Filter 补丁），**方案三 > 方案二 > 方案一**。
+
+---
+
+## 10. 待你确认
+
+- [ ] 采纳 **方案三** 为正式策略，弱化 v1 全量快照思路  
+- [ ] 下一迭代先做 **P0**：`verify_stack.py` + `AGENTS.md`  
+- [ ] 应急 DB 周备：是否由你运维侧做（不进 Agent 主路径）  
+- [ ] `scripts/` 定位改为「可选加速器」，规格以 §2 为准  
+
+**确认前**：不扩大快照范围、不锁 Pipe 版本。
+
+---
+
+## 11. 文档地图（v2）
+
+| 读者 | 读什么 |
+|------|--------|
+| Agent 重建 | 本文件 §2–§7 → `AGENTS.md`（待写）→ `verify_stack.py` |
+| 图像细节 | `open-webui-openrouter-image-continuity-plan.md` |
+| 界面文案意图 | `open-webui-user-guidance-plan.md` |
+| 运维应急恢复 | §6 备份表 + DB restore（非 Agent 主路径） |
