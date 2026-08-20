@@ -66,7 +66,7 @@
 | 项 | Stock | 本实例 |
 |----|-------|--------|
 | `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
-| `DEFAULT_MODELS` | 自选 | **`open_webui_openrouter_integration.openai.gpt-5.6-sol-pro`**（GPT-5.6 Sol Pro Pipe） |
+| `DEFAULT_MODELS` | 自选 | **`open_webui_openrouter_integration.x-ai.grok-4.6`**（日常默认；Sol Pro 仍在置顶四格） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
 **说明**：新对话默认落在 Pipe Sol Pro（2026-08-20 修复）。`scripts/apply_ui_guidance_banners.py` 会一并写入 `DEFAULT_MODELS`。

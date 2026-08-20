@@ -11,7 +11,7 @@
 | Pipe content SHA256（前 12） | `081c3773444c` |
 | Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms` **均存在** |
 | 上次 `verify_stack.py` | **2026-08-20 全绿**（20 ok / 0 err）；Task 模型后改为 **Grok 4.6** |
-| Wave 0 已应用到实例 | capabilities；Task = **Grok 4.6**；默认聊天 = Sol Pro |
+| Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关** |
 
 ## Pipe 更新后
 

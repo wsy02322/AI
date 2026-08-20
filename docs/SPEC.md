@@ -21,8 +21,8 @@
 | UX-2 | 英文指引：两条 Banner + 关键 Description + 空对话 chips（「Select … first」） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **19 个 public** 维持（对比用）；不缩到 6 |
-| UX-5 | 新对话默认 = `open_webui_openrouter_integration.openai.gpt-5.6-sol-pro` |
-| UX-6 | **路线 S**：作图 = 选图像模型。**不同会话作图当主路径**（不把 Sol/Opus 的 `image_generation` 打开来追 ChatGPT） |
+| UX-5 | 新对话默认 = `open_webui_openrouter_integration.x-ai.grok-4.6`（日常聊天；难题用置顶 Sol Pro / Opus + Reasoning depth） |
+| UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false |
 
 ## 稳定性（Now）
 
@@ -35,7 +35,8 @@
 | ST-5 | `AUTO_INSTALL_*` / `AUTO_ATTACH_*` web_tools & image_gen = false |
 | ST-6 | `UPDATE_MODEL_CAPABILITIES` = false |
 | ST-7 | Sonar / 纯图像：`code_interpreter` 为 false；纯图像额外 `builtin_tools` / `terminal` 为 false。**不**关 Sol Pro 的 code interpreter |
-| ST-8 | 后台 Task 模型（标题/补全/标签）使用 **Pipe Grok 4.6**（低成本）；**默认聊天**仍为 Sol Pro。不用幽灵直连 id，也不用 Sol Pro 跑后台 |
+| ST-8 | 后台 Task 模型 = **Grok 4.6**（与默认聊天同档，低成本） |
+| ST-9 | **全局** `enable_image_generation` / `ENABLE_IMAGE_GENERATION` = false（路线 S；作图只走 Pipe 图像模型） |
 
 ## 明确 Later / Don't
 

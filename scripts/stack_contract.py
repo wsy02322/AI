@@ -4,9 +4,9 @@ from __future__ import annotations
 
 PIPE = "open_webui_openrouter_integration"
 
-DEFAULT_MODEL = f"{PIPE}.openai.gpt-5.6-sol-pro"
-# Background tasks (title, autocomplete, tags): cheap Pipe model — not the default chat model.
-TASK_MODEL = f"{PIPE}.x-ai.grok-4.6"
+DEFAULT_MODEL = f"{PIPE}.x-ai.grok-4.6"
+# Background tasks (title, autocomplete, tags): same cheap Pipe model as default chat.
+TASK_MODEL = DEFAULT_MODEL
 
 PINNED_MODELS = [
     f"{PIPE}.perplexity.sonar-pro-search",

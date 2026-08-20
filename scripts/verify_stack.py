@@ -94,15 +94,26 @@ def verify(h: dict[str, str]) -> int:
     if cfg.get("default_models") != DEFAULT_MODEL:
         r.err(f"default_models={cfg.get('default_models')} want {DEFAULT_MODEL}")
     else:
-        r.ok("default_models Sol Pro")
+        r.ok(f"default_models {DEFAULT_MODEL}")
     if (cfg.get("features") or {}).get("enable_web_search"):
         r.err("native web search enabled")
     else:
         r.ok("native web search off")
+    if (cfg.get("features") or {}).get("enable_image_generation"):
+        r.err("global image generation enabled")
+    else:
+        r.ok("global image generation off")
     if (cfg.get("features") or {}).get("enable_direct_connections"):
         r.err("direct connections enabled")
     else:
         r.ok("direct connections off")
+
+    img_cfg = requests.get(f"{OPENWEBUI_URL}/api/v1/images/config", headers=h, timeout=30)
+    if img_cfg.status_code == 200:
+        if img_cfg.json().get("ENABLE_IMAGE_GENERATION"):
+            r.err("ENABLE_IMAGE_GENERATION still true")
+        else:
+            r.ok("ENABLE_IMAGE_GENERATION false")
 
     models_cfg = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/models", headers=h, timeout=30).json()
     pinned = models_cfg.get("DEFAULT_PINNED_MODELS") or ""
@@ -222,7 +233,8 @@ def verify(h: dict[str, str]) -> int:
 
     if SMOKE:
         for mid, label in (
-            (DEFAULT_MODEL, "sol-pro"),
+            (DEFAULT_MODEL, "default-grok"),
+            (f"{PIPE}.openai.gpt-5.6-sol-pro", "sol-pro"),
             (f"{PIPE}.perplexity.sonar-pro-search", "sonar-search"),
         ):
             resp = requests.post(

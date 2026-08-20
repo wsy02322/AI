@@ -128,6 +128,44 @@ def apply_capabilities(h: dict[str, str]) -> None:
         print(f"keep chat {model.get('name')} code_interpreter={caps.get('code_interpreter')}")
 
 
+def apply_default_chat_model(h: dict[str, str]) -> None:
+    models_cfg = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/models", headers=h, timeout=30)
+    if models_cfg.status_code != 200:
+        raise RuntimeError(f"get models config: {models_cfg.status_code}")
+    cfg = models_cfg.json()
+    payload = {
+        "DEFAULT_MODELS": DEFAULT_MODEL,
+        "DEFAULT_PINNED_MODELS": cfg.get("DEFAULT_PINNED_MODELS"),
+        "MODEL_ORDER_LIST": cfg.get("MODEL_ORDER_LIST"),
+    }
+    resp = requests.post(f"{OPENWEBUI_URL}/api/v1/configs/models", headers=h, json=payload, timeout=30)
+    if resp.status_code != 200:
+        raise RuntimeError(f"models config: {resp.status_code} {resp.text[:400]}")
+    saved = resp.json()
+    print(f"DEFAULT_MODELS={saved.get('DEFAULT_MODELS')}")
+
+
+def disable_global_image_gen(h: dict[str, str]) -> None:
+    img = requests.get(f"{OPENWEBUI_URL}/api/v1/images/config", headers=h, timeout=30)
+    if img.status_code != 200:
+        raise RuntimeError(f"get images config: {img.status_code}")
+    payload = dict(img.json())
+    payload["ENABLE_IMAGE_GENERATION"] = False
+    resp = requests.post(
+        f"{OPENWEBUI_URL}/api/v1/images/config/update",
+        headers=h,
+        json=payload,
+        timeout=30,
+    )
+    if resp.status_code != 200:
+        raise RuntimeError(f"images config: {resp.status_code} {resp.text[:400]}")
+    saved = resp.json()
+    print(f"ENABLE_IMAGE_GENERATION={saved.get('ENABLE_IMAGE_GENERATION')}")
+    cfg = requests.get(f"{OPENWEBUI_URL}/api/config", headers=h, timeout=30).json()
+    feat = (cfg.get("features") or {}).get("enable_image_generation")
+    print(f"features.enable_image_generation={feat}")
+
+
 def apply_task_models(h: dict[str, str]) -> None:
     cfg = requests.get(f"{OPENWEBUI_URL}/api/v1/tasks/config", headers=h, timeout=30)
     if cfg.status_code != 200:
@@ -152,6 +190,8 @@ def apply_task_models(h: dict[str, str]) -> None:
 def main() -> int:
     h = headers(signin())
     apply_capabilities(h)
+    apply_default_chat_model(h)
+    disable_global_image_gen(h)
     apply_task_models(h)
     print("wave0 apply ok")
     return 0

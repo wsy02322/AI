@@ -9,9 +9,11 @@ import time
 
 import requests
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from stack_contract import DEFAULT_MODEL as DEFAULT_MODELS
+
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 PIPE = "open_webui_openrouter_integration"
-DEFAULT_MODELS = f"{PIPE}.openai.gpt-5.6-sol-pro"
 
 BANNERS = [
     {
