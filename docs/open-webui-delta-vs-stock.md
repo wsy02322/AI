@@ -274,7 +274,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 ### 7.2 Prompt suggestions（空对话 chips）
 
-**设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip，均含 “Select … first”。
+**设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip；第 1 条为 WeChat 反馈（`@dalapi`），其余 3 条含 “Select … first”。
 
 **存储**：`POST /api/v1/configs/suggestions`；导出键 **`ui.prompt_suggestions`**（flat，非 `export.ui` 嵌套）。`GET /api/config` 的嵌套 `ui.prompt_suggestions` 可能为空，以 export 为准。
 

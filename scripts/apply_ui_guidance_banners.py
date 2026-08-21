@@ -85,10 +85,10 @@ DESCRIPTIONS = {
 
 SUGGESTIONS = [
     {
-        "title": ["Quick search", "Select Sonar Pro Search first"],
+        "title": ["Message me on WeChat @dalapi", "Let's improve this together"],
         "content": (
-            "After you select Perplexity: Sonar Pro Search, summarize today’s most important AI news "
-            "in a few sentences and include sources."
+            "Message me on WeChat @dalapi — let's improve this together. "
+            "Tell me one thing that confused you or one feature you'd like to see."
         ),
     },
     {
