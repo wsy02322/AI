@@ -10,7 +10,7 @@ Open WebUI + OpenRouter 文档见 `docs/`：
 - `docs/open-webui-notebook-youtube-plan.md` — **P0-D Notebook / YouTube**（N1 已执行；口播抓取受 YouTube 风控）
 - `docs/open-webui-live-voice-screen-plan.md` — **P0-B 语音 + P0-C 屏享**（L1 稳定过渡；顶级档位须确认）
 - `docs/open-webui-delta-vs-stock.md` — **相对纯官方 OWUI 的全部改动记录**（单一真相源）
-- `docs/open-webui-secret-key-persist-plan.md` — **JWT 密钥持久化 + Pipe API Key 正规加密**（规划中，确认前不执行）
+- `docs/open-webui-secret-key-persist-plan.md` — **运维 L0**（接受重登；不持久化 JWT / 不加密 Pipe key）
 - `docs/open-webui-disaster-recovery-rebuild-plan.md` — **灾备 v2：规格驱动重建**（非全量快照）
 - `docs/open-webui-openrouter-image-continuity-plan.md` — 图像能力、错误与补丁历史
 - `docs/open-webui-user-guidance-plan.md` — 界面英文指引意图

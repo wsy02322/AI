@@ -249,7 +249,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 | `open-webui-live-voice-screen-plan.md` | **P0-B 语音 + P0-C 屏享** |
 | `open-webui-delta-vs-stock.md` | 相对官方已落地差异 |
 | `open-webui-disaster-recovery-rebuild-plan.md` | 重建/验收思路 |
-| `open-webui-secret-key-persist-plan.md` | JWT 密钥持久化 + Pipe API Key 加密（**确认前不执行**） |
+| `open-webui-secret-key-persist-plan.md` | **运维 L0**（接受重登；JWT / Pipe 加密 K1+K2 冻结） |
 | `open-webui-openrouter-image-continuity-plan.md` | 图像错误史；连续性仍属 Wave 3 |
 | `open-webui-user-guidance-plan.md` | 英文指引意图 |
 

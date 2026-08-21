@@ -72,15 +72,17 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-NL-6 | YouTube ingest ≠ Wave 1 视频生成 |
 | ST-NL-7 | N2+（独立入口 / Studio）**未确认前** 不上生产。N1 允许改 `rag.*` 为 OpenRouter embedding |
 
-## 运维密钥规划 ID（文档已写；**确认前不改实例 / 不改 VPS 容器**）
+## 运维密钥（L0 轻量档，**已确认**）
 
-条文全文见 `docs/open-webui-secret-key-persist-plan.md`。
+条文全文见 `docs/open-webui-secret-key-persist-plan.md`。**不执行** JWT 持久化 / Pipe Fernet 加密（K1/K2 冻结）。
 
 | ID | 必须 |
 |----|------|
-| ST-OPS-1 | 跨容器重建的 JWT 密钥必须持久化；**禁止**为「补上 env」而新生成 `WEBUI_SECRET_KEY` |
-| ST-OPS-2 | Pipe `API_KEY` 加密前必须已完成 ST-OPS-1；只加密不持久化会在下次重建时再次 catalog 空 |
-| ST-OPS-3 | `openai.api_configs` 保持全 `enable: false`；密钥操作不得改这条 |
+| ST-OPS-1 | 容器重建可轮换 JWT（`WEBUI_SECRET_KEY=""`，`.webui_secret_key` 不持久化）；**接受**用户重新登录 |
+| ST-OPS-2 | Pipe `API_KEY` 默认 **明文** merge 维护；catalog 空时用 `openai.api_keys[0]` 或 TTS 侧明文恢复。**不**主动加密 Pipe key |
+| ST-OPS-3 | `openai.api_configs` 保持全 `enable: false`；任何密钥操作不得改这条 |
+| ST-OPS-4 | VPS **禁止**向 env 写入**新的**随机 `WEBUI_SECRET_KEY`（15:09 根因）；若 Pipe key 已是 `encrypted:` 且 decrypt 失败 → env 改回空 + merge 明文 |
+| ST-OPS-5 | 不可逆资产 = **DB / volume**（聊天、Knowledge）；JWT 不必备份 |
 
 ## 明确 Later / Don't
 

@@ -116,7 +116,7 @@
 | `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
 | valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |
 | picker / `/api/models` 空、聊天 `Model not found` | Pipe `API_KEY` 解密失败（env 非空 `WEBUI_SECRET_KEY` 与 DB `encrypted:` 不一致；或 `.webui_secret_key` 容器重建丢失）或误调 **空** `POST /api/v1/models/sync` | **禁止空 sync**。**禁止**随意在 `/root/open-webui.env` 写非空 `WEBUI_SECRET_KEY`。修复：env 改回 `""` → merge 明文 OpenRouter 密钥到 Pipe valves（或 Admin UI 重填）→ `GET /api/models?refresh=true` → `restore_public_grants.py` → wave0 / plan A / banners |
-| 容器重建后全员掉线 | `/app/backend/.webui_secret_key` **不在 data volume**，重建会生成新 session 密钥 | 预期行为；用户重新登录。持久化方案见 `open-webui-secret-key-persist-plan.md`（**确认前不执行**） |
+| 容器重建后全员掉线 | `/app/backend/.webui_secret_key` 不在 volume；**L0 策略**故意不持久化 JWT | **可接受** — 用户重登录。Agent 跑 verify + 必要时 merge Pipe key（见 `open-webui-secret-key-persist-plan.md` §2） |
 
 **Agent 重建时**：先读错误表 → 实现 **等价约束** → 跑验收，而非找旧 `content` 粘贴。
 
@@ -135,8 +135,8 @@
 | Public 模型：`access_grants` principal `*` | Pipe 默认图像模型仅 admin |
 | OpenRouter Pipe 模型 id 前缀 `open_webui_openrouter_integration.` | |
 | **`openai.api_configs` 全 `enable=false`** | 用户刻意：模型只走 Pipe，**勿**改为 true |
-| **`WEBUI_SECRET_KEY` env 为空** | 非空会与 DB `encrypted:` Pipe key 冲突；当前实例 env `""`，密钥在 `.webui_secret_key` |
-| Pipe `API_KEY` 可为明文 | 2026-08-21 应急修 DB；Admin 重保存且 env 非空时会再 `encrypted:` |
+| **`WEBUI_SECRET_KEY` env 为空** | **L0 已确认**：不持久化 JWT；重建后重登可接受 | 写入新随机 env 密钥且 Pipe 为 `encrypted:` → catalog 空 |
+| Pipe `API_KEY` 明文 | **L0 默认**；便于 agent 秒级恢复 | Admin 误保存成 `encrypted:` → merge 回明文 |
 
 这些应进 **`AGENTS.md` + 错误目录**，不必进 Function 源码快照。
 
@@ -153,7 +153,7 @@
 | Banners **non-dismissible**（当前） | 彰显 game changer | 用户关掉后仍误用 |
 | `scripts/` 是加速器，**非** 唯一真相源 | Pipe 版本变仍可重写 | |
 | **`openai.api_configs` 保持 disabled** | 模型目录只经 Pipe；避免双路由与误 sync | 启用 slot → 与 Pipe 冲突、用户架构意图破坏 |
-| **env `WEBUI_SECRET_KEY` 保持空**（当前） | 避免与 DB 加密 Pipe key 不一致 | 非空 env 且未重填 Pipe → catalog 空 |
+| **L0：不持久化 JWT、Pipe key 明文** | 简单稳定；重建后重登 + agent 脚本可还原功能 | 主动 K1/K2 → 密钥耦合、维护脚本易踩坑（15:09） |
 
 ---
 
@@ -184,7 +184,7 @@
 1. 安装 OWUI + 安装 **当前** OpenRouter Pipe（记录版本号入 `docs/VERSIONS.md`）  
 2. **Merge** Pipe valves：API_KEY（可明文或 Admin 重填）+ §2.2 约束相关 false  
 3. 关闭 Direct Connections；**保持** `openai.api_configs` 全 `enable=false`  
-4. `/root/open-webui.env`：`WEBUI_SECRET_KEY=""`（除非刻意统一加密并已在 Admin 重保存 Pipe key）  
+4. `/root/open-webui.env`：`WEBUI_SECRET_KEY=""`（**L0**；不持久化 JWT；见 `open-webui-secret-key-persist-plan.md`）  
 
 ### Step 3 — 实现稳定性（按模式，非按旧代码）
 

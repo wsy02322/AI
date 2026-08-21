@@ -1,6 +1,6 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。密钥持久化 / Pipe 加密读 **`docs/open-webui-secret-key-persist-plan.md`**（**未确认不执行**）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
 
 ## 宪法（所有动作）
 
@@ -10,7 +10,7 @@
 
 **P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **19 个 public**。
 
-未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。**未确认** `open-webui-secret-key-persist-plan.md` 时：不写非空 `WEBUI_SECRET_KEY`、不重建容器换密钥、不把 Pipe `API_KEY` 再加密。
+未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
 
 ## 改实例前
 
@@ -18,13 +18,13 @@
 2. 更新 Pipe valves：**merge**，禁止全量覆盖（会丢 `API_KEY`）  
 3. 更新模型：`POST /api/v1/models/model/update` 必须带 `access_grants`  
 4. **禁止** `POST /api/v1/models/sync` 空列表：OWUI 0.11 会按 payload **删掉**不在列表里的全部模型行  
-5. **Pipe `API_KEY` 与 `WEBUI_SECRET_KEY`（2026-08-21 VPS 维护后）**  
-   - **当前实例**：`/root/open-webui.env` 中 `WEBUI_SECRET_KEY=""`（空）；运行时密钥由 `start.sh` 从容器内 `/app/backend/.webui_secret_key` 加载（**不在 data volume**，容器重建会换密钥 → **全员需重新登录**）。  
-   - Pipe `API_KEY` 在 DB 中为 **明文** `sk-or-v1-…`（15:47 UTC 应急修 DB；备份 `/root/backups/webui-valves-fix-20260821-154729.db`）。  
-   - **禁止**在 env 随意写入非空 `WEBUI_SECRET_KEY`：与 DB 里 `encrypted:…` 不一致会导致 `Failed to decrypt` → catalog 空。若必须设 env 密钥，须在 Admin → Functions → OpenRouter Integration **重填并保存** API Key。  
-   - **禁止**改 `openai.api_configs` 的 `enable` 为 true（5 条 OpenRouter 槽 **刻意 false**；模型只走 Pipe）。  
-   - 若 catalog 空且日志有 `decrypt` / `invalid token or key mismatch`：用仍明文的 OpenRouter 密钥（`config.openai.api_keys[0]` 或 TTS/STT 侧）**merge** 回 Pipe valves（可明文或 Admin UI 重保存），再 `GET /api/models?refresh=true`，最后 `scripts/restore_public_grants.py`。  
-   - **禁止** `POST /api/v1/models/sync` 空列表（会删光 DB 模型行）。  
+5. **运维 L0（ST-OPS，已确认）** — 详见 `docs/open-webui-secret-key-persist-plan.md` §2  
+   - env：`WEBUI_SECRET_KEY=""`。**不**持久化 JWT；容器重建 → **用户重登录（可接受）**。  
+   - Pipe `API_KEY`：**明文** merge 维护；**不**主动加密。  
+   - **禁止** VPS 写入**新的**随机非空 `WEBUI_SECRET_KEY`（与 `encrypted:` Pipe key 冲突 → catalog 空）。  
+   - **禁止**改 `openai.api_configs` 为 `enable: true`。  
+   - catalog 空：merge 明文 OpenRouter key（`api_keys[0]` / TTS）→ `GET /api/models?refresh=true` → `restore_public_grants.py` → plan A / wave0 / banners → verify。  
+   - **禁止**空 `POST /api/v1/models/sync`。  
 
 登录优先 `OPENWEBUI_USERNAME`，不一定等于 email。
 
@@ -64,15 +64,16 @@
 |----|----------------|
 | 容器 | `open-webui`，`127.0.0.1:8080`，镜像 `e97bf9531916` |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
-| env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""` |
+| env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
 | `openai.api_configs` | 5 条，**全部 `enable: false`** |
-| 持久化建议（未做） | 将 `.webui_secret_key` 挂到 data volume，避免重建换 session 密钥 |
+| 重建后 | 通知用户重登 + agent 跑 verify / 必要时 merge Pipe key（§2 SOP） |
 
-升配 / 重建容器前：先 `verify_stack.py` 全绿；大改前备份 `webui.db`（见灾备 §6）。
+升配 / 重建容器前：备份 `webui.db`（护聊天/Knowledge，不护 JWT）；重建后跑 `verify_stack.py`。
 
 ## 不要做
 
-- 在 `/root/open-webui.env` 写入非空 `WEBUI_SECRET_KEY`（除非同步在 Admin 重保存 Pipe API Key）  
+- 在 `/root/open-webui.env` 写入**新的**随机非空 `WEBUI_SECRET_KEY`  
+- 主动把 Pipe `API_KEY` 加密成 `encrypted:`（K1/K2 已冻结；Admin 误保存则 merge 回明文）  
 - 启用 `openai.api_configs`（OpenRouter 直连槽）  
 - 给 Sonar / 纯图像灌 tools  
 - 打开 Sol Pro `image_generation` 来做同会话作图  
