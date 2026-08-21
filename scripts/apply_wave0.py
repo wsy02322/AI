@@ -87,8 +87,9 @@ def strip_tool_caps(caps: dict, *, image: bool) -> dict:
     out = dict(caps or {})
     out["code_interpreter"] = False
     out["web_search"] = False
+    # OWUI 0.11 defaults missing builtin_tools -> True and injects get_current_timestamp.
+    out["builtin_tools"] = False
     if image:
-        out["builtin_tools"] = False
         out["terminal"] = False
     return out
 
@@ -104,7 +105,10 @@ def apply_capabilities(h: dict[str, str]) -> None:
             continue
         meta["capabilities"] = after
         update_model(h, model, meta)
-        print(f"caps sonar {model.get('name')}: code_interpreter {before.get('code_interpreter')} -> False")
+        print(
+            f"caps sonar {model.get('name')}: "
+            f"code={before.get('code_interpreter')} builtin={before.get('builtin_tools')} -> False"
+        )
 
     for model_id in IMAGE_MODEL_IDS:
         model = get_model(h, model_id)

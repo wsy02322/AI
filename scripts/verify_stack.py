@@ -217,9 +217,9 @@ def verify(h: dict[str, str]) -> int:
                 r.err(f"{mid} code_interpreter still true")
             if caps.get("web_search"):
                 r.err(f"{mid} web_search still true")
+            if caps.get("builtin_tools") is not False:
+                r.err(f"{mid} builtin_tools={caps.get('builtin_tools')} want false")
         if mid in IMAGE_MODEL_IDS:
-            if caps.get("builtin_tools"):
-                r.err(f"{mid} builtin_tools still true")
             if caps.get("terminal"):
                 r.err(f"{mid} terminal still true")
         if mid in CHAT_KEEP_CODE_INTERPRETER:
@@ -240,14 +240,17 @@ def verify(h: dict[str, str]) -> int:
             (f"{PIPE}.openai.gpt-5.6-sol-pro", "sol-pro"),
             (f"{PIPE}.perplexity.sonar-pro-search", "sonar-search"),
         ):
+            payload = {
+                "model": mid,
+                "messages": [{"role": "user", "content": "Reply with the single word OK."}],
+                "stream": False,
+            }
+            if label == "sonar-search":
+                payload["params"] = {"function_calling": "native"}
             resp = requests.post(
                 f"{OPENWEBUI_URL}/api/chat/completions",
                 headers=h,
-                json={
-                    "model": mid,
-                    "messages": [{"role": "user", "content": "Reply with the single word OK."}],
-                    "stream": False,
-                },
+                json=payload,
                 timeout=180,
             )
             text = (resp.text or "")[:400]

@@ -105,13 +105,22 @@ def refresh_catalog(h: dict[str, str]) -> int:
 
 def ensure_public_grants(h: dict[str, str]) -> int:
     listed = requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=120).json().get("data") or []
-    by_id = {m["id"]: m for m in listed}
+    listed_ids = {m["id"] for m in listed}
     fixed = 0
     for model_id in PUBLIC_MODEL_IDS:
-        model = by_id.get(model_id)
-        if not model:
+        if model_id not in listed_ids:
             print(f"WARN missing in catalog {model_id}")
             continue
+        detail = requests.get(
+            f"{OPENWEBUI_URL}/api/v1/models/model",
+            headers=h,
+            params={"id": model_id},
+            timeout=30,
+        )
+        if detail.status_code != 200:
+            print(f"WARN get {model_id}: {detail.status_code}")
+            continue
+        model = detail.json()
         grants = model.get("access_grants") or []
         if any(g.get("principal_id") == "*" for g in grants):
             continue
