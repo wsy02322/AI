@@ -1,6 +1,6 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。密钥持久化 / Pipe 加密读 **`docs/open-webui-secret-key-persist-plan.md`**（**未确认不执行**）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
 
 ## 宪法（所有动作）
 
@@ -10,7 +10,7 @@
 
 **P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **19 个 public**。
 
-未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。
+未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。**未确认** `open-webui-secret-key-persist-plan.md` 时：不写非空 `WEBUI_SECRET_KEY`、不重建容器换密钥、不把 Pipe `API_KEY` 再加密。
 
 ## 改实例前
 

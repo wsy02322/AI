@@ -116,7 +116,7 @@
 | `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
 | valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |
 | picker / `/api/models` 空、聊天 `Model not found` | Pipe `API_KEY` 解密失败（env 非空 `WEBUI_SECRET_KEY` 与 DB `encrypted:` 不一致；或 `.webui_secret_key` 容器重建丢失）或误调 **空** `POST /api/v1/models/sync` | **禁止空 sync**。**禁止**随意在 `/root/open-webui.env` 写非空 `WEBUI_SECRET_KEY`。修复：env 改回 `""` → merge 明文 OpenRouter 密钥到 Pipe valves（或 Admin UI 重填）→ `GET /api/models?refresh=true` → `restore_public_grants.py` → wave0 / plan A / banners |
-| 容器重建后全员掉线 | `/app/backend/.webui_secret_key` **不在 data volume**，重建会生成新 session 密钥 | 预期行为；用户重新登录。可选：持久化 `.webui_secret_key` 到 data volume |
+| 容器重建后全员掉线 | `/app/backend/.webui_secret_key` **不在 data volume**，重建会生成新 session 密钥 | 预期行为；用户重新登录。持久化方案见 `open-webui-secret-key-persist-plan.md`（**确认前不执行**） |
 
 **Agent 重建时**：先读错误表 → 实现 **等价约束** → 跑验收，而非找旧 `content` 粘贴。
 

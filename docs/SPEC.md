@@ -72,6 +72,16 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-NL-6 | YouTube ingest ≠ Wave 1 视频生成 |
 | ST-NL-7 | N2+（独立入口 / Studio）**未确认前** 不上生产。N1 允许改 `rag.*` 为 OpenRouter embedding |
 
+## 运维密钥规划 ID（文档已写；**确认前不改实例 / 不改 VPS 容器**）
+
+条文全文见 `docs/open-webui-secret-key-persist-plan.md`。
+
+| ID | 必须 |
+|----|------|
+| ST-OPS-1 | 跨容器重建的 JWT 密钥必须持久化；**禁止**为「补上 env」而新生成 `WEBUI_SECRET_KEY` |
+| ST-OPS-2 | Pipe `API_KEY` 加密前必须已完成 ST-OPS-1；只加密不持久化会在下次重建时再次 catalog 空 |
+| ST-OPS-3 | `openai.api_configs` 保持全 `enable: false`；密钥操作不得改这条 |
+
 ## 明确 Later / Don't
 
 - **已落地**：聊天四格 + 路线 S；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
