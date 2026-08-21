@@ -336,7 +336,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | 现象 | 我们的改动 |
 |------|------------|
-| `No endpoints found that support tool use` + `get_current_timestamp` | Guard 剥 tools；Valves 关 DATETIME/Web Search；方案 A 停用 web_tools/image_gen |
+| `No endpoints found that support tool use` + `get_current_timestamp` | Guard 剥 tools；Valves 关 DATETIME；方案 A 停用 web_tools/image_gen；**Sonar 也关 `builtin_tools`**（OWUI 缺省 true 会注入时间戳 tool） |
 | `gpt-image-*` chat endpoint 错误 | Pipe Images API 路由 |
 | `seedream-5` OpenRouter 500 | 同上 + resolution 映射 |
 | 多轮图像 131072 token | `openrouter_image_context_guard` + chat `middle-out` / context-compression |
