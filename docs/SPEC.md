@@ -42,7 +42,7 @@
 | ST-10 | 对比多轮：跨模型 `encrypted reasoning` 不得让一栏永久 404。Pipe 在 400/404 且错误含 `produced under a different model` / `encrypted reasoning` / `compaction content` 时，剥回放密文并 **内部重试**。`PERSIST_REASONING_TOKENS` 保持 `conversation`（单模型零损失）。**不**把全局 `disabled` 当终态。 |
 | ST-Live-1 | Live / 屏享 / 摄像走 **OWUI Call overlay**；禁止第二套未文档化前端 |
 | ST-Live-2 | 屏享会话必须用 **vision-capable** 模型（Grok 4.6 或 Gemini vision）；禁止对 Sonar / 纯图像开 Live tool 幻觉 |
-| ST-Live-3 | STT/TTS 继续 OpenRouter 时：**merge** 配置，不覆盖密钥。当前 TTS = `openai/tts-1-hd`，`SPLIT_ON=sentence` |
+| ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。意图：TTS `openai/tts-1-hd` + `SPLIT_ON=sentence`。**现状**：OpenRouter **没有** `/audio/speech` 的 `tts-1`/`tts-1-hd`，也没有 `whisper-*`；Call overlay 的朗读/转写会 400。屏享主路径是 **vision 聊天**，不依赖该端点。真正 S2S 朗读走 L2 / 直连密钥（须确认） |
 | ST-Live-4 | Realtime / 厂商 Live API（L2+）**未确认前** 不上生产 |
 
 ## 明确 Later / Don't
