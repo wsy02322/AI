@@ -258,7 +258,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | B2 rbb L2 | **未确认**。只提升 P0-B；新钥匙 + fork；该 overlay 无持续屏享 |
 | L3a 统一 Live | **未确认**。同时冲 P0-B/P0-C，但第二密钥/中继/表面更复杂 |
 | gpt-audio 改 Call | **不做捷径** |
-| gpt-audio 体验对照 | **GA-A 已执行** — Pipe Responses API 不支持 `modalities.audio` → 无 output_audio；维持 L1，见 `open-webui-gpt-audio-trial-plan.md` §5 |
+| gpt-audio 体验对照 | **GA-A 已执行** — Pipe **`/responses`** 拒 `modalities.audio` → 聊天 API 无 `output_audio`（听感/延迟/usage 未测）；维持 L1，见 `open-webui-gpt-audio-trial-plan.md` §5 |
 | P0-D Notebook | 与 Live 两项同级；独立 plan/确认，不要求 Live 让出优先级 |
 
 **现在不做：** 未选档就改实例、L3 三家并行、stock+realtime 双容器、为 Overview 改 Live TTS。

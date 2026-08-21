@@ -90,14 +90,12 @@ def _collect_stream_audio(resp: requests.Response) -> tuple[bytes, str, dict[str
     audio_b64_parts: list[str] = []
     text_parts: list[str] = []
     usage: dict[str, Any] | None = None
-    raw_lines: list[str] = []
     for line in resp.iter_lines(decode_unicode=True):
         if not line or not line.startswith("data: "):
             continue
         payload = line[6:].strip()
         if payload == "[DONE]":
             break
-        raw_lines.append(payload[:500])
         try:
             chunk = json.loads(payload)
         except json.JSONDecodeError:
@@ -146,12 +144,11 @@ def test_gpt_audio(h: dict[str, str], model_id: str, label: str) -> dict[str, An
         timeout=180,
         stream=True,
     )
-    wall = round(time.perf_counter() - t0, 2)
     result: dict[str, Any] = {
         "label": label,
         "model": model_id,
         "http": resp.status_code,
-        "wall_s": wall,
+        "wall_s": None,
         "has_playable_audio": False,
         "bytes": 0,
         "content_type": resp.headers.get("content-type", ""),
@@ -160,6 +157,7 @@ def test_gpt_audio(h: dict[str, str], model_id: str, label: str) -> dict[str, An
         "note": "",
     }
     if resp.status_code != 200:
+        result["wall_s"] = round(time.perf_counter() - t0, 2)
         body = resp.text[:800] if not resp.raw.closed else ""
         try:
             body = resp.content[:800].decode("utf-8", errors="replace")
@@ -169,15 +167,20 @@ def test_gpt_audio(h: dict[str, str], model_id: str, label: str) -> dict[str, An
         return result
 
     audio_bytes, text, usage = _collect_stream_audio(resp)
+    wall = round(time.perf_counter() - t0, 2)
+    result["wall_s"] = wall
     result["bytes"] = len(audio_bytes)
-    result["text"] = text[:240]
+    result["text"] = text[:1200]
     result["usage"] = usage
     if len(audio_bytes) > 200:
         result["has_playable_audio"] = True
         safe = label.replace(" ", "_").lower()
         _save_bytes(f"{ARTIFACT_DIR}/ga_a_{safe}.wav", audio_bytes)
     elif text:
-        result["note"] = "text-only response (no audio bytes in stream)"
+        if "Invalid Responses API request" in text or "invalid_value" in text.lower():
+            result["note"] = "Responses API rejects audio modality (HTTP 200 + SSE error markdown)"
+        else:
+            result["note"] = "SSE text without audio bytes"
     else:
         result["note"] = "empty stream (no text, no audio)"
     return result

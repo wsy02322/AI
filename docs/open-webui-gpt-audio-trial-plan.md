@@ -77,15 +77,29 @@
 **测试句**：`OK，这是音频测试。`  
 **gpt-audio 请求**：`modalities=["text","audio"]`，`audio={voice:alloy,format:wav}`，`stream=true`（OpenRouter 文档要求）。
 
+**§1 四问覆盖**
+
+| 问题 | 状态 |
+|------|------|
+| 1 听感 vs MiniMax | **未答**（gpt-audio 无音频样本，无法 A/B） |
+| 2 一轮语音延迟 vs L1 | **未答**（步骤 4 可选；文本出音频已失败，未做 Call 对照） |
+| 3 Pipe 能否返回可播音频 | **已答：不能**（见下表） |
+| 4 usage / 费用 | **未答**（三列 `usage` 均为 null） |
+
+**墙钟说明**：MiniMax 列为 **整段下载**（`/audio/speech` 完整 MP3）。gpt-audio 列为 **N/A（不可与 MiniMax 比整段生成）**；脚本 `wall_s` 为 **SSE 读完**（仅错误 Markdown，无音频），复跑约 **~1.1s / ~0.6s**，只说明错误卡片到达/读完速度，**不是**语音生成耗时。
+
 | 项 | MiniMax L1 | gpt-audio-mini | gpt-audio |
 |----|------------|----------------|-----------|
 | 有可播音频 | **是**（MP3 31149 B） | **否** | **否** |
 | HTTP | 200 | 200（流内错误文案） | 200（流内错误文案） |
-| 墙钟（s） | **1.62** | 0.49 | 0.46 |
+| 墙钟（s） | **1.62**（整段） | **N/A**（TTFB/SSE ~0.49） | **N/A**（TTFB/SSE ~0.46） |
 | 听感 | **基线** | 无样本 | 无样本 |
-| 备注 | `/api/v1/audio/speech` → `minimax/speech-2.8-turbo` | OpenRouter **`Invalid Responses API request`**：`modalities[1]` 只允许 `text\|image`，不接受 `audio`（Pipe 走 Responses API，非 chat 音频出参） | 同 mini |
+| usage | — | null | null |
+| 备注 | `/api/v1/audio/speech` → `minimax/speech-2.8-turbo` | Pipe **`/responses`** 路径：`modalities[1]` 只允许 `text\|image`，**拒 `audio`** → OpenRouter `Invalid Responses API request` | 同 mini |
 
-**失败模式（写死）**：非 4xx/5xx，而是 **HTTP 200 + SSE 错误 Markdown**；**零** `delta.audio` / 文件 blob。OpenRouter raw：`invalid_value` on `modalities` → expected `text|image`。
+**失败模式（写死）**：非 4xx/5xx，而是 **HTTP 200 + SSE 错误 Markdown**（非成功纯文本）；**零** `delta.audio` / 文件 blob。OpenRouter raw：`invalid_value` on `modalities` → expected `text|image`。
+
+**根因范围（写死）**：证据支持 **Pipe `/responses` 不接受 `modalities.audio`** → 经 OWUI 聊天 API **无 `output_audio`**。**未**证明 OpenRouter 直连 chat/completions 不可出音频；**未**做去 `modalities` 纯文本对照。
 
 **GA-A 结论（§4 第一行）**：**停**。不在 OWUI/Pipe 上为 gpt-audio 加码改 Call；Voice 顶级仍 L-park / Realtime 路线。GA-B 维持 Don't。
 
