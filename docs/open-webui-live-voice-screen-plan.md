@@ -1,25 +1,28 @@
 # Live 语音 · 摄像头 · 屏幕共享 — 方案
 
-> **状态**：v3 **规划已对齐 P0 三条并列**（2026-08-21）。v2 已确认并执行 **A（L0 catalog）+ B1（L1 略降级）**；**B2/L2 暂缓**（须再确认；不与 P0-C 同轮）  
+> **状态**：v4 **规划已对齐 P0 四条并列**（2026-08-21）。v2 已确认并执行 **A（L0 catalog）+ B1（L1 略降级）**；顶级语音与持续屏享仍未完成，后续方案须确认
 > **日期**：2026-08-21  
-> **优先级**：全局 **P0-B**（与图像、Notebook 并列）。**本子系统内部**仍是：屏幕共享 → 实时语音 → 摄像头  
+> **优先级**：**语音聊天 = P0-B，屏幕共享 = P0-C**，两者全局同级（与图像、Notebook 并列）；摄像头仍为 Live 辅助能力
 > **宪法**：（1）媲美 ChatGPT / Grok 最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行  
 
 ---
 
-## Review（v2 → v3，对照宪法 + 新 P0）
+## Review（v3 → v4：语音与屏享同级 P0）
 
-v3 **不改实例**。更正两轮语音建议，并给屏享让出「全局唯一第一」的表述。
+v4 **不改实例**。用户纠正：语音聊天不能放在屏享下面，也不能因 Notebook P0 而默认暂缓。
 
-| v2 / 口头建议 | 宪法下的更正 |
+| v3 / 口头建议 | 宪法下的更正 |
 |---------------|--------------|
 | gpt-audio 无额外镜像就能让 Call 变快 | Call 仍是 STT→文本→TTS。Pipe 无完整 `output_audio`。改 Call = OWUI 前端分叉，仍无 barge-in → **不推荐当捷径** |
 | L2 overlay「丢失屏享」 | 准确说：Realtime overlay **无 `getDisplayMedia`**，**该 overlay 内**不能持续共享屏幕；不是站点所有屏享入口必然消失 |
 | L2 是唯一 S2S 路径 | 是 **OWUI 生态最短社区成品**；Gemini Live / 自建 Realtime 也能做，但更重 |
-| 「屏享首要」写成全局唯一 P0 | 用户确认后全局 P0 = **图像 + 屏享 + Notebook/YouTube**。本文「屏享首要」只约束 **Live 子系统** |
-| 下一步默认逼选 R0 或上 L2 | **L2 暂缓**。下一执行候选是 P0-C Notebook（另确认）。L1 保持可用 |
+| 屏享 → 语音 | **撤销**。语音 P0-B 与屏享 P0-C 同级，都以顶级付费档为目标 |
+| L2 全局暂缓、带宽让给 Notebook | **撤销**。四条 P0 并列；各自执行仍须单独 plan/确认 |
+| rbb L2 当 Live 终态 | **不成立**：它能补 P0-B 语音，却不能让 P0-C 持续屏享达标；只能是局部候选 |
 
-**与 P0-C 分轨：** Notebook Audio Overview 是异步播客（`open-webui-notebook-youtube-plan.md`），**不是** Call S2S，也不得覆盖 ST-Live-3 TTS。
+**复杂度门仍有效：** 先比较「语音+屏享统一顶级方案」与「两条较简单稳定的局部方案」。若统一方案明显更重，必须问用户是否接受略降级，不能自行选择。
+
+**与 P0-D 分轨：** Notebook Audio Overview 是异步播客（`open-webui-notebook-youtube-plan.md`），**不是** Call S2S，也不得覆盖 ST-Live-3 TTS。
 
 ---
 
@@ -40,8 +43,8 @@ v1 把 **L1 写成默认终点**，等于执行者先替你选了「降级」。
 
 | 你要的 | 顶级怎么实现 | 略降级（简单稳定很多） |
 |--------|----------------|------------------------|
-| **屏幕共享**（Live 内首要；全局 P0-B） | Gemini Live 持续 1fps S2S | **OWUI overlay + vision 模型**（社区已有 UI；延迟数秒、难打断） |
-| **实时语音 / 打断** | OpenAI Realtime 或 Grok Voice 或 rbb-dev 镜像 | 现有 **Whisper → 文本模型 → TTS** |
+| **屏幕共享（P0-C）** | Gemini Live 持续 1fps S2S | **OWUI overlay + vision 模型**（社区已有 UI；延迟数秒、难打断） |
+| **实时语音 / 打断（P0-B）** | OpenAI Realtime 或 Grok Voice 或 rbb-dev 镜像 | 现有 **Whisper → 文本模型 → TTS** |
 | **摄像头** | 与屏享同一 overlay / Live 会话 | 同上，OWUI 已有 |
 
 v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音体感**。所以「略降级」主要牺牲的是 **ChatGPT Voice 那种语感**，不是「不能看屏」。
@@ -112,16 +115,16 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 |------|--------|----|--------------|------|
 | **L0** | 修 catalog、权限、STT/TTS 烟测 | 现网故障 | 高 | **独立**：确认后立刻做，不塞进 Live 大改 |
 | **L1** | OWUI 原生 Voice/Video + vision | 屏享够用；语音非 S2S | **最高** | **略降级方案**；须确认是否先落地 |
-| **L2** | **替换**为 rbb-dev `open-webui-realtime`（一套镜像，保留 Pipe） | 语音接近 GPT Live；**该 overlay 无持续 `getDisplayMedia`** | 中（跟 fork 升级） | **暂缓**。通往顶级语音的社区最短路；重大，须单独确认；勿与 Notebook N1 同轮 |
-| **L3a** | 旁路 Gemini Live | **屏+音一体最强** | 低（第二产品） | 仅当 L1 屏享仍不够 **且** 你接受第二密钥 |
-| **L3b/c** | OpenAI / Grok 直连 Live | 语音顶级 | 低 | 与 L2 重叠或更重；一般不必在 L2 之外再做 |
+| **L2** | **替换**为 rbb-dev `open-webui-realtime`（一套镜像，保留 Pipe） | 语音接近 GPT Live；**该 overlay 无持续 `getDisplayMedia`** | 中（跟 fork 升级） | **P0-B 局部候选**，不是 P0-B/P0-C 共同终态；重大，须单独确认 |
+| **L3a** | 旁路 Gemini Live | **屏+音一体最强** | 低（第二产品） | **统一顶级候选**；密钥、中继、第二表面均触发复杂度确认门 |
+| **L3b/c** | OpenAI / Grok 直连 Live | 语音顶级 | 低 | P0-B 候选；持续屏享能力须独立验证，不能假设 |
 | **L4** | 自研中继 / 双容器长期并行 | 可定制 | 很低 | **否** |
 
 **不做（默认）：** 466 全挂 Live；重开 Web Tools；未确认上 L3 三家并行；长期 stock+realtime 双容器。  
 
 ---
 
-## 4. 推荐阶梯（由简到繁）
+## 4. 实现档位（由简到繁，不代表优先级）
 
 ### L0 — 前置（阻塞项，0～1 天量级）
 
@@ -161,7 +164,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 ---
 
-### L2 — Realtime 容器（**须你点头；v3 暂缓**）
+### L2 — Realtime 容器（**须你点头；P0-B 局部候选**）
 
 **背景**：Open WebUI **主线 0.11 尚未合入** OpenAI Realtime；社区 **rbb-dev** 提供 `ghcr.io/rbb-dev/open-webui-realtime`。若执行：**钉死版本标签**（建议 `:v0.11.0`），**禁止 `:latest`**（会跟 `mtech-dev`，含未声明 Microsoft Graph OAuth）。
 
@@ -170,7 +173,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | 收益 | 更接近 GPT Live：**快、可打断、通话中 tool** |
 | 代价 | **替换** OWUI 镜像；常需 **OpenAI 或 Realtime 兼容密钥**；**该 overlay 无 `getDisplayMedia`**（持续屏享会退化成静态图/handoff） |
 | 与 Pipe | **保留同一套 Pipe**；不要再开第二套 stock 容器 |
-| 确认门 | 非 stock OWUI、新钥匙、跟 fork、**接受该 overlay 屏享降级**；且不与 P0-C N1 同轮 |
+| 确认门 | 非 stock OWUI、新钥匙、跟 fork、**接受该 overlay 只提升语音、不让持续屏享达标** |
 
 **通过判据**：WebRTC 通话 &lt;1.5s 首响（主观）+ **明确记录**屏享是 handoff 还是持续帧（不得把静态图写成 Gemini Live 级屏享）。
 
@@ -182,7 +185,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 | 选型 | 最适合 | 屏享 | 备注 |
 |------|--------|------|------|
-| **Gemini Live** | **屏幕共享首要** | 原生 1fps | 需 Google AI / Vertex；会话时长限制（音视频约 2min 档需扩展策略） |
+| **Gemini Live** | **语音 + 屏享统一** | 原生 1fps | 需 Google AI / Vertex；会话时长限制与接入复杂度须实测 |
 | **OpenAI Realtime** | 最贴 ChatGPT Live | 支持 | 与 L2 重叠；密钥 OpenAI |
 | **Grok Voice + Grok 4.6 vision** | 全栈 xAI 叙事 | 混合：Voice WSS + 屏帧走 Pipe/vision | 工程量大；**冲最高但最不稳** |
 
@@ -244,29 +247,35 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 ---
 
-## 8. 拍板记录（v3）
+## 8. 拍板记录（v4）
 
 | 项 | 状态 |
 |----|------|
 | A L0 catalog | **已做** |
-| B1 L1 overlay | **已做**（略降级语音，屏享入口可用） |
-| B2 L2 realtime | **暂缓**。须单独确认：新钥匙 + fork + **该 overlay 无持续屏享** |
+| B1 L1 overlay | **已做**（稳定过渡；语音与持续屏享均未达顶级） |
+| P0-B 顶级语音 | **最高优先级、未完成**。目标：S2S、barge-in、低延迟 |
+| P0-C 顶级屏享 | **最高优先级、未完成**。目标：持续帧、理解刚发生的变化 |
+| B2 rbb L2 | **未确认**。只提升 P0-B；新钥匙 + fork；该 overlay 无持续屏享 |
+| L3a 统一 Live | **未确认**。同时冲 P0-B/P0-C，但第二密钥/中继/表面更复杂 |
 | gpt-audio 改 Call | **不做捷径** |
-| 全局下一执行候选 | **P0-C Notebook N1**（见 notebook plan §7），仍须再确认才改实例 |
+| P0-D Notebook | 与 Live 两项同级；独立 plan/确认，不要求 Live 让出优先级 |
 
-**现在不做：** L3 三家并行、自研中继、stock+realtime 双容器、为 Overview 改 Live TTS。
+**现在不做：** 未选档就改实例、L3 三家并行、stock+realtime 双容器、为 Overview 改 Live TTS。
 
 ---
 
-## 9. 执行顺序（给 Agent，须确认）
+## 9. 执行确认门（给 Agent）
 
 ```
-（已确认）L0 + L1
-  →（暂缓）L2 realtime
-  → 全局带宽让给 P0-C Notebook（另文件、另确认）
+（已确认）L0 + L1（稳定过渡）
+  ├─ 顶级统一：L3a（语音 + 持续屏享；复杂度高）
+  ├─ 局部提升：L2（顶级语音；持续屏享仍走 L1）
+  └─ 维持 L1（略降级但最简单稳定）
 ```
 
-**禁止**：未确认改实例；把 L2 与 Notebook N1 捆成一轮；跳过确认上 Realtime；长期双容器。
+Agent 必须先给出三档的模型能力、密钥、镜像/中继、屏享、升级维护和成本实测，再由用户选。**不得**因两项同为 P0 就绕过确认，也不得自行选择 L1 降级或 L2 局部提升。
+
+**禁止**：未确认改实例；把 L2 写成语音+屏享均达标；跳过确认上 Realtime；长期双容器。
 
 ---
 
@@ -280,7 +289,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 - rbb-dev Realtime 讨论：https://github.com/open-webui/open-webui/discussions/22622  
 - 本仓库：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`、`docs/open-webui-notebook-youtube-plan.md`
 
-*L1 已落地。L2 未确认不改实例。全局下一执行候选见 Notebook plan §7。*
+*L1 已落地但不是顶级终态。P0-B/P0-C 后续档位未确认前不改实例。*
 
 ---
 
@@ -296,7 +305,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | **你已装的 rbb-dev Pipe** | OpenRouter 全目录 + whisper STT + tts-1（micropigeon 已配） | 账单统一 OpenRouter | ✅ 配 **vision 模型** 即可 | ❌ |
 | OWUI 文档 | [Voice & Video](https://open-webui-open-webui.mintlify.app/features/voice-video) | 配置参考 | ✅ | ❌ |
 
-→ **「屏幕共享首要」**：社区 **已经做了 80% UI**；你主要是 **L0 修 catalog + 选 vision 模型 + 调 STT/TTS**（计划 L1），不必从零写 `getDisplayMedia`。
+→ **「稳定过渡」**：社区已完成大部分采集 UI；L1 不必从零写 `getDisplayMedia`，但它不等于顶级持续屏流，也不降低 P0-B 语音的优先级。
 
 ### 11.2 同生态、最接近 GPT Live 语音（帮 **L2 大头**）
 
@@ -345,8 +354,8 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 ### 11.7 社区怎么用（宪法）
 
 1. **屏享（本子系统）**：用 stock overlay，不造 `getDisplayMedia`。L2 overlay **不能**替代持续屏享。  
-2. **语音要顶级**：社区最短路仍是 rbb-dev realtime；**全局暂缓**，不与 P0-C 同轮。  
+2. **语音要顶级**：社区最短路仍是 rbb-dev realtime；它是 P0-B 局部候选，须确认，不能掩盖 P0-C 缺口。
 3. **Gemini Live 级持续屏流**：社区无 OWUI 一键 → 另开 plan（L3），现在不执行。  
-4. **Notebook / YouTube**：见 `open-webui-notebook-youtube-plan.md`，不是本文件的 Call 栈。  
+4. **Notebook / YouTube（P0-D）**：见 `open-webui-notebook-youtube-plan.md`，不是本文件的 Call 栈。
 5. **不必看**：换 sena-labs Pipe、等主线 merge、CSM/Sesame、gpt-audio 当 Call 捷径。
 

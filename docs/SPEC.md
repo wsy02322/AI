@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-C）、`docs/open-webui-live-voice-screen-plan.md`（P0-B Live）
+> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）
 
 ---
 
@@ -13,17 +13,18 @@
 
 旧「冲最高就默认砍掉」不再作默认：目标仍是顶级；降级必须是 **你点头的权衡**，不是执行者自行放弃。
 
-## 全局最高优先级（P0，三条并列）
+## 全局最高优先级（P0，四条并列）
 
-不是「做完一条再做下一条」。Live 文档里的「屏享首要」只作用于 **Live 子系统**（屏享 → 语音 → 摄像）。
+不是「做完一条再做下一条」。**语音聊天与屏幕共享同级**，不得再把语音写成屏享下面的次级项；两者都受宪法的复杂度确认门约束。
 
 | ID | 主线 | 现状 | 独立 plan |
 |----|------|------|-----------|
 | **P0-A** | **图像生成** | Now：路线 S 已落地 | `open-webui-openrouter-image-continuity-plan.md`（连续性仍增强） |
-| **P0-B** | **屏幕共享** | L1 已落地；L2 S2S **暂缓、须再确认** | `open-webui-live-voice-screen-plan.md` |
-| **P0-C** | **Notebook / YouTube** | **仅规划**；未改实例 | `open-webui-notebook-youtube-plan.md` |
+| **P0-B** | **语音聊天** | L1 串联已落地但**未达顶级**；S2S / barge-in 待确认方案 | `open-webui-live-voice-screen-plan.md` |
+| **P0-C** | **屏幕共享** | L1 入口已落地但**未达持续屏流顶级** | `open-webui-live-voice-screen-plan.md` |
+| **P0-D** | **Notebook / YouTube** | **仅规划**；未改实例 | `open-webui-notebook-youtube-plan.md` |
 
-P0-C 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 timestamp），不是「转录丢进 RAG」。达标面见该 plan §1；**NL-A ≠ NL-B**。
+P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 timestamp），不是「转录丢进 RAG」。达标面见该 plan §1；**NL-A ≠ NL-B**。
 
 ---
 
@@ -57,7 +58,7 @@ P0-C 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 OWUI 默认 voice `alloy` + `response_format=mp3`）；STT = `openai/whisper-large-v3-turbo`。**不要**再用 `openai/tts-1` / `tts-1-hd`（OpenRouter `/audio/speech` 无此模型 → Read Aloud 400）。真正 S2S 仍走 L2（须确认） |
 | ST-Live-4 | Realtime / 厂商 Live API（L2+）**未确认前** 不上生产 |
 
-## P0-C 规划 ID（文档已确认；N1+ 未确认执行前不生效）
+## P0-D 规划 ID（文档已确认；N1+ 未确认执行前不生效）
 
 落地前只约束规划与 Agent，不把 Knowledge 写成已可用。条文全文见 `docs/open-webui-notebook-youtube-plan.md` §5。
 
@@ -74,8 +75,9 @@ P0-C 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 ## 明确 Later / Don't
 
 - **已落地**：聊天四格 + 路线 S；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
-- **P0 进行中**：图像增强；屏享保持 L1；**Notebook/YouTube（P0-C，下一执行候选须再确认）**  
-- **Later（须单独确认）**：Live **L2** Realtime（暂缓）；Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio  
+- **P0 进行中**：图像增强；**语音聊天（S2S / barge-in 未完成）**；**屏幕共享（持续屏流未完成）**；**Notebook/YouTube（P0-D）**
+- **复杂度确认门**：语音与屏享都不得自行降级；若顶级统一方案过重，先列「顶级」与「略降级但简单稳定」两档，由用户确认。rbb Realtime 只补语音、不补持续屏享，不能作为两项均达标的终态
+- **Later（须单独确认）**：Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio
 - **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S 
 
 ---

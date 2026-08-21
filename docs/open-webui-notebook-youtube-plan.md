@@ -2,7 +2,7 @@
 
 > **状态**：v1 **规划已确认**（2026-08-21）；**未改实例**  
 > **日期**：2026-08-21  
-> **全局优先级**：**P0-C**，与 **图像生成（P0-A）**、**屏幕共享（P0-B）** 并列最高  
+> **全局优先级**：**P0-D**，与 **图像生成（P0-A）**、**语音聊天（P0-B）**、**屏幕共享（P0-C）** 并列最高
 > **旗舰源**：YouTube（转录不够；须视觉时间线 + 可点击 timestamp）  
 > **宪法**：（1）媲美甚至超越市面最顶级（NotebookLM / Gemini Notebook 及视频向竞品）；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行  
 
@@ -96,7 +96,7 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 
 | ID | 内容 | 通过 |
 |----|------|------|
-| N0-1 | SPEC / AGENTS / 总路线图写入 P0-C | 文档与本文一致 |
+| N0-1 | SPEC / AGENTS / 总路线图写入 P0-D | 文档与本文一致 |
 | N0-2 | 市场基准：NotebookLM transcript-only + Studio 产物 | §1 |
 | N0-3 | 记录 RAG 401、Live TTS ≠ Overview、视频生成 ≠ ingest | §0 §3 |
 | N0-4 | 入口原则：Notebook ≠ Sonar；禁止第二套未文档化前端 | ST-NL-5 |
@@ -154,15 +154,16 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 
 ---
 
-## 6. 与 P0-A / P0-B 的带宽
+## 6. 与 P0-A / P0-B / P0-C 的关系
 
-三条最高优先级 **并列**，不是「做完语音再做知识」：
+四条最高优先级 **并列**，不是让 Live 给 Notebook 让出带宽；每次改实例仍按宪法单独 plan/确认：
 
 | 轨 | 现在 | 下一步（均须确认才改实例） |
 |----|------|----------------------------|
 | **P0-A 图像** | 路线 S 已落地 | 连续性等仍属增强，不挡 Notebook |
-| **P0-B 屏享** | L1 已落地 | **L2 S2S 暂缓**（fork + 新钥匙 + overlay 持续屏享缺口）；Live 子系统内仍屏享优先于语音 |
-| **P0-C Notebook** | 仅本文 | **下一执行候选**：确认后从 N1 起（先修 RAG 槽） |
+| **P0-B 语音聊天** | L1 串联可用，未达 S2S / barge-in | 与屏享同级；顶级统一或局部方案见 Live plan，复杂度须确认 |
+| **P0-C 屏享** | L1 入口可用，未达持续原生屏流 | 与语音同级；不能用 rbb L2 的语音收益冒充达标 |
+| **P0-D Notebook** | 仅本文 | 确认后从 N1 起（先修 RAG 槽） |
 
 不把 gpt-audio 改 Call、不把 Realtime 镜像、不把 Notebook 塞进同一轮施工。
 
