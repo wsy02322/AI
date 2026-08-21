@@ -43,7 +43,7 @@
 
 ## 明确 Later / Don't
 
-- **Later 必做**：视频生成（换视频模型，少量 public）；slides（独立表面，不灌全模型 tools）  
+- **Later 必做**：**Live 语音/屏幕共享/摄像**（见 `docs/open-webui-live-voice-screen-plan.md`）；视频生成（换视频模型）；slides（独立表面）  
 - **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径  
 
 ---

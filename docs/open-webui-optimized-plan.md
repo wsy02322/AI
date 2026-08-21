@@ -49,6 +49,7 @@
 | 能力 | 现状 | 后续原则（预写，防走偏） |
 |------|------|--------------------------|
 | **视频生成** | ~24 模型在 catalog；Filter 已装；**0 public** | 与作图同一契约：**换视频模型即生成**，不把 video tools 灌进 Sol/Sonar。先测 2～4 个旗舰再 public，不要 24 个一起开 |
+| **Live 语音/屏享/摄像** | OWUI 0.11 有 Call overlay；当前为 STT→TTS 串联 + OpenRouter | **首要屏享**；详见 **`docs/open-webui-live-voice-screen-plan.md`**。默认 **L0→L1 原生**；Realtime/Live API（对标 GPT/Gemini/Grok Voice 官网）**须确认** |
 | **Slides** | 无产品契约 | 单独表面（Notes / 专用流程），**不要**给聊天模型再挂一套会 404 的 tool。出方案时再对照三条要求审一次 |
 | 多轮图像连续性 | 有漂移 | 仅当 verify 已稳定、且补丁能跟着 Pipe 更新走，才考虑轻量 preserve；否则接受差距 |
 | 语音 STT/TTS | 已配置 OpenRouter | 可用则保留；坏了再修。不作为当前主推 |
