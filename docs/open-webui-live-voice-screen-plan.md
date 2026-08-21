@@ -1,9 +1,25 @@
 # Live 语音 · 摄像头 · 屏幕共享 — 方案
 
-> **状态**：v2 已确认并执行 **A（L0 catalog）+ B1（L1 略降级）**；**B2/L2 未做**  
-> **日期**：2026-08-21（落地）  
-> **优先级**：**屏幕共享首要** → 实时语音 → 摄像头  
+> **状态**：v3 **规划已对齐 P0 三条并列**（2026-08-21）。v2 已确认并执行 **A（L0 catalog）+ B1（L1 略降级）**；**B2/L2 暂缓**（须再确认；不与 P0-C 同轮）  
+> **日期**：2026-08-21  
+> **优先级**：全局 **P0-B**（与图像、Notebook 并列）。**本子系统内部**仍是：屏幕共享 → 实时语音 → 摄像头  
 > **宪法**：（1）媲美 ChatGPT / Grok 最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行  
+
+---
+
+## Review（v2 → v3，对照宪法 + 新 P0）
+
+v3 **不改实例**。更正两轮语音建议，并给屏享让出「全局唯一第一」的表述。
+
+| v2 / 口头建议 | 宪法下的更正 |
+|---------------|--------------|
+| gpt-audio 无额外镜像就能让 Call 变快 | Call 仍是 STT→文本→TTS。Pipe 无完整 `output_audio`。改 Call = OWUI 前端分叉，仍无 barge-in → **不推荐当捷径** |
+| L2 overlay「丢失屏享」 | 准确说：Realtime overlay **无 `getDisplayMedia`**，**该 overlay 内**不能持续共享屏幕；不是站点所有屏享入口必然消失 |
+| L2 是唯一 S2S 路径 | 是 **OWUI 生态最短社区成品**；Gemini Live / 自建 Realtime 也能做，但更重 |
+| 「屏享首要」写成全局唯一 P0 | 用户确认后全局 P0 = **图像 + 屏享 + Notebook/YouTube**。本文「屏享首要」只约束 **Live 子系统** |
+| 下一步默认逼选 R0 或上 L2 | **L2 暂缓**。下一执行候选是 P0-C Notebook（另确认）。L1 保持可用 |
+
+**与 P0-C 分轨：** Notebook Audio Overview 是异步播客（`open-webui-notebook-youtube-plan.md`），**不是** Call S2S，也不得覆盖 ST-Live-3 TTS。
 
 ---
 
@@ -24,7 +40,7 @@ v1 把 **L1 写成默认终点**，等于执行者先替你选了「降级」。
 
 | 你要的 | 顶级怎么实现 | 略降级（简单稳定很多） |
 |--------|----------------|------------------------|
-| **屏幕共享**（首要） | Gemini Live 持续 1fps S2S | **OWUI overlay + vision 模型**（社区已有 UI；延迟数秒、难打断） |
+| **屏幕共享**（Live 内首要；全局 P0-B） | Gemini Live 持续 1fps S2S | **OWUI overlay + vision 模型**（社区已有 UI；延迟数秒、难打断） |
 | **实时语音 / 打断** | OpenAI Realtime 或 Grok Voice 或 rbb-dev 镜像 | 现有 **Whisper → 文本模型 → TTS** |
 | **摄像头** | 与屏享同一 overlay / Live 会话 | 同上，OWUI 已有 |
 
@@ -96,7 +112,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 |------|--------|----|--------------|------|
 | **L0** | 修 catalog、权限、STT/TTS 烟测 | 现网故障 | 高 | **独立**：确认后立刻做，不塞进 Live 大改 |
 | **L1** | OWUI 原生 Voice/Video + vision | 屏享够用；语音非 S2S | **最高** | **略降级方案**；须确认是否先落地 |
-| **L2** | **替换**为 rbb-dev `open-webui-realtime`（一套镜像，保留 Pipe） | 语音接近 GPT Live | 中（跟 fork 升级） | **通往顶级语音的社区最短路**；重大，须确认 |
+| **L2** | **替换**为 rbb-dev `open-webui-realtime`（一套镜像，保留 Pipe） | 语音接近 GPT Live；**该 overlay 无持续 `getDisplayMedia`** | 中（跟 fork 升级） | **暂缓**。通往顶级语音的社区最短路；重大，须单独确认；勿与 Notebook N1 同轮 |
 | **L3a** | 旁路 Gemini Live | **屏+音一体最强** | 低（第二产品） | 仅当 L1 屏享仍不够 **且** 你接受第二密钥 |
 | **L3b/c** | OpenAI / Grok 直连 Live | 语音顶级 | 低 | 与 L2 重叠或更重；一般不必在 L2 之外再做 |
 | **L4** | 自研中继 / 双容器长期并行 | 可定制 | 很低 | **否** |
@@ -145,18 +161,18 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 ---
 
-### L2 — Realtime 容器（**须你点头**）
+### L2 — Realtime 容器（**须你点头；v3 暂缓**）
 
-**背景**：Open WebUI **主线 0.11 尚未合入** OpenAI Realtime；社区 **rbb-dev**（同 OpenRouter Pipe 作者）提供 `ghcr.io/rbb-dev/open-webui-realtime:latest`，支持 WebRTC Realtime、通话中 tools、历史回写聊天。
+**背景**：Open WebUI **主线 0.11 尚未合入** OpenAI Realtime；社区 **rbb-dev** 提供 `ghcr.io/rbb-dev/open-webui-realtime`。若执行：**钉死版本标签**（建议 `:v0.11.0`），**禁止 `:latest`**（会跟 `mtech-dev`，含未声明 Microsoft Graph OAuth）。
 
 | 项 | 说明 |
 |----|------|
 | 收益 | 更接近 GPT Live：**快、可打断、通话中 tool** |
-| 代价 | **替换** OWUI 镜像（rbb-dev 持续 rebase）；Realtime 模型常需 **OpenAI 或 Realtime 兼容密钥**（OpenRouter WebRTC 须实测） |
+| 代价 | **替换** OWUI 镜像；常需 **OpenAI 或 Realtime 兼容密钥**；**该 overlay 无 `getDisplayMedia`**（持续屏享会退化成静态图/handoff） |
 | 与 Pipe | **保留同一套 Pipe**；不要再开第二套 stock 容器 |
-| 确认门 | 是否接受 **非 stock OWUI**、是否新增直连密钥、是否跟 fork 升级 |
+| 确认门 | 非 stock OWUI、新钥匙、跟 fork、**接受该 overlay 屏享降级**；且不与 P0-C N1 同轮 |
 
-**通过判据**：WebRTC 通话 &lt;1.5s 首响（主观）+ 屏享/工具至少一种路径可用。
+**通过判据**：WebRTC 通话 &lt;1.5s 首响（主观）+ **明确记录**屏享是 handoff 还是持续帧（不得把静态图写成 Gemini Live 级屏享）。
 
 ---
 
@@ -228,35 +244,29 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 ---
 
-## 8. 请你拍板（宪法第 1、3 条）
+## 8. 拍板记录（v3）
 
-**A. L0（catalog 空）** — 现网故障，与 Live 产品分开。是否 **确认立刻修**？
+| 项 | 状态 |
+|----|------|
+| A L0 catalog | **已做** |
+| B1 L1 overlay | **已做**（略降级语音，屏享入口可用） |
+| B2 L2 realtime | **暂缓**。须单独确认：新钥匙 + fork + **该 overlay 无持续屏享** |
+| gpt-audio 改 Call | **不做捷径** |
+| 全局下一执行候选 | **P0-C Notebook N1**（见 notebook plan §7），仍须再确认才改实例 |
 
-**B. 屏享 + 语音档位（二选一，可写「先 B1 再视体验开 B2」）：**
-
-| | 方案 | 相对顶级 | 简单稳定 |
-|--|------|----------|----------|
-| **B1** | L1：stock overlay + Whisper/TTS + vision | 屏享够用；语音明显弱于 ChatGPT/Grok Voice | 高、易维护 |
-| **B2** | L2：整机换成 rbb-dev realtime（一套 OWUI + 现有 Pipe） | 语音接近 GPT Live；屏享仍靠 overlay/image handoff | 中（跟 fork） |
-
-**C.** 若选 B2：能否加 **OpenAI（或 Realtime 兼容）密钥**？预算按 **$/分钟** 能否接受上限？
-
-**D.** **现在不做**：L3 三家并行、自研中继、stock+realtime 双容器。若你要 Gemini Live 级持续屏流，等 B1 试用后再单独 plan。
-
-宪法下 **不再默认「只做 L1」**；推荐顺序仍是 **先 A，再你选 B1 或 B2**，因为屏享首要且 B1 已覆盖入口。
+**现在不做：** L3 三家并行、自研中继、stock+realtime 双容器、为 Overview 改 Live TTS。
 
 ---
 
 ## 9. 执行顺序（给 Agent，须确认）
 
 ```
-（确认 A）L0 修 catalog
-  →（确认 B1）L1 配置/指引/验收
-  →（确认 B2）替换为 realtime 镜像 + 密钥烟测
-  → 写入 SPEC ST-Live-* 与 VERSIONS
+（已确认）L0 + L1
+  →（暂缓）L2 realtime
+  → 全局带宽让给 P0-C Notebook（另文件、另确认）
 ```
 
-**禁止**：未确认改实例；跳过 A 上 Realtime；L3 三家并行；长期双容器。
+**禁止**：未确认改实例；把 L2 与 Notebook N1 捆成一轮；跳过确认上 Realtime；长期双容器。
 
 ---
 
@@ -268,9 +278,9 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 - Gemini Live：https://ai.google.dev/gemini-api/docs/live-api  
 - Grok Voice Agent：https://docs.x.ai/developers/model-capabilities/audio/voice-agent  
 - rbb-dev Realtime 讨论：https://github.com/open-webui/open-webui/discussions/22622  
-- 本仓库：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`
+- 本仓库：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`、`docs/open-webui-notebook-youtube-plan.md`
 
-*未确认不改实例。请回复 §8 的 A / B1 或 B2 / C。*
+*L1 已落地。L2 未确认不改实例。全局下一执行候选见 Notebook plan §7。*
 
 ---
 
@@ -334,8 +344,9 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 ### 11.7 社区怎么用（宪法）
 
-1. **屏享**：用 stock overlay，不造 `getDisplayMedia`。  
-2. **语音要顶级**：优先 **替换** 为 rbb-dev realtime 镜像（同作者、持续 rebase），不自研 WebRTC、不长期双容器。  
+1. **屏享（本子系统）**：用 stock overlay，不造 `getDisplayMedia`。L2 overlay **不能**替代持续屏享。  
+2. **语音要顶级**：社区最短路仍是 rbb-dev realtime；**全局暂缓**，不与 P0-C 同轮。  
 3. **Gemini Live 级持续屏流**：社区无 OWUI 一键 → 另开 plan（L3），现在不执行。  
-4. **不必看**：换 sena-labs Pipe、等主线 merge、CSM/Sesame。
+4. **Notebook / YouTube**：见 `open-webui-notebook-youtube-plan.md`，不是本文件的 Call 栈。  
+5. **不必看**：换 sena-labs Pipe、等主线 merge、CSM/Sesame、gpt-audio 当 Call 捷径。
 

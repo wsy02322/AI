@@ -1,6 +1,6 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-C 读 **`docs/open-webui-notebook-youtube-plan.md`**。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
 
 ## 宪法（所有动作）
 
@@ -8,7 +8,9 @@
 2. 务必简单和稳定，优先易维护。  
 3. 重大改动：先 plan，确认后再执行。
 
-视频、slides、Live 屏享均为 **Later 必做**（各有独立 plan）。维持 **19 个 public**。
+**P0 三条并列**：图像生成、屏幕共享、Notebook/YouTube（各有独立 plan）。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **19 个 public**。
+
+未确认 N1+ **不改** `rag.*`、不装 Notebook 容器、不把转录+RAG 标为达标。Live **L2 暂缓**（须单独确认）。
 
 ## 改实例前
 
@@ -53,5 +55,10 @@
 - 打开 Sol Pro `image_generation` 来做同会话作图  
 - 一次 public 全部视频模型  
 - 关全局 Code Interpreter（只收 Sonar/图像的 capability）  
+- 把 RAG / Knowledge 当加分项或与 Sonar 做成同一个按钮  
+- 把 YouTube 字幕/转录当成 NotebookLM 级验收  
+- 把视频生成（Wave 1）与 YouTube ingest（P0-C）混成一条施工  
+- 用 Call overlay / 现有 MiniMax Read Aloud 冒充 Audio Overview  
+- 未确认就把 gpt-audio 或 Realtime 镜像当 Call S2S 落地  
 
 Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。

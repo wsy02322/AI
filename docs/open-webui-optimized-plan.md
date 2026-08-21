@@ -1,9 +1,9 @@
 # 优化计划：强能力 · 简单 · 稳定
 
-> **状态**：Wave 0 **已应用到实例**（2026-08-20，`verify_stack.py` 全绿）。Wave 1 视频 / Wave 2 slides 仍待单独开一轮。  
-> **日期**：2026-08-20  
-> **宪法**：（1）媲美甚至超越 ChatGPT / Grok 最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行。  
-> **用户约束**：维持 **19 个 public**（用户会对比模型，非纯小白）；**视频生成**与 **slides** 为后续必做，不是放弃项。
+> **状态**：Wave 0 **已应用到实例**。**P0 三条并列已写入契约**（2026-08-21）：图像 / 屏享 / Notebook·YouTube。P0-C **仅规划，未改实例**。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。  
+> **日期**：2026-08-21  
+> **宪法**：（1）媲美甚至超越 ChatGPT / Grok / 市面最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行。  
+> **用户约束**：维持 **19 个 public**；**P0-A 图像、P0-B 屏享、P0-C Notebook/YouTube** 同为最高优先级；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
 
 ---
 
@@ -16,7 +16,7 @@
 | Pipe + 466 模型 catalog | **原生 Images / Images Edit**（开着，模型 id 非 Pipe） |
 | 方案 A、3 Guard | **Code Interpreter / Code Execution**（pyodide，开） |
 | 19 public、4 置顶、DEFAULT_MODELS | **Audio STT/TTS**（OpenRouter whisper / tts，已配） |
-| Banner / suggestions / Description | **RAG / Knowledge**（embedding 等大套配置） |
+| Banner / suggestions / Description | **RAG / Knowledge**（配置在，但 **未产品化**；embedding 槽仍 401 → 已升格 **P0-C**，见 notebook plan） |
 | 关原生 Web Search、关 Direct Connections | **Memories / Notes / Automations / Calendar**（均 enable） |
 | 明确不做：ComfyUI、inpainting、第二套 Pipe | **Task 模型**（标题/补全默认 `x-ai/grok-4.5`，非 Pipe） |
 | | **视频**：catalog 约 24 个 + 20+ Filter，**均未 public** |
@@ -38,7 +38,7 @@
 |------|------|----------------|
 | 聊天 / 推理 | Sol Pro 默认；Opus 等 public | **维持**。Reasoning depth 已有 Banner |
 | 快搜 / 深研 | 两档 Sonar public | **维持**。不重开 Web Tools / 原生 Web Search |
-| 作图 | 9 个图像模型 public；切模型即作图 | **维持为主路径**（见 §2） |
+| 作图 | 9 个图像模型 public；切模型即作图 | **P0-A**：维持为主路径（见 §2） |
 | 文件上传 | Direct Uploads | **维持** |
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；缺自动验收（§4 Wave 0） |
@@ -48,12 +48,12 @@
 
 | 能力 | 现状 | 后续原则（预写，防走偏） |
 |------|------|--------------------------|
-| **视频生成** | ~24 模型在 catalog；Filter 已装；**0 public** | 与作图同一契约：**换视频模型即生成**，不把 video tools 灌进 Sol/Sonar。先测 2～4 个旗舰再 public，不要 24 个一起开 |
-| **Live 语音/屏享/摄像** | OWUI 0.11 有 Call overlay；当前为 STT→TTS 串联 + OpenRouter | **首要屏享**；详见 **`docs/open-webui-live-voice-screen-plan.md`**。默认 **L0→L1 原生**；Realtime/Live API（对标 GPT/Gemini/Grok Voice 官网）**须确认** |
-| **Slides** | 无产品契约 | 单独表面（Notes / 专用流程），**不要**给聊天模型再挂一套会 404 的 tool。出方案时再对照三条要求审一次 |
-| 多轮图像连续性 | 有漂移 | 仅当 verify 已稳定、且补丁能跟着 Pipe 更新走，才考虑轻量 preserve；否则接受差距 |
-| 语音 STT/TTS | 已配置 OpenRouter | 可用则保留；坏了再修。不作为当前主推 |
-| RAG / Knowledge | 大套默认配置 | 知识库是加分项；不与 Sonar 抢「搜索」叙事 |
+| **视频生成**（Wave 1） | ~24 模型在 catalog；Filter 已装；**0 public** | **≠ YouTube ingest**。与作图同一契约：**换视频模型即生成**，不把 video tools 灌进 Sol/Sonar。先测 2～4 个旗舰再 public |
+| **Live 语音/屏享/摄像**（P0-B） | L1 已落地（Call overlay + Whisper/MiniMax） | **Live 子系统内**屏享优先于语音。详见 **`docs/open-webui-live-voice-screen-plan.md`**。L2 Realtime **暂缓、须再确认**（勿与 P0-C 同轮施工） |
+| **Notebook / YouTube**（P0-C） | 无产品面；RAG 槽 401 | **与图像、屏享同级最高优先**。详见 **`docs/open-webui-notebook-youtube-plan.md`**。YouTube 须视觉时间线 + timestamp；转录+RAG **不算**达标。N1+ 须再确认才改实例 |
+| **Slides** | 无产品契约 | 单独表面（Notes / 专用流程），**不要**给聊天模型再挂一套会 404 的 tool。可与 Notebook Studio 产物衔接，但 W2 仍单独确认 |
+| 多轮图像连续性 | 有漂移 | P0-A 增强；仅当 verify 已稳定、且补丁能跟着 Pipe 更新走，才考虑轻量 preserve |
+| 语音 STT/TTS | MiniMax + Whisper 已配 | Live L1 保留。Audio Overview **另测**，不默认够用 |
 
 ### 1.3 Don't（当前与后续都默认不做，除非三条要求改写）
 
@@ -65,12 +65,15 @@
 | 466 模型全部 public | 摧毁简单 |
 | 同会话作图作为**第二条主路径** | 见 §2 |
 | 锁死 OWUI/Pipe 版本当主策略 | 阻碍更新 |
+| YouTube 转录+RAG 冒充 NotebookLM | 见 P0-C；NL-A ≠ 达标 |
+| 视频生成与 YouTube ingest 混成一轮 | 两套产品 |
 
 ### 1.4 已开着、本阶段「不推广、不深挖、不随便关」
 
 关全局开关容易误伤；这些不是当前用户契约的一部分：
 
-- Memories、Notes、Calendar、Automations、Autocomplete、Follow-up、社区分享、OAuth  
+- Memories、Calendar、Automations、Autocomplete、Follow-up、社区分享、OAuth  
+- Notes / Knowledge：**P0-C 可能的宿主**；在 N2 入口拍板前仍不推广、不深挖、不随便关。不得当成已可用的 NotebookLM 
 - Code Interpreter（pyodide）：聊天模型可留；**Sonar / 纯图像 / 未来视频模型不应表现为可开的 tool**  
 - 原生 Images：全局 enable=true，但 Sol Pro 的 `capabilities.image_generation=false`，用户主路径已不是「聊天里点 Image」
 
@@ -147,7 +150,7 @@
 | ID | 内容 |
 |----|------|
 | W0-1 | `scripts/verify_stack.py`：DEFAULT_MODELS、方案 A、Guard active、Sonar/图像无 tool 404、19 public、banners/suggestions |
-| W0-2 | `docs/SPEC.md` + `AGENTS.md`：四格 + 19 public + 路线 S + 视频/slides = Later |
+| W0-2 | `docs/SPEC.md` + `AGENTS.md`：四格 + 19 public + 路线 S + **P0 三条** + 视频生成/slides = Later |
 | W0-3 | 按模型 capabilities：**Sonar / 纯图像** 关闭会邀请用户开 tool 的项（`code_interpreter`；图像上多余的 `builtin_tools` / `terminal`）。**不**关 Sol Pro 的 code interpreter |
 | W0-4 | `docs/VERSIONS.md` 记 OWUI / Pipe；Pipe 更新 Runbook：更新后跑 W0-1 + 现有 apply 脚本 |
 | W0-5 | Task 默认模型：标题/补全若仍指向非 Pipe `x-ai/grok-4.5`，改为 Pipe 文本模型（避免后台任务走幽灵 id） |
@@ -163,7 +166,21 @@
 | W1-3 | 通过则 **少量 public** + 英文 Description（「Select this model first」）+ 可选 1 条 suggestion |
 | W1-4 | Banner **不必**改成五格长文；Description 承担「视频要换模型」 |
 
-失败则该模型不 public，不引入第二条「聊天里点 Video」路径。
+失败则该模型不 public，不引入第二条「聊天里点 Video」路径。**禁止**与 P0-C YouTube 知识 ingest 混施工。
+
+### Wave-N — Notebook / YouTube（P0-C，独立验收；**确认执行前不改实例**）
+
+全文：`docs/open-webui-notebook-youtube-plan.md`。摘要：
+
+| ID | 内容 |
+|----|------|
+| N0 | 契约与市场基准（**本轮已写入文档**） |
+| N1 | 修 RAG 槽 + YouTube 字幕/ASR + **视觉时间线** + timestamp 验收 |
+| N2 | 多源 Notebook + 源边界问答 + 与 Sonar 双入口 |
+| N3 | Studio：Brief/FAQ/导图 + Audio Overview（TTS 另测） |
+| N4 | 频道/播放列表、交互 Overview、Video Overview |
+
+NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 
 ### Wave 2 — Slides（必做，独立设计后再做）
 
@@ -173,11 +190,10 @@
 | W2-2 | 对照三条要求写一页方案，通过后再实施 |
 | W2-3 | 与视频一样：可测、可关、不破坏四格+19 的聊天稳定性 |
 
-### Wave 3 — 可选增强（非承诺）
+### Wave 3 — 可选增强（非承诺；**不含** Notebook）
 
 - 图像轻量连续性（canonical 上一张 + preserve 句）  
-- STT/TTS 体验打磨  
-- RAG 作为「自己的库」与 Sonar「公网搜」并列说明  
+- Live STT/TTS 体验打磨（≠ Audio Overview）  
 - Native Images 仅当有明确实验且 verify 全绿才碰  
 
 ---
@@ -190,9 +206,11 @@
 | 全局关闭 code interpreter | **不做**。只收 Sonar/图像的 capability |
 | 缩 public 到 6 | **撤销**。维持 19 |
 | 清理 MODEL_ORDER_LIST 当 P1 | **降为顺便**。admin 列表已是 466 Pipe |
-| 图像连续性 P2 马上做 | **推到 Wave 3** |
-| 视频「不推广」 | **改为 Wave 1 必做** |
+| 图像连续性 P2 马上做 | **推到 Wave 3**（不挡 P0-C） |
+| 视频「不推广」 | **改为 Wave 1 必做**（生成 ≠ YouTube ingest） |
+| RAG 是加分项 / Wave 3 | **撤销**。升格 **P0-C**；与 Sonar **双入口**，不抢同一按钮 |
 | 同会话作图待拍板 | **已拍板：不做主路径**（§2.3） |
+| Live L2 与 Notebook 抢同一轮 | **L2 暂缓**；下一执行候选为 P0-C N1（仍须确认） |
 
 ---
 
@@ -200,11 +218,16 @@
 
 **现在（Wave 0 后）**
 
-- 新对话 = Sol Pro；四格置顶仍在；19 public 仍在  
+- 新对话 = Grok 4.6 + Opus（双默认）；四格置顶仍在；19 public 仍在  
 - Sonar / 图像无 tool 404；Integrations 仍无 Web Tools / Image Gen / Web Search  
 - `verify_stack` 可重复跑绿  
 
-**视频（Wave 1 后）**
+**Notebook / YouTube（N1–N2 后）**
+
+- 无字幕 YouTube 能入库；引用可点到 `MM:SS`；「画面上有什么」能答 shown 而非只 transcript  
+- 与 Sonar 入口分离；`verify_stack` / Live L1 不回归  
+
+**视频生成（Wave 1 后）**
 
 - 至少 1 个视频模型 public 且实测出片  
 - 聊天模型不会因 video tool 404  
@@ -219,7 +242,10 @@
 
 | 文件 | 角色 |
 |------|------|
-| **本文件** | 路线与波次（产品契约） |
+| **本文件** | 路线与波次 |
+| `SPEC.md` | 体验与稳定性契约（含 P0） |
+| `open-webui-notebook-youtube-plan.md` | **P0-C** Notebook / YouTube |
+| `open-webui-live-voice-screen-plan.md` | **P0-B** Live / 屏享 / 语音 |
 | `open-webui-delta-vs-stock.md` | 相对官方已落地差异 |
 | `open-webui-disaster-recovery-rebuild-plan.md` | 重建/验收思路 |
 | `open-webui-openrouter-image-continuity-plan.md` | 图像错误史；连续性仍属 Wave 3 |
@@ -227,4 +253,4 @@
 
 ---
 
-*确认 Wave 0 后再改实例。Wave 1/2 各开一轮，不与 Wave 0 捆在一起做。*
+*Wave 0 已落地。P0-C / Wave 1 / Wave 2 / Live L2 各开一轮确认后再改实例，不捆在一起做。*

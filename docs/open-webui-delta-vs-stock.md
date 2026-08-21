@@ -352,7 +352,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `www.micropigeon.com` | **无 DNS**（有意或未配） |
 | HTTP→HTTPS | `http://micropigeon.com` **Caddy 308** → https；**无 HSTS** |
 | `http://78.47.152.85` | 仍 200，但是 **另一套中文页**（`/api/version` 404），不是本 OWUI |
-| `rag.openai.api_base_url` | 仍 `gptsapi.net`（未改；RAG 若用该槽会 401） |
+| `rag.openai.api_base_url` | 仍 `gptsapi.net`（未改；**P0-C N1 阻塞**：RAG 若用该槽会 401）。规划见 `open-webui-notebook-youtube-plan.md`；**未确认执行前不改** |
 | TTS | **`minimax/speech-2.8-turbo`** + voice `alloy` + `SPLIT_ON=sentence`（L1；OpenRouter 无 tts-1） |
 
 ---
@@ -417,6 +417,8 @@ python3 scripts/fix_sonar_tool_guard.py
 | 主题 | 文档 |
 |------|------|
 | 图像细节与测试列表 | `open-webui-openrouter-image-continuity-plan.md` |
+| Live / 屏享 | `open-webui-live-voice-screen-plan.md` |
+| Notebook / YouTube（P0-C，仅规划） | `open-webui-notebook-youtube-plan.md` |
 | 界面文案设计意图 | `open-webui-user-guidance-plan.md` |
 | 灾备与重建流程 | `open-webui-disaster-recovery-rebuild-plan.md` |
 

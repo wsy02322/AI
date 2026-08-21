@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）
+> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-C）、`docs/open-webui-live-voice-screen-plan.md`（P0-B Live）
 
 ---
 
@@ -12,6 +12,18 @@
 3. **重大改动**：先出 plan，**你确认后再执行**。未确认不改实例。
 
 旧「冲最高就默认砍掉」不再作默认：目标仍是顶级；降级必须是 **你点头的权衡**，不是执行者自行放弃。
+
+## 全局最高优先级（P0，三条并列）
+
+不是「做完一条再做下一条」。Live 文档里的「屏享首要」只作用于 **Live 子系统**（屏享 → 语音 → 摄像）。
+
+| ID | 主线 | 现状 | 独立 plan |
+|----|------|------|-----------|
+| **P0-A** | **图像生成** | Now：路线 S 已落地 | `open-webui-openrouter-image-continuity-plan.md`（连续性仍增强） |
+| **P0-B** | **屏幕共享** | L1 已落地；L2 S2S **暂缓、须再确认** | `open-webui-live-voice-screen-plan.md` |
+| **P0-C** | **Notebook / YouTube** | **仅规划**；未改实例 | `open-webui-notebook-youtube-plan.md` |
+
+P0-C 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 timestamp），不是「转录丢进 RAG」。达标面见该 plan §1；**NL-A ≠ NL-B**。
 
 ---
 
@@ -45,10 +57,26 @@
 | ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 OWUI 默认 voice `alloy` + `response_format=mp3`）；STT = `openai/whisper-large-v3-turbo`。**不要**再用 `openai/tts-1` / `tts-1-hd`（OpenRouter `/audio/speech` 无此模型 → Read Aloud 400）。真正 S2S 仍走 L2（须确认） |
 | ST-Live-4 | Realtime / 厂商 Live API（L2+）**未确认前** 不上生产 |
 
+## P0-C 规划 ID（文档已确认；N1+ 未确认执行前不生效）
+
+落地前只约束规划与 Agent，不把 Knowledge 写成已可用。条文全文见 `docs/open-webui-notebook-youtube-plan.md` §5。
+
+| ID | 必须 |
+|----|------|
+| ST-NL-1 | YouTube = 转录 **加** 视觉时间线；无字幕走 ASR |
+| ST-NL-2 | 关键结论可点击 timestamp；区分 spoken / shown / inferred |
+| ST-NL-3 | Notebook 问答源边界内；不用 Sonar / web_tools 冒充知识库 |
+| ST-NL-4 | Audio Overview ≠ Call overlay；不得为 Overview 覆盖 Live TTS |
+| ST-NL-5 | Notebook 入口须文档化；不与四格搜索按钮混用 |
+| ST-NL-6 | YouTube ingest ≠ Wave 1 视频生成 |
+| ST-NL-7 | N1+ **未确认执行前** 不上生产（含不改 `rag.*`） |
+
 ## 明确 Later / Don't
 
-- **L1 已落地**（stock overlay + Whisper/TTS + vision 指引）。**Later**：L2 Realtime 镜像（须再确认）；视频生成；slides  
-- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器  
+- **已落地**：聊天四格 + 路线 S；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
+- **P0 进行中**：图像增强；屏享保持 L1；**Notebook/YouTube（P0-C，下一执行候选须再确认）**  
+- **Later（须单独确认）**：Live **L2** Realtime（暂缓）；Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio  
+- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S 
 
 ---
 
