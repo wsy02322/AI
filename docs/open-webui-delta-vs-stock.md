@@ -1,7 +1,7 @@
 # 相对纯官方 Open WebUI 的全部改动记录
 
 > **基准（Stock）**：Open WebUI **0.11.0**，无第三方 Pipe、无自定义 Function、无本仓库脚本与文档所描述的配置。  
-> **对比对象（本实例）**：`http://78.47.152.85`（探针日期 **2026-08-20**）  
+> **对比对象（本实例）**：`https://micropigeon.com`（探针日期 **2026-08-21**）  
 > **本文件地位**：相对官方的 **单一真相源**；灾备规格见 `open-webui-disaster-recovery-rebuild-plan.md`。
 
 ---
