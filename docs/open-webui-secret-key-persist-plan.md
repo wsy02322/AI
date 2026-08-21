@@ -1,6 +1,6 @@
 # 运维密钥策略 — 轻量档（已确认）+ 可选持久化（不执行）
 
-> **状态**：**L0 轻量档已确认**（2026-08-21）。**不执行** K1/K2。确认前不改实例。  
+> **状态**：**L0 已执行**（2026-08-21）。`apply_ops_l0.py` + `verify_ops_l0.py` 已落地；K1/K2 **冻结**。  
 > **日期**：2026-08-21  
 > **宪法**：（2）简单稳定优先 — 容器重建后 **用户重登录可接受**；agent 脚本 **1～2 分钟** 可还原功能与契约配置。
 
@@ -13,7 +13,7 @@
 | 项 | 策略 | 可接受代价 |
 |----|------|------------|
 | **`WEBUI_SECRET_KEY`** | env 保持 `""`；容器内 `.webui_secret_key` **不持久化**到 volume | 容器重建 → **全员重新登录** |
-| **Pipe `API_KEY`** | DB **明文**（或 merge 明文恢复）；**不**主动加密 | DB 备份含 OpenRouter key（与 `openai.api_keys` 同档风险） |
+| **Pipe `API_KEY`** | merge 恢复（输入明文；OWUI API 保存后常为 `encrypted:`，catalog 正常即可） | Admin 误改 env 密钥导致 decrypt 失败 → merge 明文重填 |
 | **`openai.api_configs`** | 5 条全 `enable: false` | 不变 |
 | **OpenRouter 密钥** | **必须有**（Pipe / TTS / RAG）；丢失则从 OpenRouter 控制台重开再 merge | 无 key = 站点不可用 |
 | **用户聊天 / Knowledge** | 靠 **DB / volume 备份**，不靠 JWT 持久化 | DB 全毁 = 数据不可还原 |
@@ -52,19 +52,8 @@
 3. 重建容器时保持：镜像 `e97bf9531916`、entrypoint `/custom/entrypoint.sh`、`127.0.0.1:8080`、`api_configs` 未改。  
 4. 通知用户：**请重新登录**（预期行为，不是故障）。
 
-### Agent（有 Admin JWT 即可）
-
-```text
-1. python3 scripts/verify_stack.py
-2. 若 catalog 空或 decrypt 日志：
-   merge OpenRouter key → Pipe valves（来源 config.openai.api_keys[0] 或 TTS 侧明文）
-   GET /api/models?refresh=true
-   scripts/restore_public_grants.py
-   scripts/apply_plan_a_hide_integrations.py
-   scripts/apply_wave0.py
-   scripts/apply_ui_guidance_banners.py
-3. verify_stack + verify_live_baseline + verify_notebook_youtube 全绿
-```
+4. Agent：`python3 scripts/apply_ops_l0.py` → `verify_ops_l0.py` → 全套 verify  
+5. 通知用户：**请重新登录**
 
 **禁止**：空 `POST /api/v1/models/sync`；启用 `openai.api_configs`。
 
@@ -79,7 +68,7 @@
 | catalog 空，无 decrypt | Pipe `API_KEY` 被清空 | merge 明文 key |
 | 聊天没了 | DB / volume 丢 | 恢复 DB 备份；**不是**重填 JWT 能解决的 |
 
-**Admin 误点 Pipe Valves Save** 可能把明文 key 变成 `encrypted:`。L0 下：**merge 回明文**即可，不要为此去做 K1。
+**OWUI API 行为**：经 `valves/update` 保存时，Pipe `API_KEY` 常被写成 `encrypted:`（运行时仍有 `.webui_secret_key`）。L0 验收看 **catalog 是否正常**，不是 DB 是否字面明文。decrypt 失败时仍用 **merge 明文** 恢复（与 15:47 同路径）。
 
 ---
 
@@ -116,5 +105,5 @@ JWT / `.webui_secret_key`：**不必**单独备份。
 
 | 日期 | 决策 |
 |------|------|
-| 2026-08-21 | 用户确认：**接受**容器重建后重登录；**拒绝** K1/K2 更重运维 |
+| 2026-08-21 | **已执行** `apply_ops_l0.py` / `verify_ops_l0.py`；实例 5 ok + verify_stack 24 ok |
 | 2026-08-21 | 默认档定为 **L0**；SPEC ST-OPS-* 与本文件一致 |

@@ -79,7 +79,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ID | 必须 |
 |----|------|
 | ST-OPS-1 | 容器重建可轮换 JWT（`WEBUI_SECRET_KEY=""`，`.webui_secret_key` 不持久化）；**接受**用户重新登录 |
-| ST-OPS-2 | Pipe `API_KEY` 默认 **明文** merge 维护；catalog 空时用 `openai.api_keys[0]` 或 TTS 侧明文恢复。**不**主动加密 Pipe key |
+| ST-OPS-2 | Pipe `API_KEY` 经 **merge 明文** 维护；catalog 空或 decrypt 失败时从 `openai.api_keys[0]` 恢复。**不**做 K1/K2 加密耦合；API 保存后可为 `encrypted:` |
 | ST-OPS-3 | `openai.api_configs` 保持全 `enable: false`；任何密钥操作不得改这条 |
 | ST-OPS-4 | VPS **禁止**向 env 写入**新的**随机 `WEBUI_SECRET_KEY`（15:09 根因）；若 Pipe key 已是 `encrypted:` 且 decrypt 失败 → env 改回空 + merge 明文 |
 | ST-OPS-5 | 不可逆资产 = **DB / volume**（聊天、Knowledge）；JWT 不必备份 |
