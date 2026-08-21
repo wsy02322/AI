@@ -1,8 +1,9 @@
-# gpt-audio 体验对照 — 最小实验（确认前不执行）
+# gpt-audio 体验对照 — 最小实验（GA-A 已执行）
 
-> **状态**：v1 **规划**。宪法：（1）不把本实验验收成 Advanced Voice；（2）不改 Call / 不换镜像；（3）确认后再动实例。  
+> **状态**：v1 **已执行（2026-08-21）**。结论：**Pipe/OWUI 未接通 `output_audio`**；维持 L1、不改 Call、不 public。  
 > **日期**：2026-08-21  
-> **已探针**：catalog 含 `open_webui_openrouter_integration.openai.gpt-audio` 与 `…gpt-audio-mini`（**非** 19 public）
+> **已探针**：catalog 含 `open_webui_openrouter_integration.openai.gpt-audio` 与 `…gpt-audio-mini`（**非** 19 public）  
+> **脚本**：`scripts/run_ga_a_trial.py`（`verify_stack` 须先全绿）
 
 关联：`docs/open-webui-live-voice-screen-plan.md`（gpt-audio **不做** Call 捷径）
 
@@ -70,18 +71,29 @@
 
 ---
 
-## 5. 实测（执行后填）
+## 5. 实测（2026-08-21）
+
+**基线**：`verify_stack.py` **24 ok / 0 err**（同会话先跑）。  
+**测试句**：`OK，这是音频测试。`  
+**gpt-audio 请求**：`modalities=["text","audio"]`，`audio={voice:alloy,format:wav}`，`stream=true`（OpenRouter 文档要求）。
 
 | 项 | MiniMax L1 | gpt-audio-mini | gpt-audio |
 |----|------------|----------------|-----------|
-| 有可播音频 | | | |
-| 墙钟（s） | | | |
-| 听感 | 基线 | | |
-| 备注 | | | |
+| 有可播音频 | **是**（MP3 31149 B） | **否** | **否** |
+| HTTP | 200 | 200（流内错误文案） | 200（流内错误文案） |
+| 墙钟（s） | **1.62** | 0.49 | 0.46 |
+| 听感 | **基线** | 无样本 | 无样本 |
+| 备注 | `/api/v1/audio/speech` → `minimax/speech-2.8-turbo` | OpenRouter **`Invalid Responses API request`**：`modalities[1]` 只允许 `text\|image`，不接受 `audio`（Pipe 走 Responses API，非 chat 音频出参） | 同 mini |
+
+**失败模式（写死）**：非 4xx/5xx，而是 **HTTP 200 + SSE 错误 Markdown**；**零** `delta.audio` / 文件 blob。OpenRouter raw：`invalid_value` on `modalities` → expected `text|image`。
+
+**GA-A 结论（§4 第一行）**：**停**。不在 OWUI/Pipe 上为 gpt-audio 加码改 Call；Voice 顶级仍 L-park / Realtime 路线。GA-B 维持 Don't。
+
+**产物**：`/opt/cursor/artifacts/ga_a_minimax_l1.mp3`、`ga_a_results.json`（密钥/全文音频未入库）。
 
 ---
 
 ## 6. 请确认
 
-- [ ] 执行 **GA-A**（不改 Call、不 public）  
-- [ ] 不执行 GA-B  
+- [x] 执行 **GA-A**（不改 Call、不 public）  
+- [x] 不执行 GA-B  
