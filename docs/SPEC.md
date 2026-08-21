@@ -40,11 +40,15 @@
 | ST-8 | 后台 Task 模型 = **Grok 4.6**（与默认聊天同档，低成本） |
 | ST-9 | **全局** `enable_image_generation` / `ENABLE_IMAGE_GENERATION` = false（路线 S；作图只走 Pipe 图像模型） |
 | ST-10 | 对比多轮：跨模型 `encrypted reasoning` 不得让一栏永久 404。Pipe 在 400/404 且错误含 `produced under a different model` / `encrypted reasoning` / `compaction content` 时，剥回放密文并 **内部重试**。`PERSIST_REASONING_TOKENS` 保持 `conversation`（单模型零损失）。**不**把全局 `disabled` 当终态。 |
+| ST-Live-1 | Live / 屏享 / 摄像走 **OWUI Call overlay**；禁止第二套未文档化前端 |
+| ST-Live-2 | 屏享会话必须用 **vision-capable** 模型（Grok 4.6 或 Gemini vision）；禁止对 Sonar / 纯图像开 Live tool 幻觉 |
+| ST-Live-3 | STT/TTS 继续 OpenRouter 时：**merge** 配置，不覆盖密钥。当前 TTS = `openai/tts-1-hd`，`SPLIT_ON=sentence` |
+| ST-Live-4 | Realtime / 厂商 Live API（L2+）**未确认前** 不上生产 |
 
 ## 明确 Later / Don't
 
-- **Later 必做**：**Live 语音/屏幕共享/摄像**（见 `docs/open-webui-live-voice-screen-plan.md`）；视频生成（换视频模型）；slides（独立表面）  
-- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径  
+- **L1 已落地**（stock overlay + Whisper/TTS + vision 指引）。**Later**：L2 Realtime 镜像（须再确认）；视频生成；slides  
+- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器  
 
 ---
 

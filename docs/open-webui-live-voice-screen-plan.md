@@ -1,7 +1,7 @@
 # Live 语音 · 摄像头 · 屏幕共享 — 方案
 
-> **状态**：计划 **v2（宪法 review）**，**确认前不改实例**  
-> **日期**：2026-08-21  
+> **状态**：v2 已确认并执行 **A（L0 catalog）+ B1（L1 略降级）**；**B2/L2 未做**  
+> **日期**：2026-08-21（落地）  
 > **优先级**：**屏幕共享首要** → 实时语音 → 摄像头  
 > **宪法**：（1）媲美 ChatGPT / Grok 最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行  
 
@@ -62,12 +62,12 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | 聊天主干 | OpenRouter **Pipe**（文本/推理/对比） |
 | 语音链路 | **串联**：STT → 选中模型 → TTS（**不是** Realtime S2S） |
 | STT | `openai` → OpenRouter，`openai/whisper-large-v3-turbo` |
-| TTS | `openai` → OpenRouter，`openai/tts-1`，voice `alloy`，`SPLIT_ON=punctuation` |
+| TTS | `openai` → OpenRouter，`openai/tts-1-hd`，voice `alloy`，`SPLIT_ON=sentence` |
 | OWUI 内置 | Call overlay：**语音 / 视频 / 屏幕共享 / 多模态输入**（官方文档与 0.11 发行说明） |
 | `enable_websocket` | **true** |
-| 模型目录 | **当前异常：`/api/v1/models` len=0**（Pipe active 但 catalog 空）→ **Live 前置阻塞** |
+| 模型目录 | **已修**（2026-08-21）：运行时 ~472 Pipe 模型；19 public 已重建 |
 
-结论：**屏幕共享 UI 在 OWUI 里已有**；catalog 空则任何 Live 都测不了。真·官网语音需要 Realtime，不能指望 Pipe 文本路径 alone。
+结论：**屏幕共享 UI 在 OWUI 里已有**；L0 catalog 不再阻塞。真·官网语音仍需 L2 Realtime。
 
 ---
 

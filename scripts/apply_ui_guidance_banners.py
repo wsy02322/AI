@@ -31,6 +31,8 @@ BANNERS = [
             "<b>Quick search</b> Sonar Pro Search · "
             "<b>Deep report</b> Sonar Deep Research (2–10 min, keep this tab open) · "
             "<b>Images</b> switch to Nano Banana Pro or GPT Image 2 first<br>"
+            "<b>Voice / screen share</b> pick Grok 4.6 or a Gemini vision model first "
+            "(not Sonar, not an image-only model). "
             "Do not use Sonar for everyday chat. Do not ask a chat model to draw."
             "</div>"
         ),
@@ -60,6 +62,9 @@ BANNERS = [
 ]
 
 DESCRIPTIONS = {
+    f"{PIPE}.x-ai.grok-4.6": (
+        "DEFAULT CHAT (paired with Opus in compare). Vision-capable — pick this or Gemini before Voice / screen share. Raise Reasoning depth for hard problems."
+    ),
     f"{PIPE}.perplexity.sonar-pro-search": (
         "QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
     ),

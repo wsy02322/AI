@@ -115,6 +115,7 @@
 | Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑 guard 逻辑 |
 | `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
 | valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |
+| picker / `/api/models` 空、聊天 `Model not found` | Pipe `API_KEY` 解密失败（`WEBUI_SECRET_KEY` 变了）或误调 **空** `POST /api/v1/models/sync`（会删光 DB 模型行） | **禁止空 sync**。用仍明文的 OpenRouter 密钥 merge 回 Pipe valves → `GET /api/models?refresh=true` → `scripts/restore_public_grants.py` → wave0 / plan A / banners |
 
 **Agent 重建时**：先读错误表 → 实现 **等价约束** → 跑验收，而非找旧 `content` 粘贴。
 

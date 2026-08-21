@@ -44,13 +44,14 @@
 |----|-------------|--------|
 | OWUI 版本 | 0.11.0 | **0.11.0**（`GET /api/version`） |
 | `ENABLE_OPENAI_API` | 视安装 | **true** |
-| OpenAI 兼容端点 | 0–1 个 | **6 个 slot**；仅 **slot 0** `enable=true` |
-| Slot 0 `base_url` | — | `https://api.gptsapi.net/v1`（密钥已配置） |
+| OpenAI 兼容端点 | 0–1 个 | **6 个 slot**；**全部 `enable=false`**（2026-08-21：关掉已 401 的 gptsapi slot 0） |
+| Slot 0 `base_url` | — | `https://api.gptsapi.net/v1`（密钥仍在；**不再启用**） |
 | Slot 1–5 `base_url` | — | `https://openrouter.ai/api/v1`（重复条目；**均 `enable=false`**；密钥已配置） |
 | `ENABLE_DIRECT_CONNECTIONS` | 常为 true | **false**（`GET /api/v1/configs/connections`） |
-| Pipe 模型目录规模 | 无 | **466** 个 `open_webui_openrouter_integration.*` 模型 |
+| `WEBUI_URL` | 空或安装 URL | **`https://micropigeon.com`**（HTTPS 升级后补上） |
+| Pipe 模型目录规模 | 无 | **~472** 个 `open_webui_openrouter_integration.*` 模型 |
 
-**含义**：日常流量经 **gptsapi.net 代理槽** 进入；OpenRouter 直连槽保留但未启用。Pipe 仍通过自身 `API_KEY` 调 OpenRouter（与 Admin OpenAI 连接独立）。
+**含义**：聊天主干只走 **Pipe → OpenRouter**，不再经 gptsapi 兼容槽。OpenRouter 直连槽保留但未启用。Pipe `API_KEY` 与 Admin OpenAI 连接独立（加密存储；`WEBUI_SECRET_KEY` 变更后须重填）。
 
 ### 2.2 原生 Web Search / Retrieval
 
@@ -309,6 +310,8 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `scripts/fix_sonar_tool_guard.py` | Sonar 防 tool 注入：Guard priority、web_tools/image_gen 早退、Sonar filterIds |
 | `scripts/apply_plan_a_hide_integrations.py` | 方案 A 一键：Valves merge、停用 Filter、剥模型 filterIds、关原生 Web Search |
 | `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + Banners + Description + Prompt chips + 校验 |
+| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public |
+| `scripts/verify_live_baseline.py` | L1 STT/TTS + 屏享指引验收 |
 
 **环境变量**：`OPENWEBUI_URL`、`OPENWEBUI_PASSWORD`、`OPENWEBUI_USERNAME`（优先于 email 登录）。
 
@@ -328,6 +331,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | 多轮图像 131072 token | `openrouter_image_context_guard` + chat `middle-out` / context-compression |
 | Pipe 更新后 Sonar 再坏 | `AUTO_INSTALL_*=false` + 重跑 guard / 方案 A |
 | `model/update` 500 | 请求带完整 `access_grants` 等字段 |
+| HTTPS 升级后 picker 空 | Pipe `encrypted` API_KEY 无法解密 + 空 `models/sync` 会删光 DB；已用 TTS 侧明文 OpenRouter 密钥重加密并 `restore_public_grants` |
 
 ---
 
@@ -345,6 +349,11 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | Reve 2.1 | OpenRouter 无模型 |
 | 全局原生 Image Gen | **已关**（`ENABLE_IMAGE_GENERATION=false`；路线 S） |
 | OWUI 核心 fork | **无** |
+| `www.micropigeon.com` | **无 DNS**（有意或未配） |
+| HTTP→HTTPS | `http://micropigeon.com` **Caddy 308** → https；**无 HSTS** |
+| `http://78.47.152.85` | 仍 200，但是 **另一套中文页**（`/api/version` 404），不是本 OWUI |
+| `rag.openai.api_base_url` | 仍 `gptsapi.net`（未改；RAG 若用该槽会 401） |
+| TTS | **`openai/tts-1-hd`** + `SPLIT_ON=sentence`（L1，2026-08-21） |
 
 ---
 
@@ -353,17 +362,19 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 ```
 Stock OWUI 0.11.0
     │
-    ├─ + OpenRouter Pipe（466 模型）+ API_KEY
+    ├─ + OpenRouter Pipe（~472 模型）+ API_KEY（encrypted）
     ├─ + 3 个自定义 Guard Filter
-    ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩）
+    ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩、跨模型 reasoning 重试）
     ├─ − 停用 web_tools / image_gen（方案 A）
     ├─ − 原生 Web Search OFF
     ├─ − Direct Connections OFF
-    ├─ Admin：6 OpenAI slots（仅 gptsapi slot0 启用）
-    ├─ 19 public 模型 + 4 置顶 + 英文 Description
+    ├─ − 全部 OpenAI 兼容槽禁用（含原 gptsapi slot0）
+    ├─ WEBUI_URL=https://micropigeon.com
+    ├─ 19 public 模型 + 4 置顶 + 英文 Description（含屏享）
     ├─ 2 条常驻英文 Banner
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
-    └─ Git：docs + 3 个 apply/fix 脚本
+    ├─ L1：tts-1-hd + sentence split + Call overlay
+    └─ Git：docs + apply/verify 脚本
 ```
 
 **体验契约**：用户通过 **选模型** 切换聊天 / 快搜 / 深度 / 作图；难题调 **Reasoning depth**；Integrations **简约**（无 Web Tools 三件套）。
@@ -382,6 +393,10 @@ python3 scripts/apply_plan_a_hide_integrations.py
 
 # UI 指引
 python3 scripts/apply_ui_guidance_banners.py
+
+# 验收
+python3 scripts/verify_stack.py
+python3 scripts/verify_live_baseline.py
 
 # Sonar guard（若重新启用 web_tools）
 python3 scripts/fix_sonar_tool_guard.py

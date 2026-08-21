@@ -15,6 +15,8 @@
 1. 跑 `python3 scripts/verify_stack.py`（需要 `OPENWEBUI_URL` / `OPENWEBUI_USERNAME` / `OPENWEBUI_PASSWORD`）  
 2. 更新 Pipe valves：**merge**，禁止全量覆盖（会丢 `API_KEY`）  
 3. 更新模型：`POST /api/v1/models/model/update` 必须带 `access_grants`  
+4. **禁止** `POST /api/v1/models/sync` 空列表：OWUI 0.11 会按 payload **删掉**不在列表里的全部模型行  
+5. Pipe `API_KEY` 在 DB 里是 `encrypted:…`。`WEBUI_SECRET_KEY` 一变（换容器 / HTTPS 重建）catalog 会空。用仍明文的 OpenRouter 密钥（TTS/STT）**merge** 回 valves，再 `GET /api/models?refresh=true`，最后 `scripts/restore_public_grants.py`  
 
 登录优先 `OPENWEBUI_USERNAME`，不一定等于 email。
 
@@ -28,6 +30,8 @@
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_ui_guidance_banners.py` | Banner / Description / chips / DEFAULT_MODELS |
+| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
+| `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 
 ## Pipe 更新 Runbook
