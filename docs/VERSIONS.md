@@ -11,7 +11,7 @@
 | Pipe content SHA256（前 12） | `a0b95c2cf90d`（S2′ 前为 `081c3773444c`） |
 | Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1` **均存在** |
 | 上次 `verify_stack.py` | **2026-08-21 全绿**（24 ok / 0 err）：catalog **472**、19 public、Grok/Opus/Sol Pro/Sonar smoke 200 |
-| 上次 `verify_live_baseline.py` | **2026-08-21**：屏享前置全绿（权限 / Banner / Grok chat 200）。TTS `/audio/speech` OpenRouter **无 tts-1[-hd]** → 400（已知，非本次引入） |
+| 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**（alloy / 俄文）；STT whisper-large-v3-turbo 可用 |
 | 上次 `verify_compare_cross_model.py` | **2026-08-20 全绿**（5 ok / 0 err）：Opus 跟在 Grok persist marker 后 200；`usage.input_tokens` = 2× 状态栏 Input（内部重试一次）；同模型 Grok 续聊 200；`PERSIST_REASONING_TOKENS` 仍为默认 conversation |
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |

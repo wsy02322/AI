@@ -353,7 +353,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | HTTP→HTTPS | `http://micropigeon.com` **Caddy 308** → https；**无 HSTS** |
 | `http://78.47.152.85` | 仍 200，但是 **另一套中文页**（`/api/version` 404），不是本 OWUI |
 | `rag.openai.api_base_url` | 仍 `gptsapi.net`（未改；RAG 若用该槽会 401） |
-| TTS | **`openai/tts-1-hd`** + `SPLIT_ON=sentence`（L1，2026-08-21） |
+| TTS | **`minimax/speech-2.8-turbo`** + voice `alloy` + `SPLIT_ON=sentence`（L1；OpenRouter 无 tts-1） |
 
 ---
 
@@ -373,7 +373,7 @@ Stock OWUI 0.11.0
     ├─ 19 public 模型 + 4 置顶 + 英文 Description（含屏享）
     ├─ 2 条常驻英文 Banner
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
-    ├─ L1：tts-1-hd + sentence split + Call overlay
+    ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
     └─ Git：docs + apply/verify 脚本
 ```
 

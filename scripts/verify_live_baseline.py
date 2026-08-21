@@ -14,7 +14,7 @@ from stack_contract import DEFAULT_MODEL_PRIMARY, PIPE
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
-TTS_MODEL = "openai/tts-1-hd"
+TTS_MODEL = "minimax/speech-2.8-turbo"
 TTS_SPLIT_ON = "sentence"
 SCREEN_SHARE_NEEDLE = "screen share"
 VISION_SMOKE_MODEL = DEFAULT_MODEL_PRIMARY
@@ -113,21 +113,7 @@ def main() -> int:
     if speech.status_code == 200 and speech.content and len(speech.content) > 200:
         r.ok(f"tts speech bytes={len(speech.content)} type={ctype}")
     else:
-        detail = speech.text[:240]
-        # OpenRouter currently has no openai/tts-1[-hd] on /audio/speech
-        # (OWUI wraps the upstream 400 as External: Bad Request).
-        lowered = detail.lower()
-        openrouter_missing = speech.status_code == 400 and (
-            "does not exist" in lowered
-            or ("bad request" in lowered and "audio/speech" in lowered)
-        )
-        if openrouter_missing:
-            print(
-                "WARN tts speech 400: OpenRouter has no /audio/speech model "
-                f"{TTS_MODEL}; L1 screen-share still uses vision chat. {detail}"
-            )
-        else:
-            r.err(f"tts speech {speech.status_code} bytes={len(speech.content)} {detail}")
+        r.err(f"tts speech {speech.status_code} bytes={len(speech.content)} {speech.text[:240]}")
 
     if speech.status_code == 200 and speech.content:
         files = {"file": ("ok.mp3", speech.content, "audio/mpeg")}

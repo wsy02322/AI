@@ -62,7 +62,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | 聊天主干 | OpenRouter **Pipe**（文本/推理/对比） |
 | 语音链路 | **串联**：STT → 选中模型 → TTS（**不是** Realtime S2S） |
 | STT | `openai` → OpenRouter，`openai/whisper-large-v3-turbo` |
-| TTS | `openai` → OpenRouter，配置 **`openai/tts-1-hd`**，voice `alloy`，`SPLIT_ON=sentence`。**OpenRouter `/audio/speech` 无此模型**（`tts-1` 同样 400）；屏享不依赖该端点 |
+| TTS | `openai` → OpenRouter **`minimax/speech-2.8-turbo`**，voice `alloy`，`SPLIT_ON=sentence`。Read Aloud / Call overlay 经 `/audio/speech` 出 MP3（2026-08-21 实测 200）。`openai/tts-1[-hd]` 在 OpenRouter **不存在** |
 | OWUI 内置 | Call overlay：**语音 / 视频 / 屏幕共享 / 多模态输入**（官方文档与 0.11 发行说明） |
 | `enable_websocket` | **true** |
 | 模型目录 | **已修**（2026-08-21）：运行时 ~472 Pipe 模型；19 public 已重建 |
@@ -128,7 +128,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 
 | 步 | 动作 | 类型 |
 |----|------|------|
-| L1-1 | TTS 升级 `tts-1-hd`；`TTS_SPLIT_ON=sentence`（首包更快） | 配置 |
+| L1-1 | TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 `alloy`）；`TTS_SPLIT_ON=sentence` | 配置 |
 | L1-2 | 英文 Banner/chip：**Screen share → pick Grok 4.6 or Gemini vision first** | 指引 |
 | L1-3 | 默认 Live 推荐模型置顶/Description（**不换** 19 public 契约） | metadata |
 | L1-4 | `scripts/verify_live_baseline.py`：STT 短音频、TTS 短句、vision 模型 smoke | 验收 |
