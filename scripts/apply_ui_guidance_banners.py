@@ -9,9 +9,11 @@ import time
 
 import requests
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from stack_contract import DEFAULT_MODELS
+
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 PIPE = "open_webui_openrouter_integration"
-DEFAULT_MODELS = f"{PIPE}.openai.gpt-5.6-sol-pro"
 
 BANNERS = [
     {
@@ -29,6 +31,10 @@ BANNERS = [
             "<b>Quick search</b> Sonar Pro Search · "
             "<b>Deep report</b> Sonar Deep Research (2–10 min, keep this tab open) · "
             "<b>Images</b> switch to Nano Banana Pro or GPT Image 2 first<br>"
+            "<b>Voice / screen share</b> pick Grok 4.6 or a Gemini vision model first "
+            "(not Sonar, not an image-only model). "
+            "<b>Notebook / YouTube</b> Workspace → Knowledge (your sources, with timestamps). "
+            "Web search stays Sonar — do not mix. "
             "Do not use Sonar for everyday chat. Do not ask a chat model to draw."
             "</div>"
         ),
@@ -58,6 +64,9 @@ BANNERS = [
 ]
 
 DESCRIPTIONS = {
+    f"{PIPE}.x-ai.grok-4.6": (
+        "DEFAULT CHAT (paired with Opus in compare). Vision-capable — pick this or Gemini before Voice / screen share. Raise Reasoning depth for hard problems."
+    ),
     f"{PIPE}.perplexity.sonar-pro-search": (
         "QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
     ),
@@ -83,10 +92,10 @@ DESCRIPTIONS = {
 
 SUGGESTIONS = [
     {
-        "title": ["Quick search", "Select Sonar Pro Search first"],
+        "title": ["Message me on WeChat @dalapi", "Let's improve this together"],
         "content": (
-            "After you select Perplexity: Sonar Pro Search, summarize today’s most important AI news "
-            "in a few sentences and include sources."
+            "Message me on WeChat @dalapi — let's improve this together. "
+            "Tell me one thing that confused you or one feature you'd like to see."
         ),
     },
     {

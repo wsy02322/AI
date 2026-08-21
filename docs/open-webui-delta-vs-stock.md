@@ -1,7 +1,7 @@
 # 相对纯官方 Open WebUI 的全部改动记录
 
 > **基准（Stock）**：Open WebUI **0.11.0**，无第三方 Pipe、无自定义 Function、无本仓库脚本与文档所描述的配置。  
-> **对比对象（本实例）**：`http://78.47.152.85`（探针日期 **2026-08-20**）  
+> **对比对象（本实例）**：`https://micropigeon.com`（探针日期 **2026-08-21**）  
 > **本文件地位**：相对官方的 **单一真相源**；灾备规格见 `open-webui-disaster-recovery-rebuild-plan.md`。
 
 ---
@@ -44,13 +44,25 @@
 |----|-------------|--------|
 | OWUI 版本 | 0.11.0 | **0.11.0**（`GET /api/version`） |
 | `ENABLE_OPENAI_API` | 视安装 | **true** |
-| OpenAI 兼容端点 | 0–1 个 | **6 个 slot**；仅 **slot 0** `enable=true` |
-| Slot 0 `base_url` | — | `https://api.gptsapi.net/v1`（密钥已配置） |
+| OpenAI 兼容端点 | 0–1 个 | **6 个 slot**；**全部 `enable=false`**（2026-08-21：关掉已 401 的 gptsapi slot 0） |
+| Slot 0 `base_url` | — | `https://api.gptsapi.net/v1`（密钥仍在；**不再启用**） |
 | Slot 1–5 `base_url` | — | `https://openrouter.ai/api/v1`（重复条目；**均 `enable=false`**；密钥已配置） |
 | `ENABLE_DIRECT_CONNECTIONS` | 常为 true | **false**（`GET /api/v1/configs/connections`） |
-| Pipe 模型目录规模 | 无 | **466** 个 `open_webui_openrouter_integration.*` 模型 |
+| `WEBUI_URL` | 空或安装 URL | **`https://micropigeon.com`**（HTTPS 升级后补上） |
+| Pipe 模型目录规模 | 无 | **~472** 个 `open_webui_openrouter_integration.*` 模型 |
 
-**含义**：日常流量经 **gptsapi.net 代理槽** 进入；OpenRouter 直连槽保留但未启用。Pipe 仍通过自身 `API_KEY` 调 OpenRouter（与 Admin OpenAI 连接独立）。
+**含义**：聊天主干只走 **Pipe → OpenRouter**，不再经 gptsapi 兼容槽。OpenRouter 直连槽保留但未启用（**5 条 `enable=false` 为刻意配置，勿改**）。Pipe `API_KEY` 与 Admin `openai.api_keys` 独立；**当前 DB 为明文**（2026-08-21 应急修复）。`/root/open-webui.env` 中 **`WEBUI_SECRET_KEY=""`**；非空 env 会与 `encrypted:` 值冲突导致 catalog 空。
+
+### 2.1.1 运行时密钥与容器（2026-08-21 维护后）
+
+| 项 | 本实例 |
+|----|--------|
+| VPS | Hetzner `78.47.152.85`，cx33（8GB）；Caddy → `127.0.0.1:8080` |
+| 镜像 | 固定 `e97bf9531916`（非 `:main` 浮动标签） |
+| Entrypoint | `/opt/open-webui/custom/entrypoint.sh` |
+| env | `/root/open-webui.env`：`WEBUI_SECRET_KEY=""` |
+| 运行时 session 密钥 | `/app/backend/.webui_secret_key`（容器内生成，**不在 data volume**） |
+| Pipe `API_KEY` | DB **明文** `sk-or-v1-…`（修前备份 `webui-valves-fix-20260821-154729.db`） |
 
 ### 2.2 原生 Web Search / Retrieval
 
@@ -66,10 +78,10 @@
 | 项 | Stock | 本实例 |
 |----|-------|--------|
 | `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
-| `DEFAULT_MODELS` | 自选 | **`open_webui_openrouter_integration.openai.gpt-5.6-sol-pro`**（GPT-5.6 Sol Pro Pipe） |
+| `DEFAULT_MODELS` | 自选 | **`grok-4.6` + `claude-opus-5`**（双默认，便于对比；逗号分隔 Pipe id） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认落在 Pipe Sol Pro（2026-08-20 修复）。`scripts/apply_ui_guidance_banners.py` 会一并写入 `DEFAULT_MODELS`。
+**说明**：新对话默认 Grok 4.6 + Opus 5 双模型（2026-08-20）。后台 Task 仍只用 Grok 4.6。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -121,6 +133,7 @@
 | Seedream 5.x | `image_config.image_size` → `resolution`；非法 `4K` 降为 `2K` |
 | `apply_chat_context_transforms` | chat 路径增加 `middle-out`、`context-compression` |
 | 图像/视频模型 | Pipe 层对 `image_output` / `video_generation` 禁止发送 tools |
+| `COMPARE_CROSS_MODEL_REASONING_V1` | 扩 `_should_retry_dropping_signed_reasoning`：400/404 跨模型加密 reasoning 拒绝时剥密文内部重试（对比 ST-10；不关 `PERSIST_REASONING_TOKENS`） |
 
 详细错误历史见 `open-webui-openrouter-image-continuity-plan.md` §2、§10。
 
@@ -273,7 +286,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 ### 7.2 Prompt suggestions（空对话 chips）
 
-**设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip，均含 “Select … first”。
+**设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip；第 1 条为 WeChat 反馈（`@dalapi`），其余 3 条含 “Select … first”。
 
 **存储**：`POST /api/v1/configs/suggestions`；导出键 **`ui.prompt_suggestions`**（flat，非 `export.ui` 嵌套）。`GET /api/config` 的嵌套 `ui.prompt_suggestions` 可能为空，以 export 为准。
 
@@ -308,6 +321,8 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `scripts/fix_sonar_tool_guard.py` | Sonar 防 tool 注入：Guard priority、web_tools/image_gen 早退、Sonar filterIds |
 | `scripts/apply_plan_a_hide_integrations.py` | 方案 A 一键：Valves merge、停用 Filter、剥模型 filterIds、关原生 Web Search |
 | `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + Banners + Description + Prompt chips + 校验 |
+| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public |
+| `scripts/verify_live_baseline.py` | L1 STT/TTS + 屏享指引验收 |
 
 **环境变量**：`OPENWEBUI_URL`、`OPENWEBUI_PASSWORD`、`OPENWEBUI_USERNAME`（优先于 email 登录）。
 
@@ -321,12 +336,13 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | 现象 | 我们的改动 |
 |------|------------|
-| `No endpoints found that support tool use` + `get_current_timestamp` | Guard 剥 tools；Valves 关 DATETIME/Web Search；方案 A 停用 web_tools/image_gen |
+| `No endpoints found that support tool use` + `get_current_timestamp` | Guard 剥 tools；Valves 关 DATETIME；方案 A 停用 web_tools/image_gen；**Sonar 也关 `builtin_tools`**（OWUI 缺省 true 会注入时间戳 tool） |
 | `gpt-image-*` chat endpoint 错误 | Pipe Images API 路由 |
 | `seedream-5` OpenRouter 500 | 同上 + resolution 映射 |
 | 多轮图像 131072 token | `openrouter_image_context_guard` + chat `middle-out` / context-compression |
 | Pipe 更新后 Sonar 再坏 | `AUTO_INSTALL_*=false` + 重跑 guard / 方案 A |
 | `model/update` 500 | 请求带完整 `access_grants` 等字段 |
+| HTTPS / VPS 维护后 picker 空 | env 非空 `WEBUI_SECRET_KEY` 与 DB `encrypted:` Pipe key 不一致 → `Failed to decrypt`；或空 `models/sync` 删光 DB。2026-08-21：env 改回空 + DB 明文 `api_keys[0]` → 473 模型；**勿**再随意写 env 密钥 |
 
 ---
 
@@ -336,12 +352,19 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 |----|------|
 | `DEFAULT_MODELS` 指向 Pipe Sol Pro | **已修**（2026-08-20） |
 | Prompt suggestions | **4 条**（export `ui.prompt_suggestions`） |
+| Task 模型（标题/补全） | **Grok 4.6** Pipe（Wave 0 后自 Sol Pro 下调成本） |
+| Sonar / 纯图像 `code_interpreter` 等 | **已关**（Wave 0）；Sol Pro / Opus 的 code interpreter **保留** |
 | `web_tools`/`image_gen` Sonar 早退补丁 | **探针未见**；当前靠停用 + Guard |
 | 图像画布连续性（canonical canvas） | **未实现** — 见 continuity plan §5 |
 | 蒙版 inpainting / ComfyUI | **未实现** |
 | Reve 2.1 | OpenRouter 无模型 |
-| OpenAI slot 1–5 未启用 | 保留配置，日常不用 |
+| 全局原生 Image Gen | **已关**（`ENABLE_IMAGE_GENERATION=false`；路线 S） |
 | OWUI 核心 fork | **无** |
+| `www.micropigeon.com` | **无 DNS**（有意或未配） |
+| HTTP→HTTPS | `http://micropigeon.com` **Caddy 308** → https；**无 HSTS** |
+| `http://78.47.152.85` | 仍 200，但是 **另一套中文页**（`/api/version` 404），不是本 OWUI |
+| `rag.openai.api_base_url` | **`https://openrouter.ai/api/v1`**（N1；模型 `openai/text-embedding-3-small`）。Knowledge 集合 **YouTube Notebook** 已有视觉时间线烟测 |
+| TTS | **`minimax/speech-2.8-turbo`** + voice `alloy` + `SPLIT_ON=sentence`（L1；OpenRouter 无 tts-1） |
 
 ---
 
@@ -350,17 +373,20 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 ```
 Stock OWUI 0.11.0
     │
-    ├─ + OpenRouter Pipe（466 模型）+ API_KEY
+    ├─ + OpenRouter Pipe（~473 模型）+ API_KEY（当前 DB 明文；env WEBUI_SECRET_KEY 空）
     ├─ + 3 个自定义 Guard Filter
-    ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩）
+    ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩、跨模型 reasoning 重试）
     ├─ − 停用 web_tools / image_gen（方案 A）
     ├─ − 原生 Web Search OFF
     ├─ − Direct Connections OFF
-    ├─ Admin：6 OpenAI slots（仅 gptsapi slot0 启用）
-    ├─ 19 public 模型 + 4 置顶 + 英文 Description
+    ├─ − 全部 OpenAI 兼容槽禁用（含原 gptsapi slot0）
+    ├─ WEBUI_URL=https://micropigeon.com
+    ├─ 19 public 模型 + 4 置顶 + 英文 Description（含屏享）
     ├─ 2 条常驻英文 Banner
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
-    └─ Git：docs + 3 个 apply/fix 脚本
+    ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
+    ├─ N1：RAG embedding → OpenRouter；Knowledge「YouTube Notebook」+ 视觉时间线
+    └─ Git：docs + apply/verify 脚本
 ```
 
 **体验契约**：用户通过 **选模型** 切换聊天 / 快搜 / 深度 / 作图；难题调 **Reasoning depth**；Integrations **简约**（无 Web Tools 三件套）。
@@ -379,6 +405,10 @@ python3 scripts/apply_plan_a_hide_integrations.py
 
 # UI 指引
 python3 scripts/apply_ui_guidance_banners.py
+
+# 验收
+python3 scripts/verify_stack.py
+python3 scripts/verify_live_baseline.py
 
 # Sonar guard（若重新启用 web_tools）
 python3 scripts/fix_sonar_tool_guard.py
@@ -399,6 +429,8 @@ python3 scripts/fix_sonar_tool_guard.py
 | 主题 | 文档 |
 |------|------|
 | 图像细节与测试列表 | `open-webui-openrouter-image-continuity-plan.md` |
+| Voice / Realtime（P0-B）+ 屏享（P0-C） | `open-webui-live-voice-screen-plan.md` |
+| Notebook / YouTube（P0-D，N1 已落地） | `open-webui-notebook-youtube-plan.md` |
 | 界面文案设计意图 | `open-webui-user-guidance-plan.md` |
 | 灾备与重建流程 | `open-webui-disaster-recovery-rebuild-plan.md` |
 

@@ -1,7 +1,7 @@
 # Open WebUI 灾备与重建 — 重规划（规格驱动）
 
 > **状态**：重规划已记录，待确认后落地  
-> **最后更新**：2026-08-20（v2，替代 v1「全量快照」思路）  
+> **最后更新**：2026-08-21（v2.1：对齐 VPS 维护摘要 — WEBUI_SECRET_KEY / Pipe API_KEY / 容器重建）  
 > **核心转变**：不追求复刻某一天的 **代码与配置字节**，而追求在任何合理新版本上 **复现同一套能力与体验**。  
 > **关联**：`open-webui-openrouter-image-continuity-plan.md`（错误与补丁历史）、`open-webui-user-guidance-plan.md`（界面指引意图）
 
@@ -95,9 +95,8 @@
 
 ### 2.3 能力范围（What we intentionally do NOT promise）
 
-- 同一对话内无感「聊完再画」（需换模型）
+- 同一对话内无感「聊完再画」（需换模型；路线 S）
 - 图像像素级锁定 / 蒙版 inpainting（未实现）
-- 默认新对话 = Sol Pro（**待修**，当前 DEFAULT_MODELS 仍指向非 Pipe id）
 - Reve 2.1 等 OpenRouter 未上架模型
 
 ---
@@ -116,6 +115,8 @@
 | Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑 guard 逻辑 |
 | `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
 | valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |
+| picker / `/api/models` 空、聊天 `Model not found` | Pipe `API_KEY` 解密失败（env 非空 `WEBUI_SECRET_KEY` 与 DB `encrypted:` 不一致；或 `.webui_secret_key` 容器重建丢失）或误调 **空** `POST /api/v1/models/sync` | **禁止空 sync**。**禁止**随意在 `/root/open-webui.env` 写非空 `WEBUI_SECRET_KEY`。修复：env 改回 `""` → merge 明文 OpenRouter 密钥到 Pipe valves（或 Admin UI 重填）→ `GET /api/models?refresh=true` → `restore_public_grants.py` → wave0 / plan A / banners |
+| 容器重建后全员掉线 | `/app/backend/.webui_secret_key` 不在 volume；**L0 策略**故意不持久化 JWT | **可接受** — 用户重登录。Agent 跑 verify + 必要时 merge Pipe key（见 `open-webui-secret-key-persist-plan.md` §2） |
 
 **Agent 重建时**：先读错误表 → 实现 **等价约束** → 跑验收，而非找旧 `content` 粘贴。
 
@@ -133,6 +134,9 @@
 | 登录用 `OPENWEBUI_USERNAME` 未必等于 email | 本实例 username 更稳 |
 | Public 模型：`access_grants` principal `*` | Pipe 默认图像模型仅 admin |
 | OpenRouter Pipe 模型 id 前缀 `open_webui_openrouter_integration.` | |
+| **`openai.api_configs` 全 `enable=false`** | 用户刻意：模型只走 Pipe，**勿**改为 true |
+| **`WEBUI_SECRET_KEY` env 为空** | **L0 已确认**：不持久化 JWT；重建后重登可接受 | 写入新随机 env 密钥且 Pipe 为 `encrypted:` → catalog 空 |
+| Pipe `API_KEY` 明文 | **L0 默认**；便于 agent 秒级恢复 | Admin 误保存成 `encrypted:` → merge 回明文 |
 
 这些应进 **`AGENTS.md` + 错误目录**，不必进 Function 源码快照。
 
@@ -148,6 +152,8 @@
 | 界面指引 **英文** | 用户要求 | |
 | Banners **non-dismissible**（当前） | 彰显 game changer | 用户关掉后仍误用 |
 | `scripts/` 是加速器，**非** 唯一真相源 | Pipe 版本变仍可重写 | |
+| **`openai.api_configs` 保持 disabled** | 模型目录只经 Pipe；避免双路由与误 sync | 启用 slot → 与 Pipe 冲突、用户架构意图破坏 |
+| **L0：不持久化 JWT、Pipe key 明文** | 简单稳定；重建后重登 + agent 脚本可还原功能 | 主动 K1/K2 → 密钥耦合、维护脚本易踩坑（15:09） |
 
 ---
 
@@ -156,7 +162,7 @@
 | 资产 | 频率 | 说明 |
 |------|------|------|
 | **用户 chats / 上传文件** | 日备 | 真正难再现 |
-| **OWUI DB** | 周备 + 大改前 | 恢复「昨天状态」应急；**非** 重建主路径 |
+| **OWUI DB** | 周备 + 大改前 | 恢复「昨天状态」应急；**非** 重建主路径。例：`/root/backups/webui-valves-fix-20260821-154729.db` |
 | **git：规格 + verify + scripts** | 每次合并 | 主重建路径 |
 | configs/export **脱敏摘要**（非全量） | 可选月备 | 仅当 diff 规格是否漂移 |
 | Function 源码全量 | **一般不备** | 除非做法一应急包 |
@@ -176,8 +182,9 @@
 ### Step 2 — 搭平台（版本可新）
 
 1. 安装 OWUI + 安装 **当前** OpenRouter Pipe（记录版本号入 `docs/VERSIONS.md`）  
-2. **Merge** Pipe valves：API_KEY + §2.2 约束相关 false  
-3. 关闭 Direct Connections  
+2. **Merge** Pipe valves：API_KEY（可明文或 Admin 重填）+ §2.2 约束相关 false  
+3. 关闭 Direct Connections；**保持** `openai.api_configs` 全 `enable=false`  
+4. `/root/open-webui.env`：`WEBUI_SECRET_KEY=""`（**L0**；不持久化 JWT；见 `open-webui-secret-key-persist-plan.md`）  
 
 ### Step 3 — 实现稳定性（按模式，非按旧代码）
 
