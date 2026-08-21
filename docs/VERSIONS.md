@@ -16,7 +16,9 @@
 | 上次 `verify_compare_cross_model.py` | **2026-08-20 全绿**（5 ok / 0 err）：Opus 跟在 Grok persist marker 后 200；`usage.input_tokens` = 2× 状态栏 Input（内部重试一次）；同模型 Grok 续聊 200；`PERSIST_REASONING_TOKENS` 仍为默认 conversation |
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |
-| HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；gptsapi slot0 **禁用**；Pipe `API_KEY` 已用当前 `WEBUI_SECRET_KEY` 重加密 |
+| HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；gptsapi slot0 **禁用**；5× OpenRouter slot **全 `enable=false`** |
+| VPS 维护（2026-08-21） | Hetzner cx23→cx33；曾误设 env `WEBUI_SECRET_KEY` → decrypt 失败 → catalog 空；已回滚 env 为空并 **DB 明文** Pipe `API_KEY`；473 模型恢复；**全员需重新登录**（`.webui_secret_key` 15:35 重建时新生成） |
+| Pipe `API_KEY` 形态 | **明文**（`sk-or-v1-…`，来自 `openai.api_keys[0]`）；非 `encrypted:`。Admin 重保存且 env 非空时会再加密 |
 
 ## Pipe 更新后
 

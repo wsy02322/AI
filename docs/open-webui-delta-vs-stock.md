@@ -51,7 +51,18 @@
 | `WEBUI_URL` | 空或安装 URL | **`https://micropigeon.com`**（HTTPS 升级后补上） |
 | Pipe 模型目录规模 | 无 | **~472** 个 `open_webui_openrouter_integration.*` 模型 |
 
-**含义**：聊天主干只走 **Pipe → OpenRouter**，不再经 gptsapi 兼容槽。OpenRouter 直连槽保留但未启用。Pipe `API_KEY` 与 Admin OpenAI 连接独立（加密存储；`WEBUI_SECRET_KEY` 变更后须重填）。
+**含义**：聊天主干只走 **Pipe → OpenRouter**，不再经 gptsapi 兼容槽。OpenRouter 直连槽保留但未启用（**5 条 `enable=false` 为刻意配置，勿改**）。Pipe `API_KEY` 与 Admin `openai.api_keys` 独立；**当前 DB 为明文**（2026-08-21 应急修复）。`/root/open-webui.env` 中 **`WEBUI_SECRET_KEY=""`**；非空 env 会与 `encrypted:` 值冲突导致 catalog 空。
+
+### 2.1.1 运行时密钥与容器（2026-08-21 维护后）
+
+| 项 | 本实例 |
+|----|--------|
+| VPS | Hetzner `78.47.152.85`，cx33（8GB）；Caddy → `127.0.0.1:8080` |
+| 镜像 | 固定 `e97bf9531916`（非 `:main` 浮动标签） |
+| Entrypoint | `/opt/open-webui/custom/entrypoint.sh` |
+| env | `/root/open-webui.env`：`WEBUI_SECRET_KEY=""` |
+| 运行时 session 密钥 | `/app/backend/.webui_secret_key`（容器内生成，**不在 data volume**） |
+| Pipe `API_KEY` | DB **明文** `sk-or-v1-…`（修前备份 `webui-valves-fix-20260821-154729.db`） |
 
 ### 2.2 原生 Web Search / Retrieval
 
@@ -331,7 +342,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | 多轮图像 131072 token | `openrouter_image_context_guard` + chat `middle-out` / context-compression |
 | Pipe 更新后 Sonar 再坏 | `AUTO_INSTALL_*=false` + 重跑 guard / 方案 A |
 | `model/update` 500 | 请求带完整 `access_grants` 等字段 |
-| HTTPS 升级后 picker 空 | Pipe `encrypted` API_KEY 无法解密 + 空 `models/sync` 会删光 DB；已用 TTS 侧明文 OpenRouter 密钥重加密并 `restore_public_grants` |
+| HTTPS / VPS 维护后 picker 空 | env 非空 `WEBUI_SECRET_KEY` 与 DB `encrypted:` Pipe key 不一致 → `Failed to decrypt`；或空 `models/sync` 删光 DB。2026-08-21：env 改回空 + DB 明文 `api_keys[0]` → 473 模型；**勿**再随意写 env 密钥 |
 
 ---
 
@@ -362,7 +373,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 ```
 Stock OWUI 0.11.0
     │
-    ├─ + OpenRouter Pipe（~472 模型）+ API_KEY（encrypted）
+    ├─ + OpenRouter Pipe（~473 模型）+ API_KEY（当前 DB 明文；env WEBUI_SECRET_KEY 空）
     ├─ + 3 个自定义 Guard Filter
     ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩、跨模型 reasoning 重试）
     ├─ − 停用 web_tools / image_gen（方案 A）

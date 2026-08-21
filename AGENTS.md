@@ -18,7 +18,13 @@
 2. 更新 Pipe valves：**merge**，禁止全量覆盖（会丢 `API_KEY`）  
 3. 更新模型：`POST /api/v1/models/model/update` 必须带 `access_grants`  
 4. **禁止** `POST /api/v1/models/sync` 空列表：OWUI 0.11 会按 payload **删掉**不在列表里的全部模型行  
-5. Pipe `API_KEY` 在 DB 里是 `encrypted:…`。`WEBUI_SECRET_KEY` 一变（换容器 / HTTPS 重建）catalog 会空。用仍明文的 OpenRouter 密钥（TTS/STT）**merge** 回 valves，再 `GET /api/models?refresh=true`，最后 `scripts/restore_public_grants.py`  
+5. **Pipe `API_KEY` 与 `WEBUI_SECRET_KEY`（2026-08-21 VPS 维护后）**  
+   - **当前实例**：`/root/open-webui.env` 中 `WEBUI_SECRET_KEY=""`（空）；运行时密钥由 `start.sh` 从容器内 `/app/backend/.webui_secret_key` 加载（**不在 data volume**，容器重建会换密钥 → **全员需重新登录**）。  
+   - Pipe `API_KEY` 在 DB 中为 **明文** `sk-or-v1-…`（15:47 UTC 应急修 DB；备份 `/root/backups/webui-valves-fix-20260821-154729.db`）。  
+   - **禁止**在 env 随意写入非空 `WEBUI_SECRET_KEY`：与 DB 里 `encrypted:…` 不一致会导致 `Failed to decrypt` → catalog 空。若必须设 env 密钥，须在 Admin → Functions → OpenRouter Integration **重填并保存** API Key。  
+   - **禁止**改 `openai.api_configs` 的 `enable` 为 true（5 条 OpenRouter 槽 **刻意 false**；模型只走 Pipe）。  
+   - 若 catalog 空且日志有 `decrypt` / `invalid token or key mismatch`：用仍明文的 OpenRouter 密钥（`config.openai.api_keys[0]` 或 TTS/STT 侧）**merge** 回 Pipe valves（可明文或 Admin UI 重保存），再 `GET /api/models?refresh=true`，最后 `scripts/restore_public_grants.py`。  
+   - **禁止** `POST /api/v1/models/sync` 空列表（会删光 DB 模型行）。  
 
 登录优先 `OPENWEBUI_USERNAME`，不一定等于 email。
 
@@ -52,8 +58,22 @@
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 
+## VPS / 容器运维（勿与 Pipe 脚本混用）
+
+| 项 | 当前值 / 约束 |
+|----|----------------|
+| 容器 | `open-webui`，`127.0.0.1:8080`，镜像 `e97bf9531916` |
+| Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
+| env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""` |
+| `openai.api_configs` | 5 条，**全部 `enable: false`** |
+| 持久化建议（未做） | 将 `.webui_secret_key` 挂到 data volume，避免重建换 session 密钥 |
+
+升配 / 重建容器前：先 `verify_stack.py` 全绿；大改前备份 `webui.db`（见灾备 §6）。
+
 ## 不要做
 
+- 在 `/root/open-webui.env` 写入非空 `WEBUI_SECRET_KEY`（除非同步在 Admin 重保存 Pipe API Key）  
+- 启用 `openai.api_configs`（OpenRouter 直连槽）  
 - 给 Sonar / 纯图像灌 tools  
 - 打开 Sol Pro `image_generation` 来做同会话作图  
 - 一次 public 全部视频模型  
