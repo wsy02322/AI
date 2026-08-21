@@ -236,3 +236,71 @@ L0 修 catalog + 权限烟测
 - 本仓库：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`
 
 *确认本文件后执行：**L0 → L1**；L2/L3 等你 §8 四点回复后再动。*
+
+---
+
+## 11. 社区是否有现成方案？（能帮多少）
+
+**结论：能帮很多，但分档——不能一个插件包办「屏享 + 三家 Live 官网同级」。**
+
+### 11.1 已经在你栈里、直接能用（帮 **L1 大头**）
+
+| 来源 | 是什么 | 帮你省什么 | 屏享 | 官网 Live 级语音 |
+|------|--------|------------|------|------------------|
+| **Open WebUI 0.11 主线** | Call overlay：语音 / 摄像 / **屏幕共享** / VAD / 静音 | 不用自研浏览器采集 UI | ✅ 内置 | ❌ 串联 STT→模型→TTS |
+| **你已装的 rbb-dev Pipe** | OpenRouter 全目录 + whisper STT + tts-1（micropigeon 已配） | 账单统一 OpenRouter | ✅ 配 **vision 模型** 即可 | ❌ |
+| OWUI 文档 | [Voice & Video](https://open-webui-open-webui.mintlify.app/features/voice-video) | 配置参考 | ✅ | ❌ |
+
+→ **「屏幕共享首要」**：社区 **已经做了 80% UI**；你主要是 **L0 修 catalog + 选 vision 模型 + 调 STT/TTS**（计划 L1），不必从零写 `getDisplayMedia`。
+
+### 11.2 同生态、最接近 GPT Live 语音（帮 **L2 大头**）
+
+| 来源 | 是什么 | 帮你省什么 | 屏享 | 备注 |
+|------|--------|------------|------|------|
+| **rbb-dev/open-webui-realtime** | 独立镜像 `ghcr.io/rbb-dev/open-webui-realtime:latest` | **整包 Realtime WebRTC**：可打断、通话中 **OWUI tools**、历史回写聊天、打字接力进同一会话 | ⚠️ PR 写 **message/image handoff** 进 Realtime 会话，**不是** Gemini 式持续屏享 HUD | 与 **你用的 Pipe 同作者**；[讨论 #22622](https://github.com/open-webui/open-webui/discussions/22622)、[PR #23237](https://github.com/open-webui/open-webui/pull/23237)（**未合入主线**，维护者称 scope 太大） |
+| rbb-dev 说明 | 兼容 OpenAI Realtime 规范；模型名须含 `realtime` | 可换 **支持 Realtime 的 base URL**（不只 OpenAI） | — | OpenRouter 是否完整支持 **ephemeral + WebRTC** 需 **实测**，不能假设 |
+
+→ **「像 ChatGPT 语音对话」**：社区 **有成品 fork**，不必自研 WebRTC；代价是 **换/并行 OWUI 镜像** + 多半 **OpenAI 或 Realtime 兼容密钥**（确认门）。
+
+### 11.3 OpenRouter / 其他 Pipe _fork（帮 **音频模型**，不帮 Live 会话）
+
+| 来源 | 是什么 | 帮你省什么 | 屏享 | 备注 |
+|------|--------|------------|------|------|
+| **rbb-dev Pipe**（主） | `gpt-audio*`、`lyria` 等 via `/chat/completions` | 聊天里 **生成/理解音频** | 图像/视频路由已有 | **不是** 全双工 Realtime |
+| sena-labs Pipe 分叉 | 类似 OpenRouter 全家桶 + 音频输出 valves | 可借鉴配置 | 同左 | 你已用 rbb-dev，**不必换** |
+| OpenRouter 列表 | `gpt-4o-realtime` 等标价存在 | — | — | **标价 ≠** OWUI/Pipe 已接好 WebRTC 会话 |
+
+### 11.4 官方 OWUI 主线（未来，**现在不能指望**）
+
+| 项 | 状态 |
+|----|------|
+| OpenAI Realtime 合入 stock | PR #23237 **closed，未 merge**；维护者「open to discussion」 |
+| Gemini Live 原生 | **无**；issue/讨论里多指向 **自研 relay / LiveKit / Pipecat** |
+| Grok Voice | **无** OWUI 集成；要走 xAI `wss://api.x.ai/v1/realtime`（与 Pipe 无关） |
+
+### 11.5 社区旁路（帮 **L3**，但要第二套产品）
+
+| 来源 | 适合 | 屏享 | 简单 |
+|------|------|------|------|
+| **Google gemini-live-api-examples** + ADK | **Gemini Live**（屏+音一体最好） | ✅ ~1fps | 低 |
+| **LiveKit / Pipecat / fastrtc** | 多厂商 Realtime 胶水 | 可接 | 低 |
+| **Realtime HUD** 等独立 HUD | OpenAI Realtime + **屏快照** | ✅ 专做屏享 | 与 OWUI **分离** |
+| **Unmute / Kyutai** | 本地 STT/TTS 端点喂 OWUI | 仅 L1 串联 | 中 |
+
+### 11.6 对你目标的「帮助度」一张表
+
+| 目标 | 社区现成能 cover 多少 | 仍须自己做 |
+|------|----------------------|------------|
+| **屏幕共享 + 语音问答（稳定）** | **~70%**（OWUI overlay + vision Pipe） | L0 catalog、指引、验收 |
+| **GPT Live 级语音（打断、快）** | **~60%**（rbb-dev realtime 镜像） | 部署决策、密钥、与 Pipe 双栈 |
+| **Gemini Live 级屏+音 S2S** | **~30%**（Google 示例 + 中继） | **L3 自研或旁路**，无 OWUI 一键 |
+| **Grok Voice 官网级** | **~50%**（xAI Realtime API 现成） | 密钥 + 中继；**屏享要混合** Grok vision |
+| **三家都满配在一个 OWUI 里** | **~0%** 现成 | 确认门：多密钥 + 多中继或接受「语音 Realtime + 文本 Pipe 屏享」混合 |
+
+### 11.7 建议怎么用社区（更新 §8 默认推荐）
+
+1. **先不造轮子**：L0 + L1 = **stock OWUI + 现有 Pipe**（社区已给 UI 与 OpenRouter 音频）。  
+2. **若 L1 语音不够快**：优先试 **rbb-dev realtime 镜像**（与 Pipe **同作者**，社区口碑最好），而不是自研 WebRTC。  
+3. **若屏享要 Gemini Live 那种 S2S**：社区 **没有** OWUI 内一键方案 → 只能 **L3 旁路**（Gemini Live API + 中继）或 **混合**：Realtime 管语音 + OWUI 屏享帧进 vision 模型。  
+4. **暂不必看**：换 sena-labs Pipe、全仓 fork CSM/Sesame、等 OWUI 主线 merge（不确定）。
+
