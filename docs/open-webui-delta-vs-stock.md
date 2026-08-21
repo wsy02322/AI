@@ -352,7 +352,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `www.micropigeon.com` | **无 DNS**（有意或未配） |
 | HTTP→HTTPS | `http://micropigeon.com` **Caddy 308** → https；**无 HSTS** |
 | `http://78.47.152.85` | 仍 200，但是 **另一套中文页**（`/api/version` 404），不是本 OWUI |
-| `rag.openai.api_base_url` | 仍 `gptsapi.net`（未改；**P0-D N1 阻塞**：RAG 若用该槽会 401）。规划见 `open-webui-notebook-youtube-plan.md`；**未确认执行前不改** |
+| `rag.openai.api_base_url` | **`https://openrouter.ai/api/v1`**（N1；模型 `openai/text-embedding-3-small`）。Knowledge 集合 **YouTube Notebook** 已有视觉时间线烟测 |
 | TTS | **`minimax/speech-2.8-turbo`** + voice `alloy` + `SPLIT_ON=sentence`（L1；OpenRouter 无 tts-1） |
 
 ---
@@ -374,6 +374,7 @@ Stock OWUI 0.11.0
     ├─ 2 条常驻英文 Banner
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
+    ├─ N1：RAG embedding → OpenRouter；Knowledge「YouTube Notebook」+ 视觉时间线
     └─ Git：docs + apply/verify 脚本
 ```
 
@@ -418,7 +419,7 @@ python3 scripts/fix_sonar_tool_guard.py
 |------|------|
 | 图像细节与测试列表 | `open-webui-openrouter-image-continuity-plan.md` |
 | Voice / Realtime（P0-B）+ 屏享（P0-C） | `open-webui-live-voice-screen-plan.md` |
-| Notebook / YouTube（P0-D，仅规划） | `open-webui-notebook-youtube-plan.md` |
+| Notebook / YouTube（P0-D，N1 已落地） | `open-webui-notebook-youtube-plan.md` |
 | 界面文案设计意图 | `open-webui-user-guidance-plan.md` |
 | 灾备与重建流程 | `open-webui-disaster-recovery-rebuild-plan.md` |
 

@@ -1,6 +1,6 @@
 # 优化计划：强能力 · 简单 · 稳定
 
-> **状态**：Wave 0 **已应用到实例**。**P0 四条并列已写入契约**（2026-08-21）：图像 / 语音聊天 / 屏享 / Notebook·YouTube。P0-D **仅规划，未改实例**。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。
+> **状态**：Wave 0 **已应用到实例**。**P0 四条并列已写入契约**。P0-D **N1 已落地**（RAG + 视觉时间线；口播受 YouTube 风控）。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。
 > **日期**：2026-08-21  
 > **宪法**：（1）媲美甚至超越 ChatGPT / Grok / 市面最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行。  
 > **用户约束**：维持 **19 个 public**；**P0-A 图像、P0-B 语音聊天、P0-C 屏享、P0-D Notebook/YouTube** 同为最高优先级；语音和屏享都受宪法复杂度确认门约束；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
@@ -51,7 +51,7 @@
 | **视频生成**（Wave 1） | ~24 模型在 catalog；Filter 已装；**0 public** | **≠ YouTube ingest**。与作图同一契约：**换视频模型即生成**，不把 video tools 灌进 Sol/Sonar。先测 2～4 个旗舰再 public |
 | **语音聊天**（P0-B） | L1 串联已落地（Whisper → 文本 → MiniMax），但不是 S2S | 与屏享同级最高。顶级标准 = 低延迟 + S2S + barge-in。rbb L2 是局部候选，重大改动须确认 |
 | **屏幕共享**（P0-C） | L1 Call overlay 已有入口，但不是持续原生 Live 屏流 | 与语音同级最高。顶级标准 = 模型理解刚发生的画面变化。不能因上 rbb L2 而把静态 handoff 写成达标 |
-| **Notebook / YouTube**（P0-D） | 无产品面；RAG 槽 401 | **与图像、语音、屏享同级最高优先**。详见 **`docs/open-webui-notebook-youtube-plan.md`**。YouTube 须视觉时间线 + timestamp；转录+RAG **不算**达标。N1+ 须再确认才改实例 |
+| **Notebook / YouTube**（P0-D） | N1：RAG OpenRouter + Knowledge 视觉时间线 | 口播抓取受 YouTube 数据中心风控。N2+ 须再确认。详见 **`docs/open-webui-notebook-youtube-plan.md`** |
 | **Slides** | 无产品契约 | 单独表面（Notes / 专用流程），**不要**给聊天模型再挂一套会 404 的 tool。可与 Notebook Studio 产物衔接，但 W2 仍单独确认 |
 | 多轮图像连续性 | 有漂移 | P0-A 增强；仅当 verify 已稳定、且补丁能跟着 Pipe 更新走，才考虑轻量 preserve |
 | 语音 STT/TTS | MiniMax + Whisper 已配 | Live L1 保留。Audio Overview **另测**，不默认够用 |

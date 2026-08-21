@@ -1,6 +1,6 @@
 # Notebook · YouTube — 方案
 
-> **状态**：v1 **规划已确认**（2026-08-21）；**未改实例**  
+> **状态**：v1 **N1 已执行**（2026-08-21）；N2+ 未做  
 > **日期**：2026-08-21  
 > **全局优先级**：**P0-D**，与 **图像生成（P0-A）**、**语音聊天（P0-B）**、**屏幕共享（P0-C）** 并列最高
 > **旗舰源**：YouTube（转录不够；须视觉时间线 + 可点击 timestamp）  
@@ -61,7 +61,7 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 |------|----------|
 | 强能力 | 不得把 NL-A（转录+RAG）验收成 NL-B。YouTube 无视觉时间线 = 未达 P0 |
 | 简单稳定 | **一套 OWUI**；ingest 用现有 OpenRouter 密钥优先；少新镜像。Knowledge / Notes 能承载就不要第二套前端 |
-| 确认后再执行 | 本文是 plan。**未再确认 N1+ 之前不改实例、不修 RAG 槽、不装新容器** |
+| 确认后再执行 | N1 已确认执行。**N2+ 未确认前** 不改入口形态、不装第二前端、不装新容器 |
 
 **默认不做：** 为 Notebook 再开 LiveKit/Pipecat；第二套 OWUI；用 `web_tools` 抓 YouTube；空 `models/sync`；把 Notebook 聊天挂到 Sonar/图像模型上灌 tools；用 Call overlay 冒充 Audio Overview。
 
@@ -86,30 +86,32 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 | `openrouter_direct_uploads` | 文件进聊天 | **不是** YouTube URL 一键入库 |
 | 路线 S 作图 / Live L1 屏享 | 并行 P0，互不替代 | Notebook 内不要求聊天作图；Audio Overview 不走 Call |
 
-**N0 阻塞（现状，见 `open-webui-delta-vs-stock.md`）：** `rag.openai.api_base_url` 仍指向 **`gptsapi.net`**。任何 Knowledge embedding **会 401**。修槽是执行 N1 的前置，**不是**本次规划提交的一部分。
+**N1 落地（2026-08-21）：** RAG embedding 已改 OpenRouter `openai/text-embedding-3-small`（`process/web` 200）。Knowledge 集合 **YouTube Notebook**。烟测视频 `jNQXAC9IVRw` 写入 **shown** 时间线（YouTube storyboard 缩略图 + Gemini 描述：象、围栏、人物）。  
+
+**未完成：** 本执行环境与 OWUI 主机均为数据中心 IP，YouTube 拦截 transcript / yt-dlp（bot-check）。口播 ASR 回退脚本已写好，需非封禁 IP 或 cookies 才能出 spoken。此限制写入验收，不把「无字幕失败」当产品终态。
 
 ---
 
-## 4. 波次（确认执行前仍不改实例）
+## 4. 波次
 
-### N0 — 契约与阻塞清单（本文已做）
+### N0 — 契约与阻塞清单（已做）
 
 | ID | 内容 | 通过 |
 |----|------|------|
 | N0-1 | SPEC / AGENTS / 总路线图写入 P0-D | 文档与本文一致 |
 | N0-2 | 市场基准：NotebookLM transcript-only + Studio 产物 | §1 |
-| N0-3 | 记录 RAG 401、Live TTS ≠ Overview、视频生成 ≠ ingest | §0 §3 |
+| N0-3 | 记录 RAG 槽、Live TTS ≠ Overview、视频生成 ≠ ingest | §0 §3 |
 | N0-4 | 入口原则：Notebook ≠ Sonar；禁止第二套未文档化前端 | ST-NL-5 |
 
-### N1 — YouTube 旗舰 ingest（须再确认执行）
+### N1 — YouTube 旗舰 ingest（**已执行，口播抓取受风控**）
 
 | ID | 内容 |
 |----|------|
-| N1-1 | 修 RAG/embedding 指向 **可用** OpenRouter（或明确的 embeddings 槽）；**merge** 密钥，不覆盖 Pipe |
-| N1-2 | 公开 YouTube URL：有字幕则用字幕；无字幕 **ASR**；保存词级或句级时间戳 |
-| N1-3 | 视觉时间线：场景关键帧 + OCR + vision 描述；与口播对齐 |
-| N1-4 | 问答引用：`youtu.be/…?t=` 或等效 `MM:SS`；模态标签 spoken / shown / inferred |
-| N1-5 | `scripts/verify_notebook_youtube.py`：无字幕样例能入库；「屏幕上写了什么」能引用画面而非只 transcript |
+| N1-1 | 修 RAG/embedding 指向 **可用** OpenRouter | **已做** |
+| N1-2 | 公开 YouTube URL：字幕优先；无字幕 **ASR** | 脚本已写；数据中心 IP 被 YouTube bot-check，spoken 未写入烟测 |
+| N1-3 | 视觉时间线 | **已做**：storyboard 缩略图 + Gemini 描述 + `youtu.be/?t=` |
+| N1-4 | 问答引用：`MM:SS` + spoken / shown / inferred | shown 已有；spoken 待非封禁 IP |
+| N1-5 | `scripts/verify_notebook_youtube.py` | **12 ok / 0 err** |
 
 **降级门：** 若视觉链路「极大复杂」，先问是否 N1 只做字幕+ASR+timestamp，视觉放到 N1b。默认目标仍是视觉（用户把 YouTube 标成旗舰）。
 
@@ -150,7 +152,7 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 | ST-NL-4 | Audio Overview ≠ Call overlay；Live TTS 配置 **不得**为 Overview 被覆盖 |
 | ST-NL-5 | Notebook 入口 **文档化**；禁止未写入 SPEC 的第二前端；不与四格搜索按钮混用 |
 | ST-NL-6 | YouTube **知识 ingest** ≠ Wave 1 **视频生成**；两套 public / Filter 不得混用 |
-| ST-NL-7 | N1+ **未确认执行前** 不上生产（含不改 `rag.*`） |
+| ST-NL-7 | N2+ **未确认执行前** 不上生产；N1 允许改 `rag.*` |
 
 ---
 
@@ -163,7 +165,7 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 | **P0-A 图像** | 路线 S 已落地 | 连续性等仍属增强，不挡 Notebook |
 | **P0-B 语音聊天** | L1 串联可用，未达 S2S / barge-in | 与屏享同级；顶级统一或局部方案见 Live plan，复杂度须确认 |
 | **P0-C 屏享** | L1 入口可用，未达持续原生屏流 | 与语音同级；不能用 rbb L2 的语音收益冒充达标 |
-| **P0-D Notebook** | 仅本文 | 确认后从 N1 起（先修 RAG 槽） |
+| **P0-D Notebook** | N1 已落地 | 下一确认：N2 入口 / 非封禁 IP 补 spoken |
 
 不把 gpt-audio 改 Call、不把 Realtime 镜像、不把 Notebook 塞进同一轮施工。
 

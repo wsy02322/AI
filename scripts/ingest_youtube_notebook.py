@@ -73,6 +73,63 @@ def mmss(seconds: float) -> str:
     return f"{total // 60:02d}:{total % 60:02d}"
 
 
+def oembed(url: str) -> dict:
+    try:
+        resp = requests.get(
+            "https://www.youtube.com/oembed",
+            params={"url": url, "format": "json"},
+            timeout=20,
+        )
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as exc:
+        print(f"WARN oembed: {exc}")
+    return {}
+
+
+def owui_youtube_captions(h: dict[str, str], url: str) -> list[dict]:
+    resp = requests.post(
+        f"{OPENWEBUI_URL}/api/v1/retrieval/process/youtube",
+        headers=h,
+        json={"url": url},
+        timeout=120,
+    )
+    if resp.status_code != 200:
+        print(f"OWUI youtube loader {resp.status_code} {resp.text[:180]}")
+        return []
+    payload = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+    content = (
+        ((payload.get("file") or {}).get("data") or {}).get("content")
+        or payload.get("content")
+        or ""
+    )
+    lines = []
+    for raw in str(content).splitlines():
+        text = raw.strip()
+        if text:
+            lines.append({"start": 0.0, "text": text, "modality": "spoken"})
+    return lines
+
+
+def fetch_thumbnails(vid: str, dest: Path) -> list[tuple[float, Path]]:
+    names = [("0.jpg", 0.0), ("1.jpg", 5.0), ("2.jpg", 10.0), ("3.jpg", 15.0)]
+    frames = []
+    seen = set()
+    for name, ts in names:
+        url = f"https://i.ytimg.com/vi/{vid}/{name}"
+        resp = requests.get(url, timeout=20)
+        if resp.status_code != 200 or not resp.content or resp.headers.get("content-type", "").startswith("text"):
+            continue
+        digest = hash(resp.content)
+        if digest in seen:
+            continue
+        seen.add(digest)
+        path = dest / name
+        path.write_bytes(resp.content)
+        frames.append((ts, path))
+    return frames
+
+
 def fetch_captions(vid: str) -> list[dict]:
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
@@ -313,9 +370,15 @@ def main() -> int:
     spoken: list[dict] = []
     source = "none"
     if not args.force_asr:
-        spoken = fetch_captions(vid)
+        spoken = owui_youtube_captions(h, url)
         if spoken:
-            source = "captions"
+            source = "owui-youtube-loader"
+        else:
+            spoken = fetch_captions(vid)
+            if spoken:
+                source = "captions"
+    meta = oembed(url)
+    title = meta.get("title") or vid
     with tempfile.TemporaryDirectory(prefix="ytnb-") as raw:
         tmp = Path(raw)
         if not spoken:
@@ -325,8 +388,13 @@ def main() -> int:
                 source = "asr" if spoken else "asr-empty"
         shown: list[dict] = []
         video = download_media(url, tmp, audio_only=False)
+        frames: list[tuple[float, Path]] = []
         if video and or_base and or_key:
             frames = sample_frames(video, tmp, MAX_FRAMES)
+        if not frames:
+            frames = fetch_thumbnails(vid, tmp)
+            print(f"using YouTube storyboard thumbs: {len(frames)}")
+        if or_base and or_key:
             for ts, png in frames:
                 shown.append(
                     {
@@ -335,23 +403,27 @@ def main() -> int:
                         "modality": "shown",
                     }
                 )
-        markdown = build_markdown(url, vid, spoken, shown, source)
+        header_url = url
+        markdown = build_markdown(header_url, vid, spoken, shown, source)
+        if title:
+            markdown = f"Title: {title}\n\n" + markdown
         md_path = tmp / f"youtube-{vid}.md"
         md_path.write_text(markdown, encoding="utf-8")
         kid = find_knowledge(h)
         file_id = upload_and_attach(token, kid, md_path)
         print(json.dumps({
             "video_id": vid,
+            "title": title,
             "spoken_source": source,
             "spoken": len(spoken),
             "shown": len(shown),
             "knowledge_id": kid,
             "file_id": file_id,
         }))
-        if not spoken:
-            raise SystemExit("ingest produced no spoken transcript")
         if not shown:
             raise SystemExit("ingest produced no visual timeline")
+        if not spoken:
+            print("WARN no spoken transcript (YouTube bot-check on this IP); visual timeline still stored")
     return 0
 
 

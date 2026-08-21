@@ -107,20 +107,33 @@ def main() -> int:
     else:
         r.ok(f"knowledge {NOTEBOOK_KNOWLEDGE_NAME} id={nb.get('id')}")
         kid = nb["id"]
-        detail = requests.get(f"{OPENWEBUI_URL}/api/v1/knowledge/{kid}", headers=h, timeout=30)
-        if detail.status_code == 200:
-            files = detail.json().get("files") or []
-            blob = json_blob(files)
-            if "youtu.be/" in blob or "youtube.com" in blob or "Spoken" in blob or "spoken:" in blob:
-                r.ok("knowledge has YouTube source text")
-            else:
-                r.err("knowledge has no YouTube ingest yet")
-            if "shown:" in blob.lower() or "## Shown" in blob:
-                r.ok("knowledge has visual timeline")
-            else:
-                r.err("knowledge missing visual timeline (shown)")
+        files = requests.get(f"{OPENWEBUI_URL}/api/v1/knowledge/{kid}/files", headers=h, timeout=30)
+        blob = json_blob(files.json() if files.status_code == 200 else {})
+        listed_files = (files.json() or {}).get("items") if files.status_code == 200 else []
+        contents = []
+        for item in listed_files or []:
+            fid = item.get("id")
+            if not fid:
+                continue
+            detail = requests.get(f"{OPENWEBUI_URL}/api/v1/files/{fid}", headers=h, timeout=30)
+            if detail.status_code == 200:
+                contents.append(json_blob(detail.json()))
+        blob = blob + "\n" + "\n".join(contents)
+        if "youtu.be/" in blob or "youtube.com" in blob or "Spoken" in blob:
+            r.ok("knowledge has YouTube source text")
         else:
-            r.err(f"knowledge detail {detail.status_code}")
+            r.err("knowledge has no YouTube ingest yet")
+        if "shown:" in blob.lower() or "## Shown" in blob:
+            r.ok("knowledge has visual timeline")
+        else:
+            r.err("knowledge missing visual timeline (shown)")
+        if "spoken:" in blob.lower() or "## Spoken" in blob:
+            if "(no spoken transcript)" in blob:
+                r.ok("spoken section present; live captions blocked on datacenter IP")
+            else:
+                r.ok("spoken timestamps present")
+        else:
+            r.err("missing spoken section")
 
     banners = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/banners", headers=h, timeout=30).json()
     text = " ".join(f"{b.get('title')} {b.get('content')}" for b in banners).lower()

@@ -7,7 +7,7 @@ Open WebUI + OpenRouter 文档见 `docs/`：
 - `docs/VERSIONS.md` — 上次验收的 OWUI / Pipe 指纹
 - `docs/open-webui-compare-first-class-plan.md` — **多模型对比为一等公民**（连续多轮多图；确认前不改实例）
 - `docs/open-webui-optimized-plan.md` — **优化计划**（P0：图像 / 语音聊天 / 屏享 / Notebook·YouTube；视频生成与 slides 为后续必做）
-- `docs/open-webui-notebook-youtube-plan.md` — **P0-D Notebook / YouTube**（规划已确认；未改实例）
+- `docs/open-webui-notebook-youtube-plan.md` — **P0-D Notebook / YouTube**（N1 已执行；口播抓取受 YouTube 风控）
 - `docs/open-webui-live-voice-screen-plan.md` — **P0-B 语音 + P0-C 屏享**（L1 稳定过渡；顶级档位须确认）
 - `docs/open-webui-delta-vs-stock.md` — **相对纯官方 OWUI 的全部改动记录**（单一真相源）
 - `docs/open-webui-disaster-recovery-rebuild-plan.md` — **灾备 v2：规格驱动重建**（非全量快照）
