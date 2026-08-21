@@ -33,6 +33,8 @@ BANNERS = [
             "<b>Images</b> switch to Nano Banana Pro or GPT Image 2 first<br>"
             "<b>Voice / screen share</b> pick Grok 4.6 or a Gemini vision model first "
             "(not Sonar, not an image-only model). "
+            "<b>Notebook / YouTube</b> Workspace → Knowledge (your sources, with timestamps). "
+            "Web search stays Sonar — do not mix. "
             "Do not use Sonar for everyday chat. Do not ask a chat model to draw."
             "</div>"
         ),

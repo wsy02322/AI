@@ -92,3 +92,11 @@ PIPE_PATCH_MARKERS = [
 
 BANNER_IDS = ["usage-pick-model-v2", "usage-reasoning-depth-v2"]
 SUGGESTIONS_COUNT = 4
+
+# P0-D Notebook / YouTube (N1)
+NOTEBOOK_KNOWLEDGE_NAME = "YouTube Notebook"
+RAG_EMBEDDING_ENGINE = "openai"
+RAG_EMBEDDING_MODEL = "openai/text-embedding-3-small"
+RAG_OPENAI_BASE_URL = "https://openrouter.ai/api/v1"
+YOUTUBE_LOADER_LANGUAGES = ["en", "zh", "zh-Hans", "zh-Hant", "ja", "ko"]
+NOTEBOOK_SMOKE_VIDEO = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
