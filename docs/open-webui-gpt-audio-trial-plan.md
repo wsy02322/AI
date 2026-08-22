@@ -92,7 +92,7 @@
 |----|------------|----------------|-----------|
 | 有可播音频 | **是**（MP3 31149 B） | **否** | **否** |
 | HTTP | 200 | 200（流内错误文案） | 200（流内错误文案） |
-| 墙钟（s） | **1.62**（整段） | **N/A**（TTFB/SSE ~0.49） | **N/A**（TTFB/SSE ~0.46） |
+| 墙钟（s） | **1.62**（整段） | **N/A**（SSE 读完 ~1.1） | **N/A**（SSE 读完 ~0.6） |
 | 听感 | **基线** | 无样本 | 无样本 |
 | usage | — | null | null |
 | 备注 | `/api/v1/audio/speech` → `minimax/speech-2.8-turbo` | Pipe **`/responses`** 路径：`modalities[1]` 只允许 `text\|image`，**拒 `audio`** → OpenRouter `Invalid Responses API request` | 同 mini |

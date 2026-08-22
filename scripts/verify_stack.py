@@ -12,6 +12,7 @@ import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import (
+    ACTIVE_MODEL_IDS,
     BANNER_IDS,
     CHAT_KEEP_CODE_INTERPRETER,
     DEFAULT_MODEL_PRIMARY,
@@ -96,7 +97,7 @@ def verify(h: dict[str, str]) -> int:
     if cfg.get("default_models") != DEFAULT_MODELS:
         r.err(f"default_models={cfg.get('default_models')} want {DEFAULT_MODELS}")
     else:
-        r.ok(f"default_models dual {DEFAULT_MODELS}")
+        r.ok(f"default_models {DEFAULT_MODELS}")
     if (cfg.get("features") or {}).get("enable_web_search"):
         r.err("native web search enabled")
     else:
@@ -185,11 +186,19 @@ def verify(h: dict[str, str]) -> int:
             r.ok(f"{fid} inactive")
 
     public_found: set[str] = set()
-    listed = requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=90).json()["data"]
-    if not isinstance(listed, list) or len(listed) < len(PUBLIC_MODEL_IDS):
-        r.err(f"models catalog unexpected {type(listed)} len={getattr(listed, '__len__', lambda: '?')()}")
+    listed = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
+    listed_ids = {m["id"] for m in listed}
+    if len(listed) != len(ACTIVE_MODEL_IDS):
+        r.err(f"active picker len={len(listed)} want {len(ACTIVE_MODEL_IDS)}")
+    elif listed_ids != set(ACTIVE_MODEL_IDS):
+        extra = sorted(listed_ids - set(ACTIVE_MODEL_IDS))
+        missing = sorted(set(ACTIVE_MODEL_IDS) - listed_ids)
+        if extra:
+            r.err(f"picker extra {extra[:5]}{'...' if len(extra) > 5 else ''}")
+        if missing:
+            r.err(f"picker missing {missing}")
     else:
-        r.ok(f"catalog {len(listed)} models")
+        r.ok(f"active picker {len(listed)} models")
 
     for mid in PUBLIC_MODEL_IDS:
         detail = requests.get(
@@ -206,6 +215,8 @@ def verify(h: dict[str, str]) -> int:
             r.err(f"not public {mid}")
         else:
             public_found.add(mid)
+        if model.get("is_active") is False:
+            r.err(f"inactive public {mid}")
         meta = model.get("meta") or {}
         filters = meta.get("filterIds") or []
         bad = [fid for fid in filters if fid in DETACH_FILTERS]

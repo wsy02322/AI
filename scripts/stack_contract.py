@@ -4,11 +4,11 @@ from __future__ import annotations
 
 PIPE = "open_webui_openrouter_integration"
 
-# New-chat defaults (comma-separated in OWUI): dual flagship for side-by-side comparison.
+# New-chat default: single flagship; users opt into compare manually.
 DEFAULT_MODEL_PRIMARY = f"{PIPE}.x-ai.grok-4.6"
 DEFAULT_MODEL_SECONDARY = f"{PIPE}.anthropic.claude-opus-5"
-DEFAULT_MODELS = f"{DEFAULT_MODEL_PRIMARY},{DEFAULT_MODEL_SECONDARY}"
-# Background tasks: cheap model only (not Opus).
+DEFAULT_MODELS = DEFAULT_MODEL_PRIMARY
+# Background tasks: same as default chat.
 TASK_MODEL = DEFAULT_MODEL_PRIMARY
 
 PINNED_MODELS = [
@@ -56,6 +56,9 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-4.6",
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
+
+# Runtime picker: only these stay active (matches 19 public).
+ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [
     f"{PIPE}.openai.gpt-5.6-sol-pro",
