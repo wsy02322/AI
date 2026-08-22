@@ -8,7 +8,7 @@
 2. `AGENTS.md` — 施工守则  
 3. `SPEC.md` — 产品契约  
 4. `ARCHITECTURE.md` — 中继到 Gemini（因中国网络）  
-5. `ACCESS.md` — 怎么打开（桌面 Web）  
+5. `ACCESS.md` — **手机怎么打开**（系统浏览器，勿微信内通话）  
 6. `LATENCY.md` — 延迟  
 7. `DEPLOYMENT.md` — 同 VPS  
 8. `PLAN.md` — MVP / 阶段 2  
@@ -21,4 +21,4 @@
 
 ## 一句话
 
-**能说、能看屏、可打断。** 桌面 Web；中国用户经 VPS 中继到 Gemini Live；屏享 1 fps（采集代码来自官方 C2S 示例，连接不要直连 Google）。
+**能说、能看、可打断。** 中国手机用户：系统浏览器 + VPS 中继；看 = 摄像头主路径；整机屏享不作为网页 MVP 承诺。

@@ -2,27 +2,24 @@
 
 ## 阶段 0 — 建仓
 
-- 用户新建 GitHub 仓库  
-- 用户新建 GitHub 仓库  
-- 服务端中继 + 官方 ScreenCapture 采集（见 `ARCHITECTURE.md`）  
-- `.env.example`、README、gitignore  
-- 复制本交接包到 `docs/`
+- 新 GitHub 仓库  
+- 手机 UI + VPS 中继 + 官方采集代码改编  
+- `.env.example`、gitignore、复制本交接包到 `docs/`
 
-## 阶段 1 — MVP
+## 阶段 1 — MVP（手机网页）
 
-1. 桌面 Web；浏览器 WSS 到本站，由 VPS 中继到 Gemini（不直连 Google）  
-2. 麦克风 S2S + 打断  
-3. `ScreenCapture`，fps=1，画布 ≥ 1280（禁止 640×480）  
-4. Caddy HTTPS + WebSocket；独立端口  
-5. `ACCEPTANCE.md` 全过（含：通话流量不打到 googleapis 的浏览器直连）  
+1. 微信 WebView 检测 + 去系统浏览器  
+2. iPhone Safari、Android Chrome：语音 + 摄像头 + 打断  
+3. 1 fps；中继；独立端口 + Caddy `/ws`  
+4. 屏享：能做就做，写明机型；做不到就文档化，不阻塞语音+摄像头验收  
+5. `ACCEPTANCE.md`
 
-**完成定义：** 真实 key + 中国可达的域名上能说话、能看屏。
+## 阶段 1.5 — 仅当用户确认「必须共享其它 App 画面」
 
-## 阶段 2 — 须用户再确认
+薄原生壳 + 系统录屏，仍连同一 VPS。5 人内部分发，不上商店也可以。
 
-1. Look（先整帧高清，再点选）  
-2. 换脑 A（tool 调其它模型）  
-3. 本产品内会话导出/历史  
-4. LiveKit（弱网/多人）  
+## 阶段 2 — 再确认
 
-阶段 1 与 2 不要同一 PR。
+Look、换脑 A、会话导出、LiveKit。
+
+阶段不要混在一个 PR。
