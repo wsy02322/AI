@@ -65,7 +65,7 @@ BANNERS = [
 
 DESCRIPTIONS = {
     f"{PIPE}.x-ai.grok-4.6": (
-        "DEFAULT CHAT (paired with Opus in compare). Vision-capable — pick this or Gemini before Voice / screen share. Raise Reasoning depth for hard problems."
+        "DEFAULT CHAT default. Vision-capable — pick this or Gemini before Voice / screen share. Use Compare to add a second model. Raise Reasoning depth for hard problems."
     ),
     f"{PIPE}.perplexity.sonar-pro-search": (
         "QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."

@@ -219,7 +219,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 
 **现在（Wave 0 后）**
 
-- 新对话 = Grok 4.6 + Opus（双默认）；四格置顶仍在；19 public 仍在  
+- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；19 public 仍在；picker 仅 public 为 active  
 - Sonar / 图像无 tool 404；Integrations 仍无 Web Tools / Image Gen / Web Search  
 - `verify_stack` 可重复跑绿  
 

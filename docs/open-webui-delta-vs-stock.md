@@ -78,10 +78,10 @@
 | 项 | Stock | 本实例 |
 |----|-------|--------|
 | `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
-| `DEFAULT_MODELS` | 自选 | **`grok-4.6` + `claude-opus-5`**（双默认，便于对比；逗号分隔 Pipe id） |
+| `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认 Grok 4.6 + Opus 5 双模型（2026-08-20）。后台 Task 仍只用 Grok 4.6。
+**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker 仅 **19 public** 为 `is_active`。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
