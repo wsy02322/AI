@@ -7,16 +7,18 @@
 1. `NEW_AGENT_PROMPT.md` — 可整段粘贴为任务  
 2. `AGENTS.md` — 施工守则  
 3. `SPEC.md` — 产品契约  
-4. `ARCHITECTURE.md` — 技术选型（官方 C2S）  
-5. `DEPLOYMENT.md` — 同 VPS 部署约束  
-6. `PLAN.md` — MVP / 阶段 2  
-7. `ACCEPTANCE.md` — 验收  
-8. `DONT.md` — 禁止项  
-9. `DECISIONS.md` — 已定决策  
-10. `SOURCES.md` — 上游链接  
+4. `ARCHITECTURE.md` — 中继到 Gemini（因中国网络）  
+5. `ACCESS.md` — 怎么打开（桌面 Web）  
+6. `LATENCY.md` — 延迟  
+7. `DEPLOYMENT.md` — 同 VPS  
+8. `PLAN.md` — MVP / 阶段 2  
+9. `ACCEPTANCE.md` — 验收  
+10. `DONT.md` — 禁止项  
+11. `DECISIONS.md` — 已定决策  
+12. `SOURCES.md` — 上游链接  
 
 本文件夹 **不是** 可运行应用。创建新仓后，建议整份复制到 `docs/`。
 
 ## 一句话
 
-**能说、能看屏、可打断。** MVP = Google 官方 `gemini-live-ephemeral-tokens-websocket`（浏览器直连 Live API + ephemeral token + 屏享 1 fps）。
+**能说、能看屏、可打断。** 桌面 Web；中国用户经 VPS 中继到 Gemini Live；屏享 1 fps（采集代码来自官方 C2S 示例，连接不要直连 Google）。

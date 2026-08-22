@@ -3,21 +3,20 @@
 ## 阶段 0 — 建仓
 
 - 用户新建 GitHub 仓库  
-- Fork/改编 `gemini-live-ephemeral-tokens-websocket`  
+- 用户新建 GitHub 仓库  
+- 服务端中继 + 官方 ScreenCapture 采集（见 `ARCHITECTURE.md`）  
 - `.env.example`、README、gitignore  
 - 复制本交接包到 `docs/`
 
 ## 阶段 1 — MVP
 
-1. Token 后端 + 浏览器直连 Live  
+1. 桌面 Web；浏览器 WSS 到本站，由 VPS 中继到 Gemini（不直连 Google）  
 2. 麦克风 S2S + 打断  
-3. `ScreenCapture`，fps=1 固定  
-4. 屏享画布 ≥ 1280；`media_resolution` high（README 注明费用）  
-5. 停共享 / 关页释放轨道  
-6. `ACCEPTANCE.md` 全过  
-7. `DEPLOYMENT.md`：VPS 上独立端口 + 反代（用户确认域名后）
+3. `ScreenCapture`，fps=1，画布 ≥ 1280（禁止 640×480）  
+4. Caddy HTTPS + WebSocket；独立端口  
+5. `ACCEPTANCE.md` 全过（含：通话流量不打到 googleapis 的浏览器直连）  
 
-**完成定义：** 真实 `GEMINI_API_KEY` 通话成功，非仅静态页。
+**完成定义：** 真实 key + 中国可达的域名上能说话、能看屏。
 
 ## 阶段 2 — 须用户再确认
 

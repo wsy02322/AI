@@ -15,7 +15,7 @@ Web 应用：麦克风说话 + 可选屏幕共享，模型 **边听边看边说*
 | LV-3 | `getDisplayMedia` 屏享；模型能讨论当前画面 |
 | LV-4 | 持续 **1 fps**（静音不降频到 ~0.3 fps） |
 | LV-5 | 屏享画布 **≥ 1280 宽**（勿 640×480）；尽量 `media_resolution` high |
-| LV-6 | 浏览器仅 ephemeral token；长期 key 仅后端 |
+| LV-6 | 长期 key 仅 VPS；浏览器只连本站 WSS（中国用户不直连 Google） |
 | LV-7 | 独立 Git 仓库；独立 VPS 进程/端口 |
 
 ## 非 MVP（阶段 2，须再确认）
@@ -47,4 +47,5 @@ Web 应用：麦克风说话 + 可选屏幕共享，模型 **边听边看边说*
 - 数字人  
 - PSTN 电话  
 - 多人房间  
-- 全本地 Whisper/TTS 栈
+- 全本地 Whisper/TTS 栈  
+- 手机 App / 商店分发

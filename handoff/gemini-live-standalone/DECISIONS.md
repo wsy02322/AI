@@ -1,28 +1,24 @@
 # 已定决策（2026-08-22）
 
-## 1. 独立产品
+## 1. 独立 Web 产品
 
-语音 + 持续屏享 + 打断 = **新 GitHub 仓库 + 新部署**，不嵌入任何现有聊天产品。
+新 GitHub 仓库 + 同 VPS 独立端口。约 5 名用户，多数在中国。
 
-## 2. MVP 骨架：官方 C2S，不是 LiveKit
+## 2. 访问 = 桌面浏览器，不是 App
 
-- 底本：`gemini-live-api-examples` → `gemini-live-ephemeral-tokens-websocket`  
-- 已有 `ScreenCapture`、`getDisplayMedia`、ephemeral token  
-- LiveKit 默认静音 ~0.3 fps，不调会弱于官网；留阶段 2  
+屏享依赖 `getDisplayMedia`。手机网页屏享差；原生 App 不缩短中国到欧盟 VPS 的 RTT，MVP 不做。
 
-## 3. 与官网的关系
+## 3. 默认中继，不默认 C2S
 
-- 同一 Live API：JPEG ≤ 1 fps → **不能**靠调帧率超越 Gemini  
-- 超越只能来自阶段 2 工作流（look、换脑 A），不是换媒体层  
+浏览器直连 Google（官方 ephemeral C2S）延迟更好，但大陆常不可达。  
+默认：**浏览器 → VPS → Gemini**。VPS 出站访问 Google。
 
-## 4. 难度对比
+采集代码用 C2S 示例的 `ScreenCapture`（1 fps、≥1280）；服务端用 Python SDK 的 Live 连接。禁止抄 SDK 示例 640×480。
 
-| 档 | 内容 | 相对难度 |
-|----|------|----------|
-| MVP | C2S 改编 + VPS 独立端口 | 1× |
-| 阶段 2 全套 | look + 换脑 + 会话存储 | ~3× |
+## 4. 延迟预期
 
-## 5. 部署
+中国用户首响大约比「能直连 Google 的网页 Live」再慢 **0.2–0.6s 量级**。仍须打断可用。不要用 App/LiveKit 幻想打赢物理 RTT。
 
-- 与用户其它站点 **同 VPS、不同进程/端口**  
-- 具体域名由用户在新 agent 会话里提供
+## 5. 阶段 2
+
+Look、换脑 A、会话导出。可选 C2S 仅当全员能访问 Google。

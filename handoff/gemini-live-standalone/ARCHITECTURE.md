@@ -1,58 +1,62 @@
 # 架构
 
-## 选定：官方 client-to-server
+## 选定：浏览器 → 你的 VPS → Gemini（server 中继）
+
+**原因：多数用户在中国，浏览器直连 Google Live 经常不可达。**  
+延迟会比「能直连 Google 的 C2S」略差，但 **能用** 优先于「理论更低延迟却连不上」。
 
 ```
-浏览器
-  ├─ getUserMedia     → PCM 16 kHz
-  ├─ getDisplayMedia  → JPEG 1 fps（屏享）
-  └─ WSS 直连 Gemini（ephemeral token）
-后端（极小）
-  └─ GEMINI_API_KEY → 签发 token → /api/token
-  └─ 静态前端
+浏览器（桌面 Chrome）
+  ├─ getUserMedia      PCM 16 kHz
+  ├─ getDisplayMedia   JPEG 1 fps
+  └─ WSS（同站 HTTPS）──► VPS Python
+                              └─ WSS──► Gemini Live
 ```
 
-Google 文档：client-to-server 比「浏览器→你的后端→API」延迟更低。用户访问方式见 `ACCESS.md`，延迟对比见 `LATENCY.md`。
+`GEMINI_API_KEY` 只在 VPS。
 
-## 底本（必须改编，勿从零写协议）
+## 底本
 
-- https://github.com/google-gemini/gemini-live-api-examples  
-- 目录：`gemini-live-ephemeral-tokens-websocket/`  
-- 关键：`ScreenCapture`、`AudioStreamer`、`mediaUtils.js`
+两份官方示例 **拆着用**，不要整份照抄错误默认：
 
-## MVP 不选
+| 用 | 来源 | 注意 |
+|----|------|------|
+| 浏览器采集：麦 + **ScreenCapture 屏享** | `gemini-live-ephemeral-tokens-websocket` 的 `mediaUtils.js` | 屏享 **≥1280 宽、1 fps** |
+| 服务端 `genai` Live 会话、把音视频转给 Google | `gemini-live-genai-python-sdk` | **不要**抄它前端 `captureFrame` 的 **640×480** |
+| 前端连 **自己的** `/ws`，不要连 `generativelanguage.googleapis.com` | 改编 C2S 的 `geminilive.js` | 去掉 ephemeral token 直连 |
+
+## 明确不选为默认
 
 | 选项 | 原因 |
 |------|------|
-| LiveKit starter | 多一跳；默认静音帧率偏低；阶段 2 |
-| `gemini-live-genai-python-sdk` 前端 | 屏享 640×480 |
+| 官方 C2S（浏览器直连 Google + ephemeral token） | 大陆用户经常失败；仅当用户明确全员能访问 Google 再考虑 |
+| LiveKit Cloud | 用户仍要连海外；多一跳；5 人过重 |
+| 原生 App | 不降低中德 RTT；屏享/上架成本高 |
 | `vision-demo` | outdated |
-| Pipecat / FastRTC / OpenLive | 另一套媒体或 cascade |
 
-## API 硬限制
+## API 硬限制（与中继无关）
 
-- WSS；音频 PCM 16k 入 / 24k 出  
 - 画面 JPEG **≤ 1 fps**  
-- 音+视频会话有时长上限 → 生产需 session resumption（MVP 文档化，能做则做）  
-- 生产用 ephemeral token  
+- 音频 PCM 16k 入 / 24k 出  
+- 音+视频会话有时长上限 → session resumption（MVP 文档化，能做则做）  
 
 ## 建议仓库布局
 
 ```
 <repo>/
   README.md
-  .env.example
-  server.py
+  .env.example          # GEMINI_API_KEY=  HOST=127.0.0.1  PORT=8090
+  server.py             # 静态文件 + /ws 中继到 Gemini
   frontend/
-    index.html
-    geminilive.js
-    mediaUtils.js   # ScreenCapture fps=1；宽度≥1280
-    script.js
-  docs/             # 本交接包
+    index.html          # 桌面 Web 通话 UI
+    mediaUtils.js       # ScreenCapture fps=1；宽度≥1280
+    ...
+  docs/
 ```
 
-## 阶段 2 接线（勿在 MVP 实现）
+## 阶段 2（勿在 MVP 做）
 
-- **Look**：`takeSnapshot()` + 裁块 → 非 Live 的 vision HTTP → 文本回会话  
-- **换脑 A**：function calling → 服务端调 OpenRouter/OpenAI 等（本仓自己的 key）  
-- **LiveKit**：仅替换媒体面
+- Look / 点选  
+- 换脑 A（function calling）  
+- 会话导出  
+- 仅当 **全员能访问 Google** 时，可加可选 C2S 模式降延迟——默认仍中继
