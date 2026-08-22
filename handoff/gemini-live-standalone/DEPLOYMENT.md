@@ -13,7 +13,7 @@
 | 环境变量 | 独立 `.env`；仅 `GEMINI_API_KEY` + 可选 `HOST`/`PORT` |
 | 日志 | 独立目录，例如 `/var/log/gemini-live/` |
 
-## 最小生产形态（MVP 可后补）
+## 访问时数据怎么走（与延迟直接相关）
 
 1. `uv run server.py` 或 `gunicorn` 监听 `127.0.0.1:8090`  
 2. Caddy 增加一条 `reverse_proxy`  

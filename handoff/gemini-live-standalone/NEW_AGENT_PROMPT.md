@@ -34,6 +34,6 @@ MVP 不要做
 - 转写导出；会话持久化在本产品内
 - LiveKit：仅弱网/多人需要时
 
-先读同目录 SPEC.md、ARCHITECTURE.md、DEPLOYMENT.md、ACCEPTANCE.md、DONT.md。
+先读同目录 SPEC.md、ARCHITECTURE.md、DEPLOYMENT.md、ACCESS.md、LATENCY.md、ACCEPTANCE.md、DONT.md。
 验收见 ACCEPTANCE.md；用真实 GEMINI_API_KEY 通话，不要只做到页面能打开。
 ```

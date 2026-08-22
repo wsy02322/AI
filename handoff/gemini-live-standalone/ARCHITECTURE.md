@@ -12,7 +12,7 @@
   └─ 静态前端
 ```
 
-Google 文档：client-to-server 比「浏览器→你的后端→API」延迟更低。
+Google 文档：client-to-server 比「浏览器→你的后端→API」延迟更低。用户访问方式见 `ACCESS.md`，延迟对比见 `LATENCY.md`。
 
 ## 底本（必须改编，勿从零写协议）
 
