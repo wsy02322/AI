@@ -3,8 +3,8 @@
 ## MVP 必读
 
 - https://github.com/google-gemini/gemini-live-api-examples  
-  - `gemini-live-ephemeral-tokens-websocket/` ← **只借采集**：`ScreenCapture`、`AudioStreamer`（1 fps，≥1280）  
-  - `gemini-live-genai-python-sdk/` ← **只借服务端** Live 会话；**勿抄前端 640×480**  
+  - `gemini-live-ephemeral-tokens-websocket/` ← **借采集**：`AudioStreamer`、`VideoStreamer`（摄像头）、可选 `ScreenCapture`  
+  - `gemini-live-genai-python-sdk/` ← **借服务端** Live 中继；**勿抄前端 640 屏享**  
 - https://ai.google.dev/gemini-api/docs/live-api  
 - https://ai.google.dev/gemini-api/docs/live-api/capabilities  
 
