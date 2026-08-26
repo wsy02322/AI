@@ -40,13 +40,13 @@ BANNERS = [
 
 DESCRIPTIONS = {
     f"{PIPE}.x-ai.grok-4.6": (
-        "DEFAULT CHAT default. Vision-capable — pick this or Gemini before Voice / screen share. Use Compare to add a second model. Raise Reasoning depth for hard problems."
+        "DEFAULT CHAT. Use Compare to add a second model. Raise Reasoning depth for hard problems."
     ),
     f"{PIPE}.perplexity.sonar-pro-search": (
-        "QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
+        "PERPLEXITY is the only model with live web search. QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
     ),
     f"{PIPE}.perplexity.sonar-deep-research": (
-        "DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models."
+        "PERPLEXITY is the only model with live web search. DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models."
     ),
     f"{PIPE}.openai.gpt-5.6-sol-pro": (
         "DEFAULT CHAT and hard reasoning. For difficult tasks: Valves → Reasoning depth → high or xhigh. Not live web search."
@@ -242,6 +242,26 @@ def verify(h: dict[str, str]) -> int:
             errors += 1
         else:
             print("ok desc", model.get("name"))
+    grok_desc = (
+        (listed.get(f"{PIPE}.x-ai.grok-4.6", {}).get("info") or {}).get("meta") or {}
+    ).get("description") or ""
+    if "Vision-capable" in grok_desc:
+        print("ERROR Grok description still contains Vision-capable guidance")
+        errors += 1
+    else:
+        print("ok Grok description removed Vision-capable guidance")
+    for model_id in (
+        f"{PIPE}.perplexity.sonar-pro-search",
+        f"{PIPE}.perplexity.sonar-deep-research",
+    ):
+        desc = (
+            (listed.get(model_id, {}).get("info") or {}).get("meta") or {}
+        ).get("description") or ""
+        if "only model with live web search" not in desc:
+            print("ERROR Perplexity description missing unique live web search claim", model_id)
+            errors += 1
+        else:
+            print("ok Perplexity unique live web search", model_id)
     return errors
 
 
