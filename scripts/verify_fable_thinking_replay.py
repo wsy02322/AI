@@ -98,6 +98,8 @@ def complete_via_chat(
             "messages": messages,
             "stream": True,
             "include_reasoning": True,
+            "reasoning_effort": "high",
+            "reasoning": {"effort": "high", "exclude": False},
             "chat_id": chat_id,
             "id": msg_id,
             "session_id": str(uuid.uuid4()),
@@ -171,7 +173,11 @@ def main() -> int:
         print(f"\nfable: {len(r.oks)} ok, {len(r.errors)} err")
         return 1
     chat_id = chat.json()["id"]
-    user_text = "Think carefully: 17 multiplied by 19. Reply with the integer only."
+    user_text = (
+        "Plan a 4-course plant-based tasting menu that is filling, high-protein, and uses leftover "
+        "chickpeas, kale, and day-old bread. For each course give one sentence why it satisfies hunger. "
+        "Think through nutrition and texture tradeoffs before answering."
+    )
     user_id = str(uuid.uuid4())
     asst_id = str(uuid.uuid4())
 
@@ -193,14 +199,17 @@ def main() -> int:
 
     reasoning = _reasoning_items(turn1)
     crypto_n = sum(1 for item in reasoning if _has_crypto(item))
+    details = (turn1.get("usage") or {}).get("output_tokens_details") or {}
+    reasoning_tokens = details.get("reasoning_tokens")
     if reasoning:
-        r.ok(f"fable turn1 output reasoning={len(reasoning)} with_crypto={crypto_n}")
+        r.ok(f"fable turn1 output reasoning={len(reasoning)} with_crypto={crypto_n} tokens={reasoning_tokens}")
         if crypto_n == 0:
-            print("INFO turn1 reasoning is summary-only; turn2 exercises strip/retry (B/C)")
+            r.err("fable turn1 reasoning items lack signature/encrypted_content (A failed)")
         else:
-            print("INFO turn1 has ciphertext; turn2 exercises replay (A)")
+            keys = sorted({k for item in reasoning for k in item.keys()})
+            print(f"INFO turn1 has signature/ciphertext; turn2 exercises replay (A); item_keys={keys}")
     else:
-        print("INFO turn1 message.output has no reasoning items; follow-up still must succeed")
+        print(f"INFO turn1 message.output has no reasoning items (reasoning_tokens={reasoning_tokens}); follow-up still must succeed")
 
     if r.errors:
         print(f"\nfable: {len(r.oks)} ok, {len(r.errors)} err")
@@ -216,7 +225,7 @@ def main() -> int:
             "id": asst_id,
             "model": FABLE_MODEL,
         },
-        {"role": "user", "content": "What was that product plus 1? Integer only."},
+        {"role": "user", "content": "Make the second course spicier and keep it plant-based. One short paragraph."},
     ]
     asst2_id = str(uuid.uuid4())
     turn2 = complete_via_chat(h, chat_id, FABLE_MODEL, history, asst2_id)
