@@ -31,10 +31,11 @@ BANNERS = [
             "<b>Images</b> Nano Banana Pro or GPT Image 2. "
             "Do not use Sonar for everyday chat. Do not ask a chat model to draw. "
             "<b>Reasoning depth</b> (Input box → <b>Valves</b>): use <b>high</b> or <b>xhigh</b> for code, long analysis, "
-            "and multi-step problems. Use <b>low</b> or <b>medium</b> for short or simple tasks (faster)."
+            "and multi-step problems. Use <b>low</b> or <b>medium</b> for short or simple tasks (faster). "
+            "<b>Settings → General → System Prompt</b> can also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1787100003,
+        "timestamp": 1787100004,
     },
 ]
 
@@ -215,6 +216,12 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     if "Reasoning depth" not in guide_html:
         print("ERROR guide banner missing Reasoning depth")
+        errors += 1
+    if "Settings → General → System Prompt" not in guide_html:
+        print("ERROR guide banner missing General System Prompt note")
+        errors += 1
+    if "can also affect image models and Perplexity sonar" not in guide_html:
+        print("ERROR guide banner missing image/search System Prompt impact")
         errors += 1
     if "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
         print("ERROR guide banner has non-minimal HTML (expect bold only)")
