@@ -1,4 +1,4 @@
 (function () {
 	'use strict';
-	/* ai-ui-1: chrome overlay lives in custom.css only. */
+	/* ai-ui-2: chrome overlay lives in custom.css only. */
 })();

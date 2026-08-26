@@ -68,7 +68,7 @@
 |----|----------------|
 | 容器 | `open-webui`，`127.0.0.1:8080`，镜像 `e97bf9531916` |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
-| 界面 CSS | **本仓** `deploy/owui-ui/custom.css`（头 **ai-ui-1**）。生产：覆盖 bind-mount 源文件 `/opt/open-webui/custom/custom.css`，然后 `touch` + `docker restart open-webui` + `caddy reload`。**禁止 `docker cp`**、禁止 `pull :main`。验收：`curl http://127.0.0.1:8080/static/custom.css` 与 `https://micropigeon.com/static/custom.css` 头均为 ai-ui-1。不要从 `open-webui-betterui` 拉 CSS。 |
+| 界面 CSS | **本仓** `deploy/owui-ui/custom.css`（头 **ai-ui-2**）。生产：覆盖 bind-mount 源文件 `/opt/open-webui/custom/custom.css`，然后 `touch` + `docker restart open-webui` + `caddy reload`。**禁止 `docker cp`**、禁止 `pull :main`、禁止私有仓 raw URL。用 `gh api` 拉文件。验收：loopback 与公网头均为 ai-ui-2。 |
 | env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
 | `openai.api_configs` | 5 条，**全部 `enable: false`** |
 | 重建后 | 通知用户重登 + agent 跑 verify / 必要时 merge Pipe key（§2 SOP） |

@@ -1,6 +1,6 @@
 # Open WebUI 界面覆盖（本仓）
 
-真相源：`deploy/owui-ui/custom.css`（版本头 **ai-ui-1**）+ 空 `loader.js`。  
+真相源：`deploy/owui-ui/custom.css`（版本头 **ai-ui-2**）+ 空 `loader.js`。  
 不要从 `open-webui-betterui` 拉 CSS。不要改 OWUI Svelte。不要动 `strip_bound_reasoning.py`。
 
 ## 部署（VPS）
@@ -11,7 +11,17 @@ Bind-mount 已存在：
 
 **禁止 `docker cp`**（会 `device or resource busy`）。**禁止** `docker pull` / `:main`。
 
-把本目录的 `custom.css` 覆盖到挂载源文件后：
+私有仓不要用 `raw.githubusercontent.com`（会 404）。在已登录 `gh` 的 VPS：
+
+```bash
+gh api "repos/wsy02322/AI/contents/deploy/owui-ui/custom.css?ref=cursor/suggested-hints-only-decf" --jq .content | base64 -d > /opt/open-webui/custom/custom.css
+touch /opt/open-webui/custom/custom.css
+docker restart open-webui
+sleep 8
+caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || systemctl reload caddy
+```
+
+或把本目录的 `custom.css` 拷到挂载源：
 
 ```bash
 SRC=/opt/open-webui/custom/custom.css
@@ -26,7 +36,7 @@ caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || systemctl reload caddy
 
 ## 验收（先 curl，再手机硬刷新）
 
-三处 `head` 都必须出现 `ai-ui-1`，且含 `model-selector`：
+三处 `head` 都必须出现 `ai-ui-2`，且含 `model-selector`：
 
 ```bash
 head -5 /opt/open-webui/custom/custom.css
