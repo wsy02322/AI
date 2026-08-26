@@ -5,15 +5,18 @@
 
 ---
 
-## 宪法（以往与以后所有动作）
+## 宪法（与 `AGENTS.md` 同步；改宪法先改 `AGENTS.md`）
 
-1. **强能力**：媲美甚至超越 ChatGPT / Grok 等 **最顶级付费档** 的功能。特别困难或复杂的实现，**必须先确认**：是否改用 **略微降级、但简单稳定特别多** 的方案。  
-2. **务必简单和稳定**，优先 **易维护**（少镜像、少密钥、少与上游分叉）。  
-3. **重大改动**：先出 plan，**你确认后再执行**。未确认不改实例。  
-4. **Walkthrough 证据**：除非特别必要，**不要**录屏或截屏；优先自动化验收与终端/日志。特别必要 ≈ 纯 UI 且脚本无法覆盖、或用户明确要求可视化证据。  
-5. **验收跟改动走**：Banner / Suggested / Description 等配置小改，只跑对应 apply 脚本自带校验（秒级 API）。**禁止**为此跑全量 `verify_stack`（含 4 次 live smoke）、禁止开浏览器、禁止重复 apply 未改的 Description。全量 `verify_stack` 仅用于 Pipe / Guard / catalog / 模型能力。
+当前 session 以根目录 `AGENTS.md` 为准。下文逐字复制，便于只读 SPEC 的人看到同一套准则。
 
-旧「冲最高就默认砍掉」不再作默认：目标仍是顶级；降级必须是 **你点头的权衡**，不是执行者自行放弃。
+1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：**先确认**是否改用略微降级、简单稳定特别多的方案。  
+2. 务必简单和稳定，优先易维护。  
+3. 重大改动：先 plan，确认后再执行。  
+4. 除非特别必要，**不要**录屏或截屏；优先脚本与终端/日志。特别必要 ≈ 纯 UI 且脚本盖不住、或你明确要求可视化证据。  
+5. 验收跟改动走：Banner / Suggested / Description 只跑 `apply_ui_guidance_banners.py` 自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止开浏览器、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。  
+6. 动实例时禁止：空 `POST /api/v1/models/sync`；全量覆盖 Pipe valves（只 merge）；写入新的非空 `WEBUI_SECRET_KEY`；把 `openai.api_configs` 设为 `enable: true`。细节在 `docs/AGENT-ONBOARDING.md`，当前 session 不必打开。
+
+目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。
 
 ## 全局最高优先级（P0，四条并列）
 

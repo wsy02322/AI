@@ -2,8 +2,9 @@
 
 Open WebUI + OpenRouter 文档见 `docs/`：
 
-- `AGENTS.md` — Agent 入口（先读 SPEC，再动实例）
-- `docs/SPEC.md` — 体验与稳定性契约（含 P0 四条并列）
+- `AGENTS.md` — **当前 Agent 宪法**（Cloud 自动注入；不要把操作手册写回来）
+- `docs/AGENT-ONBOARDING.md` — **新 Agent / 新 session 开工包**（脚本、Runbook、VPS、不要做）
+- `docs/SPEC.md` — 体验与稳定性契约（含 P0 四条并列；宪法与 AGENTS.md 同步）
 - `docs/VERSIONS.md` — 上次验收的 OWUI / Pipe 指纹
 - `docs/open-webui-compare-first-class-plan.md` — **多模型对比为一等公民**（连续多轮多图；确认前不改实例）
 - `docs/open-webui-optimized-plan.md` — **优化计划**（P0：图像 / 语音聊天 / 屏享 / Notebook·YouTube；视频生成与 slides 为后续必做）

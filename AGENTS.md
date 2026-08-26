@@ -1,95 +1,19 @@
-# AGENTS.md — 本仓库怎么动 Open WebUI
+# AGENTS.md — 宪法（当前 Agent 唯一自动注入准则）
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+当前 session：只遵守下面宪法与 P0 并列。**不要主动打开** `docs/AGENT-ONBOARDING.md`。  
+新 session / 新 Agent：开工前读 `docs/AGENT-ONBOARDING.md`。产品契约：`docs/SPEC.md`。
 
-## 宪法（所有动作）
+## 宪法
 
 1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：**先确认**是否改用略微降级、简单稳定特别多的方案。  
 2. 务必简单和稳定，优先易维护。  
 3. 重大改动：先 plan，确认后再执行。  
 4. 除非特别必要，**不要**录屏或截屏；优先脚本与终端/日志。特别必要 ≈ 纯 UI 且脚本盖不住、或你明确要求可视化证据。  
-5. 验收跟改动走：Banner / Suggested / Description 只跑 `apply_ui_guidance_banners.py` 自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止开浏览器、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。
+5. 验收跟改动走：Banner / Suggested / Description 只跑 `apply_ui_guidance_banners.py` 自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止开浏览器、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。  
+6. 动实例时禁止：空 `POST /api/v1/models/sync`；全量覆盖 Pipe valves（只 merge）；写入新的非空 `WEBUI_SECRET_KEY`；把 `openai.api_configs` 设为 `enable: true`。细节在 `docs/AGENT-ONBOARDING.md`，当前 session 不必打开。
 
-**P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **19 个 public**。
+目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。
 
-未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
+## P0（并列，不是顺序）
 
-## 改实例前
-
-1. 改 Pipe / Guard / catalog / 模型能力前：跑 `python3 scripts/verify_stack.py`。Banner / Suggested / 文案小改 **跳过**（脚本自带校验即可）  
-2. 更新 Pipe valves：**merge**，禁止全量覆盖（会丢 `API_KEY`）  
-3. 更新模型：`POST /api/v1/models/model/update` 必须带 `access_grants`  
-4. **禁止** `POST /api/v1/models/sync` 空列表：OWUI 0.11 会按 payload **删掉**不在列表里的全部模型行  
-5. **运维 L0（ST-OPS，已确认）** — 详见 `docs/open-webui-secret-key-persist-plan.md` §2  
-   - env：`WEBUI_SECRET_KEY=""`。**不**持久化 JWT；容器重建 → **用户重登录（可接受）**。  
-   - Pipe `API_KEY`：**merge 明文**恢复；API 保存后常为 `encrypted:`（catalog 正常即可）。  
-   - **禁止** VPS 写入**新的**随机非空 `WEBUI_SECRET_KEY`（与 `encrypted:` Pipe key 冲突 → catalog 空）。  
-   - **禁止**改 `openai.api_configs` 为 `enable: true`。  
-   - catalog 空：merge 明文 OpenRouter key（`api_keys[0]` / TTS）→ `GET /api/models?refresh=true` → `restore_public_grants.py` → plan A / wave0 / banners → verify。  
-   - **禁止**空 `POST /api/v1/models/sync`。  
-
-登录优先 `OPENWEBUI_USERNAME`，不一定等于 email。
-
-## 常用脚本（加速器，不是 SPEC）
-
-| 脚本 | 何时 |
-|------|------|
-| `scripts/verify_stack.py` | Pipe / Guard / catalog / 模型能力改动后。**不要**为 Banner / Suggested 文案跑 |
-| `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
-| `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
-| `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 |
-| `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
-| `scripts/apply_model_catalog_visibility.py` | 仅保留 19 public 为 `is_active`；其余 Pipe catalog 禁用 |
-| `scripts/apply_ui_guidance_banners.py` | Banner / Description / **清空 Suggested** / DEFAULT_MODELS |
-| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
-| `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
-| `scripts/run_ga_a_trial.py` | GA-A：MiniMax TTS vs gpt-audio（不改 Call/public；写 `open-webui-gpt-audio-trial-plan.md` §5） |
-| `scripts/apply_notebook_n1.py` | N1：RAG embedding → OpenRouter、YouTube loader 语言、Knowledge 集合 |
-| `scripts/ingest_youtube_notebook.py` | N1：YouTube 字幕/ASR + 视觉时间线写入 Knowledge |
-| `scripts/verify_notebook_youtube.py` | N1 验收：RAG 槽、集合、字幕+shown、Banner |
-| `scripts/apply_ops_l0.py` | **L0 执行**：Pipe key / api_configs / catalog / public grants（merge-only） |
-| `scripts/verify_ops_l0.py` | **L0 验收**：ST-OPS 探针 |
-| `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
-
-## Pipe 更新 Runbook
-
-1. 在 Admin 更新 Pipe（或按上游安装）  
-2. **Merge** valves：见 SPEC ST-4～ST-6（`apply_plan_a_hide_integrations.py` 会 merge）  
-3. 确认 3 个 Guard 仍 global active：`image_tool_guard`、`image_context_guard`、`search_native_tool_guard`  
-4. `python3 scripts/apply_plan_a_hide_integrations.py`  
-5. `python3 scripts/apply_ui_guidance_banners.py`  
-6. `python3 scripts/apply_wave0.py`  
-7. `python3 scripts/verify_stack.py` 全绿  
-8. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
-
-若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
-
-## VPS / 容器运维（勿与 Pipe 脚本混用）
-
-| 项 | 当前值 / 约束 |
-|----|----------------|
-| 容器 | `open-webui`，`127.0.0.1:8080`，镜像 `e97bf9531916` |
-| Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
-| env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
-| `openai.api_configs` | 5 条，**全部 `enable: false`** |
-| 重建后 | 通知用户重登 + agent 跑 verify / 必要时 merge Pipe key（§2 SOP） |
-
-升配 / 重建容器前：备份 `webui.db`（护聊天/Knowledge，不护 JWT）；重建后跑 `verify_stack.py`。
-
-## 不要做
-
-- 在 `/root/open-webui.env` 写入**新的**随机非空 `WEBUI_SECRET_KEY`  
-- 主动把 Pipe `API_KEY` 加密成 `encrypted:`（K1/K2 已冻结；Admin 误保存则 merge 回明文）  
-- 启用 `openai.api_configs`（OpenRouter 直连槽）  
-- 给 Sonar / 纯图像灌 tools  
-- 打开 Sol Pro `image_generation` 来做同会话作图  
-- 一次 public 全部视频模型  
-- 关全局 Code Interpreter（只收 Sonar/图像的 capability）  
-- 把 RAG / Knowledge 当加分项或与 Sonar 做成同一个按钮  
-- 把 YouTube 字幕/转录当成 NotebookLM 级验收  
-- 把视频生成（Wave 1）与 YouTube ingest（P0-D）混成一条施工
-- 用 Call overlay / 现有 MiniMax Read Aloud 冒充 Audio Overview  
-- 未确认就把 gpt-audio 或 Realtime 镜像当 Call S2S 落地  
-- 把语音聊天排在屏享之后，或用 rbb L2 的语音收益掩盖持续屏享缺口
-
-Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
+图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube 同级。不得写成「屏享 → 语音」。维持 **19 个 public**。未确认 N2+ 不改 Notebook 入口、不装第二前端。无 Realtime 钥匙时不换 OWUI 镜像。

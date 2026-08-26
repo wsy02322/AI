@@ -326,7 +326,7 @@ OWUI 点击 Suggested **立刻发送**，不能当纯提示。**已清空**（`P
 
 ### 8.3 尚未入库（讨论中，非当前差异）
 
-- `SPEC.md`、`AGENTS.md`、`scripts/verify_stack.py`、`docs/VERSIONS.md`（见灾备规划 P0）
+- `SPEC.md`、`AGENTS.md`（宪法）、`docs/AGENT-ONBOARDING.md`（新 Agent 开工包）、`scripts/verify_stack.py`、`docs/VERSIONS.md`（见灾备规划 P0）
 
 ---
 
