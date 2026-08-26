@@ -21,45 +21,28 @@ PIPE = "open_webui_openrouter_integration"
 
 BANNERS = [
     {
-        "id": "usage-pick-model-v2",
+        "id": "usage-guide-v3",
         "type": "info",
-        "title": "Pick the right model — this is the main quality switch",
+        "title": "How to use this workspace",
         "content": (
             '<div style="background:#eff6ff;color:#1e3a8a;border:1px solid #93c5fd;'
             "border-left:6px solid #2563eb;border-radius:12px;padding:10px 14px;"
             'line-height:1.35;display:block;width:100%;box-sizing:border-box;">'
             '<span style="display:inline-flex;background:#2563eb;color:#fff;padding:1px 8px;'
             'border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;">'
-            "PICK A MODEL</span> "
+            "HOW TO USE</span> "
             "<b>Web search only on Perplexity Sonar. Images only on an image model.</b><br>"
             "<b>Quick search</b> Sonar Pro Search · "
             "<b>Deep report</b> Sonar Deep Research · "
             "<b>Images</b> Nano Banana Pro or GPT Image 2. "
-            "Do not use Sonar for everyday chat. Do not ask a chat model to draw."
+            "Do not use Sonar for everyday chat. Do not ask a chat model to draw.<br>"
+            '<span style="color:#9a3412;"><b>Reasoning depth</b></span> '
+            "(Input box → <b>Valves</b>): use <b>high</b> or <b>xhigh</b> for code, long analysis, "
+            "and multi-step problems. Use <b>low</b> or <b>medium</b> for short or simple tasks (faster)."
             "</div>"
         ),
         "dismissible": False,
-        "timestamp": 1787100000,
-    },
-    {
-        "id": "usage-reasoning-depth-v2",
-        "type": "warning",
-        "title": "Turn up Reasoning depth for hard work",
-        "content": (
-            '<div style="background:#fff7ed;color:#9a3412;border:1px solid #fdba74;'
-            "border-left:6px solid #ea580c;border-radius:12px;padding:10px 14px;"
-            'line-height:1.35;display:block;width:100%;box-sizing:border-box;">'
-            '<span style="display:inline-flex;background:#ea580c;color:#fff;padding:1px 8px;'
-            'border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;">'
-            "REASONING DEPTH</span> "
-            "Input box → <b>Valves</b> → <b>Reasoning depth</b>: "
-            "use <b>high</b> or <b>xhigh</b> for code, long analysis, and multi-step problems. "
-            "Use <b>low</b> / <b>medium</b> for short or simple tasks (faster). "
-            "This often changes quality more than switching between Sol Pro and Opus."
-            "</div>"
-        ),
-        "dismissible": False,
-        "timestamp": 1787100001,
+        "timestamp": 1787100002,
     },
 ]
 
@@ -210,8 +193,11 @@ def verify(h: dict[str, str]) -> int:
     ).json().get("ui.prompt_suggestions") or []
     ids = [b.get("id") for b in banners]
     print("verify banners", ids)
-    if "usage-pick-model-v2" not in ids or "usage-reasoning-depth-v2" not in ids:
-        print("ERROR missing banners")
+    if len(banners) != 1 or "usage-guide-v3" not in ids:
+        print("ERROR want single usage-guide-v3 banner")
+        errors += 1
+    if any(bid in ids for bid in ("usage-pick-model-v2", "usage-reasoning-depth-v2")):
+        print("ERROR legacy dual banners still present")
         errors += 1
     old = [b for b in banners if "resoning" in str(b.get("content") or "").lower()]
     if old:
@@ -230,16 +216,21 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     else:
         print("ok suggestions empty")
-    pick = next((b for b in banners if b.get("id") == "usage-pick-model-v2"), {})
-    pick_html = str(pick.get("content") or "")
-    if "Web search only on Perplexity Sonar" not in pick_html:
-        print("ERROR pick banner missing Sonar/image lead")
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v3"), {})
+    guide_html = str(guide.get("content") or "")
+    if "Web search only on Perplexity Sonar" not in guide_html:
+        print("ERROR guide banner missing Sonar/image lead")
+        errors += 1
+    if "Reasoning depth" not in guide_html:
+        print("ERROR guide banner missing Reasoning depth")
         errors += 1
     banned = ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
-    hit = [p for p in banned if p in pick_html]
+    hit = [p for p in banned if p in guide_html]
     if hit:
-        print("ERROR pick banner still has", hit)
+        print("ERROR guide banner still has", hit)
         errors += 1
+    elif guide_html and "Web search only on Perplexity Sonar" in guide_html:
+        print("ok guide banner merged English")
     listed = {
         m["id"]: m
         for m in requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=60).json()["data"]

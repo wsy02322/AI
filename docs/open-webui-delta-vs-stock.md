@@ -275,14 +275,13 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 ### 7.1 General UI Banners（相对 Stock：无）
 
-两条 **不可 dismiss**（`dismissible: false`）英文 Banner（`POST /api/v1/configs/banners`）：
+一条 **不可 dismiss**（`dismissible: false`）全英 Banner（`POST /api/v1/configs/banners`）：
 
 | id | type | 作用 |
 |----|------|------|
-| `usage-pick-model-v2` | info | 粗体：联网只在 Sonar、作图只在图像模型；快搜 / 深研 / Banana·GPT Image 2 |
-| `usage-reasoning-depth-v2` | warning | Valves → Reasoning depth → high/xhigh |
+| `usage-guide-v3` | info | 合并原蓝条 + 橙条：Sonar=联网、图像模型=作图；快搜 / 深研 / Banana·GPT Image 2；第二行 Reasoning depth（Valves → high/xhigh vs low/medium） |
 
-已替换早期拼写错误 banner（`resoning`）。
+已替换早期两条 `usage-*-v2` 与拼写错误 banner（`resoning`）。
 
 ### 7.2 Prompt suggestions（空对话 chips）
 
@@ -380,7 +379,7 @@ Stock OWUI 0.11.0
     ├─ − 全部 OpenAI 兼容槽禁用（含原 gptsapi slot0）
     ├─ WEBUI_URL=https://micropigeon.com
     ├─ 19 public 模型 + 4 置顶 + 英文 Description（含屏享）
-    ├─ 2 条常驻英文 Banner
+    ├─ 1 条常驻全英 Banner（`usage-guide-v3`）
     ├─ Suggested chips **空**
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
@@ -417,7 +416,7 @@ python3 scripts/fix_sonar_tool_guard.py
 
 - `GET /api/version` → 0.11.0  
 - `GET /api/config` → `enable_web_search=false`  
-- `GET /api/v1/configs/banners` → 两条 `usage-*-v2`  
+- `GET /api/v1/configs/banners` → 一条 `usage-guide-v3`  
 - Sonar / 图像模型聊天 → 无 tool use 404  
 - 样本模型 Integrations → 无 OR Web Tools / Image Gen  
 
