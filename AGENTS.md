@@ -8,8 +8,8 @@
 1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：**先确认**是否改用略微降级、简单稳定特别多的方案。  
 2. 务必简单和稳定，优先易维护。  
 3. 重大改动：先 plan，确认后再执行。  
-4. 除非特别必要，**不要**录屏或截屏；优先脚本与终端/日志。特别必要 ≈ 纯 UI 且脚本盖不住、或你明确要求可视化证据。  
-5. 验收跟改动走：Banner / Suggested / Description 只跑 `apply_ui_guidance_banners.py` 自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止开浏览器、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。  
+4. **一般情况不开浏览器**，也不录屏、不截屏。优先脚本与终端/日志。仅当你明确要求，或改了本仓库前端代码且脚本无法证明时才开浏览器。  
+5. 验收跟改动走：Banner / Suggested / Description 只跑对应 apply 的自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。  
 6. 动实例时禁止：空 `POST /api/v1/models/sync`；全量覆盖 Pipe valves（只 merge）；写入新的非空 `WEBUI_SECRET_KEY`；把 `openai.api_configs` 设为 `enable: true`。细节在 `docs/AGENT-ONBOARDING.md`，当前 session 不必打开。
 
 目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。
