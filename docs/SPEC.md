@@ -33,7 +33,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ID | 必须 |
 |----|------|
 | UX-1 | **四格捷径**：Chat = Sol Pro / Opus；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
-| UX-2 | 英文指引：两条 Banner + 关键 Description + 空对话 chips（「Select … first」） |
+| UX-2 | 英文指引：两条 Banner + 关键 Description。**空对话 Suggested 清空**（OWUI 点击即发送，误触面；提示走 Banner） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **19 个 public** 维持（对比用）；不缩到 6 |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |

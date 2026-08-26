@@ -42,7 +42,7 @@
 | 文件上传 | Direct Uploads | **维持** |
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；缺自动验收（§4 Wave 0） |
-| 英文指引 | 2 Banner + 4 chips + Description | **维持**（Banner 数量不作为本阶段议题） |
+| 英文指引 | 2 Banner + Description；**无** Suggested chips | **维持**（Banner 数量不作为本阶段议题） |
 
 ### 1.2 Later（已承诺，单独一波，不塞进当前）
 

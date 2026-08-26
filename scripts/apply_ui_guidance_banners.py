@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Apply prominent English in-app guidance (banners, descriptions, prompt chips)."""
+"""Apply prominent English in-app guidance (banners, descriptions).
+
+Empty-chat Suggested chips are cleared: OWUI always auto-sends on click,
+so they are a misfire surface, not hints. Banners + descriptions stay.
+"""
 
 from __future__ import annotations
 
@@ -90,36 +94,8 @@ DESCRIPTIONS = {
     ),
 }
 
-SUGGESTIONS = [
-    {
-        "title": ["Message me on WeChat @dalapi", "Let's improve this together"],
-        "content": (
-            "Message me on WeChat @dalapi — let's improve this together. "
-            "Tell me one thing that confused you or one feature you'd like to see."
-        ),
-    },
-    {
-        "title": ["Deep report", "Select Sonar Deep Research first"],
-        "content": (
-            "After you select Perplexity: Sonar Deep Research, write a sourced industry brief on "
-            "the latest foundation-model landscape. Keep this tab open; it can take 2–10 minutes."
-        ),
-    },
-    {
-        "title": ["Images", "Select Nano Banana Pro first"],
-        "content": (
-            "After you select Google: Nano Banana Pro (Gemini 3 Pro Image), generate a clean product "
-            "render of a ceramic coffee mug on a white background."
-        ),
-    },
-    {
-        "title": ["Hard reasoning", "Set Reasoning depth to xhigh"],
-        "content": (
-            "On GPT-5.6 Sol Pro or Claude Opus 5, set input-box Valves → Reasoning depth to xhigh, "
-            "then explain a multi-step strategy for evaluating two competing research papers."
-        ),
-    },
-]
+# OWUI Suggested chips always submit on click. Clear them; banners carry the hints.
+SUGGESTIONS: list[dict] = []
 
 
 def signin() -> str:
@@ -247,14 +223,14 @@ def verify(h: dict[str, str]) -> int:
         text = f"{b.get('title')} {b.get('content')}"
         if any("\u4e00" <= ch <= "\u9fff" for ch in text):
             chinese += 1
-    for s in suggestions:
-        text = " ".join(s.get("title") or []) + " " + str(s.get("content") or "")
-        if any("\u4e00" <= ch <= "\u9fff" for ch in text):
-            chinese += 1
     if chinese:
         print(f"ERROR Chinese in user-facing copy: {chinese}")
         errors += 1
-    print(f"suggestions count {len(suggestions)}")
+    if suggestions:
+        print(f"ERROR suggestions still present: {len(suggestions)}")
+        errors += 1
+    else:
+        print("ok suggestions empty")
     listed = {
         m["id"]: m
         for m in requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=60).json()["data"]

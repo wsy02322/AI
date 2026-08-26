@@ -143,9 +143,9 @@ def verify(h: dict[str, str]) -> int:
         r.ok(f"banners {banner_ids}")
     suggestions = export.get("ui.prompt_suggestions") or []
     if len(suggestions) != SUGGESTIONS_COUNT:
-        r.err(f"suggestions={len(suggestions)} want {SUGGESTIONS_COUNT}")
+        r.err(f"suggestions={len(suggestions)} want empty")
     else:
-        r.ok(f"suggestions {len(suggestions)}")
+        r.ok("suggestions empty")
 
     valves = requests.get(
         f"{OPENWEBUI_URL}/api/v1/functions/id/{PIPE}/valves", headers=h, timeout=30

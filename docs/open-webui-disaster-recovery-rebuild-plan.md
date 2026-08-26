@@ -77,7 +77,7 @@
 | ID | 规格 |
 |----|------|
 | UX-1 | **四格能力**：Chat（Sol Pro / Opus）、Quick search（Sonar Pro Search）、Deep report（Sonar Deep Research）、Images（Banana Pro / GPT Image 2）— **换模型即换能力** |
-| UX-2 | **英文指引**：两条常驻 Banner（pick model + Reasoning depth）+ 关键模型 Description +（可选）空对话 chips 带 “Select … first” |
+| UX-2 | **英文指引**：两条常驻 Banner（pick model + Reasoning depth）+ 关键模型 Description。空对话 Suggested **清空**（点击即发送） |
 | UX-3 | **Integrations 简约**：日常聊天 **不出现** OR Web Tools、OR Image Gen、OWUI Web Search；保留 Direct Uploads；图像模型保留 native image filter |
 | UX-4 | **Reasoning depth** 在 UI 有可见说明：难题 high/xhigh，简单题 low/medium |
 | UX-5 | Deep Research：**2–10 分钟** 等待写在 Deep 模型说明或 Banner 中 |
@@ -129,7 +129,7 @@
 | Filter **priority 越低越先执行**（inlet）；Guard 要 **最后** 剥 tools | per-model Filter 会在 Guard 之后 **再注入** server_tools |
 | `POST /api/v1/configs/banners` body 是 `{"banners":[...]}` | 不是裸数组 |
 | `POST /api/v1/configs/suggestions` body 是 `{"suggestions":[...]}` | |
-| Prompt chips **不会** 自动切换模型 | chip 文案必须写 “Select X first” |
+| Prompt chips **不会** 自动切换模型 | **已清空** Suggested，避免误触发送 |
 | Banner 仅 **HTML**，无 Markdown | |
 | 登录用 `OPENWEBUI_USERNAME` 未必等于 email | 本实例 username 更稳 |
 | Public 模型：`access_grants` principal `*` | Pipe 默认图像模型仅 admin |
