@@ -179,6 +179,9 @@ def set_descriptions(h: dict[str, str]) -> None:
             continue
         model = detail.json()
         meta = dict(model.get("meta") or {})
+        if meta.get("description") == description:
+            print(f"desc {model.get('name')}: unchanged")
+            continue
         meta["description"] = description
         payload = {
             "id": model["id"],

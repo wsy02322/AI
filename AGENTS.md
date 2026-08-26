@@ -7,7 +7,8 @@
 1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：**先确认**是否改用略微降级、简单稳定特别多的方案。  
 2. 务必简单和稳定，优先易维护。  
 3. 重大改动：先 plan，确认后再执行。  
-4. 除非特别必要，**不要**录屏或截屏；优先 `verify_stack` 等脚本与终端/日志。特别必要 ≈ 纯 UI 且脚本盖不住、或你明确要求可视化证据。
+4. 除非特别必要，**不要**录屏或截屏；优先脚本与终端/日志。特别必要 ≈ 纯 UI 且脚本盖不住、或你明确要求可视化证据。  
+5. 验收跟改动走：Banner / Suggested / Description 只跑 `apply_ui_guidance_banners.py` 自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止开浏览器、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。
 
 **P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **19 个 public**。
 
@@ -15,7 +16,7 @@
 
 ## 改实例前
 
-1. 跑 `python3 scripts/verify_stack.py`（需要 `OPENWEBUI_URL` / `OPENWEBUI_USERNAME` / `OPENWEBUI_PASSWORD`）  
+1. 改 Pipe / Guard / catalog / 模型能力前：跑 `python3 scripts/verify_stack.py`。Banner / Suggested / 文案小改 **跳过**（脚本自带校验即可）  
 2. 更新 Pipe valves：**merge**，禁止全量覆盖（会丢 `API_KEY`）  
 3. 更新模型：`POST /api/v1/models/model/update` 必须带 `access_grants`  
 4. **禁止** `POST /api/v1/models/sync` 空列表：OWUI 0.11 会按 payload **删掉**不在列表里的全部模型行  
@@ -33,7 +34,7 @@
 
 | 脚本 | 何时 |
 |------|------|
-| `scripts/verify_stack.py` | 任何改动后；Pipe 更新后 |
+| `scripts/verify_stack.py` | Pipe / Guard / catalog / 模型能力改动后。**不要**为 Banner / Suggested 文案跑 |
 | `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 |
