@@ -68,6 +68,7 @@
 |----|----------------|
 | 容器 | `open-webui`，`127.0.0.1:8080`，镜像 `e97bf9531916` |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
+| 界面 CSS | 仓库 `wsy02322/open-webui-betterui` → `deploy/hetzner-custom/custom.css`。生产验收：`curl -sS https://micropigeon.com/static/custom.css \| head -8` 须为最新版本头（现目标 **v14.5**，composer 模型选择器只留 chevron）。**只改 Git 不够**，须写入 `/opt/open-webui/custom/custom.css` 并 `docker cp` 进容器。不要用该仓 `install.sh` 的 `docker run …:main`（会打掉钉死镜像）。 |
 | env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
 | `openai.api_configs` | 5 条，**全部 `enable: false`** |
 | 重建后 | 通知用户重登 + agent 跑 verify / 必要时 merge Pipe key（§2 SOP） |
