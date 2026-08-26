@@ -151,6 +151,8 @@ def verify(h: dict[str, str]) -> int:
         for p in ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
     ):
         r.err("guide banner still has voice/notebook/chat-grid copy")
+    elif "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
+        r.err("guide banner has non-minimal HTML (expect bold only)")
     else:
         r.ok("guide banner merged English")
     suggestions = export.get("ui.prompt_suggestions") or []

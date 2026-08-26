@@ -23,26 +23,18 @@ BANNERS = [
     {
         "id": "usage-guide-v3",
         "type": "info",
-        "title": "How to use this workspace",
+        "title": "",
         "content": (
-            '<div style="background:#eff6ff;color:#1e3a8a;border:1px solid #93c5fd;'
-            "border-left:6px solid #2563eb;border-radius:12px;padding:10px 14px;"
-            'line-height:1.35;display:block;width:100%;box-sizing:border-box;">'
-            '<span style="display:inline-flex;background:#2563eb;color:#fff;padding:1px 8px;'
-            'border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;">'
-            "HOW TO USE</span> "
-            "<b>Web search only on Perplexity Sonar. Images only on an image model.</b><br>"
+            "<b>Web search only on Perplexity Sonar. Images only on an image model.</b> "
             "<b>Quick search</b> Sonar Pro Search · "
             "<b>Deep report</b> Sonar Deep Research · "
             "<b>Images</b> Nano Banana Pro or GPT Image 2. "
-            "Do not use Sonar for everyday chat. Do not ask a chat model to draw.<br>"
-            '<span style="color:#9a3412;"><b>Reasoning depth</b></span> '
-            "(Input box → <b>Valves</b>): use <b>high</b> or <b>xhigh</b> for code, long analysis, "
+            "Do not use Sonar for everyday chat. Do not ask a chat model to draw. "
+            "<b>Reasoning depth</b> (Input box → <b>Valves</b>): use <b>high</b> or <b>xhigh</b> for code, long analysis, "
             "and multi-step problems. Use <b>low</b> or <b>medium</b> for short or simple tasks (faster)."
-            "</div>"
         ),
         "dismissible": False,
-        "timestamp": 1787100002,
+        "timestamp": 1787100003,
     },
 ]
 
@@ -223,6 +215,9 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     if "Reasoning depth" not in guide_html:
         print("ERROR guide banner missing Reasoning depth")
+        errors += 1
+    if "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
+        print("ERROR guide banner has non-minimal HTML (expect bold only)")
         errors += 1
     banned = ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
     hit = [p for p in banned if p in guide_html]
