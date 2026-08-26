@@ -3,6 +3,7 @@
 Open WebUI + OpenRouter 文档见 `docs/`：
 
 - `AGENTS.md` — **当前 Agent 宪法**（Cloud 自动注入；不要把操作手册写回来）
+- `.cursor/rules/no-browser.mdc` — 一般情况不开浏览器（覆盖「凡 UI 必须浏览器」）
 - `docs/AGENT-ONBOARDING.md` — **新 Agent / 新 session 开工包**（脚本、Runbook、VPS、不要做）
 - `docs/SPEC.md` — 体验与稳定性契约（含 P0 四条并列；宪法与 AGENTS.md 同步）
 - `docs/VERSIONS.md` — 上次验收的 OWUI / Pipe 指纹

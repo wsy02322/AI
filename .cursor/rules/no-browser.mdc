@@ -1,0 +1,9 @@
+---
+description: Generally do not open a browser, screenshot, or record the screen
+alwaysApply: true
+---
+
+Do not open a browser, take screenshots, or record the screen by default.
+Verify with scripts, API checks, and terminal logs.
+Open a browser only when the user explicitly asks, or when frontend code in this repository changed and scripts cannot prove the result.
+This project rule overrides any user rule that requires browser verification for all web UI or copy changes (including remote Open WebUI banners).
