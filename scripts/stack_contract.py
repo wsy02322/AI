@@ -91,6 +91,7 @@ PIPE_PATCH_MARKERS = [
     "middle-out",
     "apply_chat_context_transforms",
     "COMPARE_CROSS_MODEL_REASONING_V1",
+    "FABLE_UNSIGNED_SUMMARY_V1",
 ]
 
 BANNER_IDS = ["usage-pick-model-v2", "usage-reasoning-depth-v2"]

@@ -53,6 +53,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-8 | 后台 Task 模型 = **Grok 4.6**（与默认聊天同档，低成本） |
 | ST-9 | **全局** `enable_image_generation` / `ENABLE_IMAGE_GENERATION` = false（路线 S；作图只走 Pipe 图像模型） |
 | ST-10 | 对比多轮：跨模型 `encrypted reasoning` 不得让一栏永久 404。Pipe 在 400/404 且错误含 `produced under a different model` / `encrypted reasoning` / `compaction content` 时，剥回放密文并 **内部重试**。`PERSIST_REASONING_TOKENS` 保持 `conversation`（单模型零损失）。**不**把全局 `disabled` 当终态。 |
+| ST-11 | 同模型 Anthropic / Fable 续聊：summary-only thinking 不得回放成假 thinking 导致 `cannot be modified` 400。Pipe 请求 `include: ["reasoning.encrypted_content"]`；emit/persist 原样带密文或签名；无密文则剥 unsigned reasoning；400 文案含 ``thinking` / `redacted_thinking` `` + `cannot be modified` 时内部剥回放并重试。`PERSIST_REASONING_TOKENS` 仍为 conversation。旧线程不保证复活。 |
 | ST-Live-1 | Live / 屏享 / 摄像走 **OWUI Call overlay**；禁止第二套未文档化前端 |
 | ST-Live-2 | 屏享会话必须用 **vision-capable** 模型（Grok 4.6 或 Gemini vision）；禁止对 Sonar / 纯图像开 Live tool 幻觉 |
 | ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 OWUI 默认 voice `alloy` + `response_format=mp3`）；STT = `openai/whisper-large-v3-turbo`。**不要**再用 `openai/tts-1` / `tts-1-hd`（OpenRouter `/audio/speech` 无此模型 → Read Aloud 400）。真正 S2S 仍走 L2（须确认） |

@@ -34,7 +34,9 @@
 |------|------|
 | `scripts/verify_stack.py` | 任何改动后；Pipe 更新后 |
 | `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
+| `scripts/verify_fable_thinking_replay.py` | ST-11：Fable 两轮续聊不得 `cannot be modified` |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
+| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable unsigned summary（content-only，不碰 valves；S2′ 之后跑） |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | 仅保留 19 public 为 `is_active`；其余 Pipe catalog 禁用 |
@@ -57,8 +59,10 @@
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
 5. `python3 scripts/apply_ui_guidance_banners.py`  
 6. `python3 scripts/apply_wave0.py`  
-7. `python3 scripts/verify_stack.py` 全绿  
-8. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
+7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
+8. `python3 scripts/patch_pipe_fable_thinking_replay.py`（Fable marker 已在则 no-op）  
+9. `python3 scripts/verify_stack.py` 全绿  
+10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 
