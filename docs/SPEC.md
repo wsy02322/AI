@@ -5,13 +5,18 @@
 
 ---
 
-## 宪法（以往与以后所有动作）
+## 宪法（与 `AGENTS.md` 同步；改宪法先改 `AGENTS.md`）
 
-1. **强能力**：媲美甚至超越 ChatGPT / Grok 等 **最顶级付费档** 的功能。特别困难或复杂的实现，**必须先确认**：是否改用 **略微降级、但简单稳定特别多** 的方案。  
-2. **务必简单和稳定**，优先 **易维护**（少镜像、少密钥、少与上游分叉）。  
-3. **重大改动**：先出 plan，**你确认后再执行**。未确认不改实例。
+当前 session 以根目录 `AGENTS.md` 为准。下文逐字复制，便于只读 SPEC 的人看到同一套准则。
 
-旧「冲最高就默认砍掉」不再作默认：目标仍是顶级；降级必须是 **你点头的权衡**，不是执行者自行放弃。
+1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：**先确认**是否改用略微降级、简单稳定特别多的方案。  
+2. 务必简单和稳定，优先易维护。  
+3. 重大改动：先 plan，确认后再执行。  
+4. **一般情况不开浏览器**，也不录屏、不截屏。优先脚本与终端/日志。仅当你明确要求，或改了本仓库前端代码且脚本无法证明时才开浏览器。  
+5. 验收跟改动走：Banner / Suggested / Description 只跑对应 apply 的自带校验。**禁止**为此全量 `verify_stack`（4 次 live smoke）、禁止重写未改的 Description。全量 verify 仅 Pipe / Guard / catalog / 模型能力。  
+6. 动实例时禁止：空 `POST /api/v1/models/sync`；全量覆盖 Pipe valves（只 merge）；写入新的非空 `WEBUI_SECRET_KEY`；把 `openai.api_configs` 设为 `enable: true`。细节在 `docs/AGENT-ONBOARDING.md`，当前 session 不必打开。
+
+目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。
 
 ## 全局最高优先级（P0，四条并列）
 
@@ -33,7 +38,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ID | 必须 |
 |----|------|
 | UX-1 | **四格捷径**：Chat = Sol Pro / Opus；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
-| UX-2 | 英文指引：两条 Banner + 关键 Description + 空对话 chips（「Select … first」） |
+| UX-2 | 英文指引：**一条** Banner（选模型 + Reasoning depth + General System Prompt 可能影响图像/Sonar）+ 关键 Description。Sonar = 联网、图像模型 = 作图（无语音/屏享/Notebook、无 Sol/Opus Chat 句）。**空对话 Suggested 清空** |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **19 个 public** 维持（对比用）；不缩到 6 |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |

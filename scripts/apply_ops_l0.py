@@ -158,9 +158,11 @@ def main() -> int:
         export = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/export", headers=h, timeout=60).json()
         ensure_pipe_key(h, export, count)
         count = refresh_catalog(h)
-    if count < 400:
+    if count < 19:
         print(f"ERR catalog still low ({count})")
         return 1
+    if count < 400:
+        print(f"WARN catalog {count} (picker may already be the 19 public; skip L0 key retry)")
 
     ensure_public_grants(h)
     print("apply_ops_l0: done")

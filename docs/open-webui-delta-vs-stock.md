@@ -275,22 +275,19 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 ### 7.1 General UI Banners（相对 Stock：无）
 
-两条 **不可 dismiss**（`dismissible: false`）英文 Banner（`POST /api/v1/configs/banners`）：
+一条 **不可 dismiss**（`dismissible: false`）全英 Banner（`POST /api/v1/configs/banners`）：
 
 | id | type | 作用 |
 |----|------|------|
-| `usage-pick-model-v2` | info | 四格选模型：Chat / Quick search / Deep report / Images |
-| `usage-reasoning-depth-v2` | warning | Valves → Reasoning depth → high/xhigh |
+| `usage-guide-v3` | info | 单行全英极简四句：Sonar=联网、图像=作图；Reasoning depth → Valves；General System Prompt 可能影响图像/Sonar |
 
-已替换早期拼写错误 banner（`resoning`）。
+已替换早期两条 `usage-*-v2` 与拼写错误 banner（`resoning`）。
 
 ### 7.2 Prompt suggestions（空对话 chips）
 
-**设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip；第 1 条为 WeChat 反馈（`@dalapi`），其余 3 条含 “Select … first”。
+OWUI 点击 Suggested **立刻发送**，不能当纯提示。**已清空**（`POST /api/v1/configs/suggestions` `[]`）。指引走 Banner + Description。
 
-**存储**：`POST /api/v1/configs/suggestions`；导出键 **`ui.prompt_suggestions`**（flat，非 `export.ui` 嵌套）。`GET /api/config` 的嵌套 `ui.prompt_suggestions` 可能为空，以 export 为准。
-
-**状态（2026-08-20）**：**4 条**已写入；重跑 `scripts/apply_ui_guidance_banners.py` 可恢复。
+**存储**：导出键 **`ui.prompt_suggestions`**。重跑 `scripts/apply_ui_guidance_banners.py` 会再次写成空列表。
 
 ### 7.3 用户面向语言
 
@@ -320,7 +317,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 |------|------|
 | `scripts/fix_sonar_tool_guard.py` | Sonar 防 tool 注入：Guard priority、web_tools/image_gen 早退、Sonar filterIds |
 | `scripts/apply_plan_a_hide_integrations.py` | 方案 A 一键：Valves merge、停用 Filter、剥模型 filterIds、关原生 Web Search |
-| `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + Banners + Description + Prompt chips + 校验 |
+| `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + Banners + Description + **清空 Suggested** + 校验 |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public |
 | `scripts/verify_live_baseline.py` | L1 STT/TTS + 屏享指引验收 |
 
@@ -328,7 +325,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 ### 8.3 尚未入库（讨论中，非当前差异）
 
-- `SPEC.md`、`AGENTS.md`、`scripts/verify_stack.py`、`docs/VERSIONS.md`（见灾备规划 P0）
+- `SPEC.md`、`AGENTS.md`（宪法）、`docs/AGENT-ONBOARDING.md`（新 Agent 开工包）、`scripts/verify_stack.py`、`docs/VERSIONS.md`（见灾备规划 P0）
 
 ---
 
@@ -351,7 +348,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | 项 | 状态 |
 |----|------|
 | `DEFAULT_MODELS` 指向 Pipe Sol Pro | **已修**（2026-08-20） |
-| Prompt suggestions | **4 条**（export `ui.prompt_suggestions`） |
+| Prompt suggestions | **空**（export `ui.prompt_suggestions` = `[]`） |
 | Task 模型（标题/补全） | **Grok 4.6** Pipe（Wave 0 后自 Sol Pro 下调成本） |
 | Sonar / 纯图像 `code_interpreter` 等 | **已关**（Wave 0）；Sol Pro / Opus 的 code interpreter **保留** |
 | `web_tools`/`image_gen` Sonar 早退补丁 | **探针未见**；当前靠停用 + Guard |
@@ -382,7 +379,8 @@ Stock OWUI 0.11.0
     ├─ − 全部 OpenAI 兼容槽禁用（含原 gptsapi slot0）
     ├─ WEBUI_URL=https://micropigeon.com
     ├─ 19 public 模型 + 4 置顶 + 英文 Description（含屏享）
-    ├─ 2 条常驻英文 Banner
+    ├─ 1 条常驻全英 Banner（`usage-guide-v3`）
+    ├─ Suggested chips **空**
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
     ├─ N1：RAG embedding → OpenRouter；Knowledge「YouTube Notebook」+ 视觉时间线
@@ -418,7 +416,7 @@ python3 scripts/fix_sonar_tool_guard.py
 
 - `GET /api/version` → 0.11.0  
 - `GET /api/config` → `enable_web_search=false`  
-- `GET /api/v1/configs/banners` → 两条 `usage-*-v2`  
+- `GET /api/v1/configs/banners` → 一条 `usage-guide-v3`  
 - Sonar / 图像模型聊天 → 无 tool use 404  
 - 样本模型 Integrations → 无 OR Web Tools / Image Gen  
 

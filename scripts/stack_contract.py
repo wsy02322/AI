@@ -93,8 +93,8 @@ PIPE_PATCH_MARKERS = [
     "COMPARE_CROSS_MODEL_REASONING_V1",
 ]
 
-BANNER_IDS = ["usage-pick-model-v2", "usage-reasoning-depth-v2"]
-SUGGESTIONS_COUNT = 4
+BANNER_IDS = ["usage-guide-v3"]
+SUGGESTIONS_COUNT = 0
 
 # P0-D Notebook / YouTube (N1)
 NOTEBOOK_KNOWLEDGE_NAME = "YouTube Notebook"

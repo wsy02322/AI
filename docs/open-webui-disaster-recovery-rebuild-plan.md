@@ -77,7 +77,7 @@
 | ID | 规格 |
 |----|------|
 | UX-1 | **四格能力**：Chat（Sol Pro / Opus）、Quick search（Sonar Pro Search）、Deep report（Sonar Deep Research）、Images（Banana Pro / GPT Image 2）— **换模型即换能力** |
-| UX-2 | **英文指引**：两条常驻 Banner（pick model + Reasoning depth）+ 关键模型 Description +（可选）空对话 chips 带 “Select … first” |
+| UX-2 | **英文指引**：**一条**常驻 Banner（Sonar=联网 / 图像模型=作图 + Reasoning depth + General System Prompt 可能影响图像/Sonar）+ 关键模型 Description。空对话 Suggested **清空** |
 | UX-3 | **Integrations 简约**：日常聊天 **不出现** OR Web Tools、OR Image Gen、OWUI Web Search；保留 Direct Uploads；图像模型保留 native image filter |
 | UX-4 | **Reasoning depth** 在 UI 有可见说明：难题 high/xhigh，简单题 low/medium |
 | UX-5 | Deep Research：**2–10 分钟** 等待写在 Deep 模型说明或 Banner 中 |
@@ -129,7 +129,7 @@
 | Filter **priority 越低越先执行**（inlet）；Guard 要 **最后** 剥 tools | per-model Filter 会在 Guard 之后 **再注入** server_tools |
 | `POST /api/v1/configs/banners` body 是 `{"banners":[...]}` | 不是裸数组 |
 | `POST /api/v1/configs/suggestions` body 是 `{"suggestions":[...]}` | |
-| Prompt chips **不会** 自动切换模型 | chip 文案必须写 “Select X first” |
+| Prompt chips **不会** 自动切换模型 | **已清空** Suggested，避免误触发送 |
 | Banner 仅 **HTML**，无 Markdown | |
 | 登录用 `OPENWEBUI_USERNAME` 未必等于 email | 本实例 username 更稳 |
 | Public 模型：`access_grants` principal `*` | Pipe 默认图像模型仅 admin |
@@ -138,7 +138,7 @@
 | **`WEBUI_SECRET_KEY` env 为空** | **L0 已确认**：不持久化 JWT；重建后重登可接受 | 写入新随机 env 密钥且 Pipe 为 `encrypted:` → catalog 空 |
 | Pipe `API_KEY` 明文 | **L0 默认**；便于 agent 秒级恢复 | Admin 误保存成 `encrypted:` → merge 回明文 |
 
-这些应进 **`AGENTS.md` + 错误目录**，不必进 Function 源码快照。
+这些应进 **`docs/AGENT-ONBOARDING.md` + 错误目录**（宪法仍只在 `AGENTS.md`），不必进 Function 源码快照。
 
 ---
 
@@ -215,7 +215,7 @@
 |--------|------|------|
 | **P0** | `docs/SPEC.md`（或本文件 §2 独立化） | 能力规格单一页 |
 | **P0** | `scripts/verify_stack.py` | 机器验收 = 防崩核心 |
-| **P1** | `AGENTS.md` | Agent 入口：读 SPEC → verify → 按需跑 scripts |
+| **P1** | `AGENTS.md` + `docs/AGENT-ONBOARDING.md` | 宪法注入当前 Agent；开工包给新 session：读 SPEC → 按需跑 scripts |
 | **P1** | `docs/VERSIONS.md` | 记录「上次验通过的 OWUI / Pipe 版本」；**不锁死** |
 | **P2** | `scripts/*.py` 改为「实现参考」，头部注明 **规格见 SPEC** | |
 | **P3** | 周备 DB + 用户数据（运维，非 Agent 文档重点） | 应急 only |
@@ -236,7 +236,7 @@
 ## 10. 待你确认
 
 - [ ] 采纳 **方案三** 为正式策略，弱化 v1 全量快照思路  
-- [ ] 下一迭代先做 **P0**：`verify_stack.py` + `AGENTS.md`  
+- [ ] 下一迭代先做 **P0**：`verify_stack.py` + `AGENTS.md`（宪法）+ `docs/AGENT-ONBOARDING.md`  
 - [ ] 应急 DB 周备：是否由你运维侧做（不进 Agent 主路径）  
 - [ ] `scripts/` 定位改为「可选加速器」，规格以 §2 为准  
 
@@ -248,7 +248,7 @@
 
 | 读者 | 读什么 |
 |------|--------|
-| Agent 重建 | 本文件 §2–§7 → `AGENTS.md`（待写）→ `verify_stack.py` |
+| Agent 重建 | 本文件 §2–§7 → `docs/AGENT-ONBOARDING.md` → `verify_stack.py`；当前 session 只守 `AGENTS.md` 宪法 |
 | 图像细节 | `open-webui-openrouter-image-continuity-plan.md` |
 | 界面文案意图 | `open-webui-user-guidance-plan.md` |
 | 运维应急恢复 | §6 备份表 + DB restore（非 Agent 主路径） |

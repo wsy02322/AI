@@ -4,7 +4,7 @@
 > **日期**：2026-08-21  
 > **宪法**：（2）简单稳定优先 — 容器重建后 **用户重登录可接受**；agent 脚本 **1～2 分钟** 可还原功能与契约配置。
 
-关联：`docs/SPEC.md`（ST-OPS-*）、`AGENTS.md`、`docs/open-webui-disaster-recovery-rebuild-plan.md`
+关联：`docs/SPEC.md`（ST-OPS-*）、`AGENTS.md`（宪法）、`docs/AGENT-ONBOARDING.md`（L0 SOP）、`docs/open-webui-disaster-recovery-rebuild-plan.md`
 
 ---
 

@@ -136,16 +136,44 @@ def verify(h: dict[str, str]) -> int:
     export = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/export", headers=h, timeout=60).json()
     banners = export.get("ui.banners") or []
     banner_ids = [b.get("id") for b in banners]
-    for bid in BANNER_IDS:
-        if bid not in banner_ids:
-            r.err(f"banner missing {bid}")
-    if all(bid in banner_ids for bid in BANNER_IDS):
+    if len(banners) != 1 or banner_ids != BANNER_IDS:
+        r.err(f"banners want {BANNER_IDS} got {banner_ids}")
+    else:
         r.ok(f"banners {banner_ids}")
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v3"), {})
+    guide_html = str(guide.get("content") or "")
+    if "Web search only on Perplexity Sonar" not in guide_html:
+        r.err("guide banner missing Sonar/image lead")
+    elif "Reasoning depth" not in guide_html:
+        r.err("guide banner missing Reasoning depth")
+    elif "Settings → General → System Prompt" not in guide_html:
+        r.err("guide banner missing General System Prompt note")
+    elif "may also affect image models and Perplexity sonar" not in guide_html:
+        r.err("guide banner missing image/search System Prompt impact")
+    elif any(
+        p in guide_html
+        for p in (
+            "Quick search",
+            "Deep report",
+            "Do not use Sonar for everyday chat",
+            "use <b>high</b> or <b>xhigh</b>",
+        )
+    ):
+        r.err("guide banner still has long usage copy")
+    elif any(
+        p in guide_html
+        for p in ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
+    ):
+        r.err("guide banner still has voice/notebook/chat-grid copy")
+    elif "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
+        r.err("guide banner has non-minimal HTML (expect bold only)")
+    else:
+        r.ok("guide banner merged English")
     suggestions = export.get("ui.prompt_suggestions") or []
     if len(suggestions) != SUGGESTIONS_COUNT:
-        r.err(f"suggestions={len(suggestions)} want {SUGGESTIONS_COUNT}")
+        r.err(f"suggestions={len(suggestions)} want empty")
     else:
-        r.ok(f"suggestions {len(suggestions)}")
+        r.ok("suggestions empty")
 
     valves = requests.get(
         f"{OPENWEBUI_URL}/api/v1/functions/id/{PIPE}/valves", headers=h, timeout=30

@@ -42,7 +42,7 @@
 | 文件上传 | Direct Uploads | **维持** |
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；缺自动验收（§4 Wave 0） |
-| 英文指引 | 2 Banner + 4 chips + Description | **维持**（Banner 数量不作为本阶段议题） |
+| 英文指引 | 1 Banner（`usage-guide-v3`）+ Description；**无** Suggested chips | **维持** |
 
 ### 1.2 Later（已承诺，单独一波，不塞进当前）
 
@@ -151,7 +151,7 @@
 | ID | 内容 |
 |----|------|
 | W0-1 | `scripts/verify_stack.py`：DEFAULT_MODELS、方案 A、Guard active、Sonar/图像无 tool 404、19 public、banners/suggestions |
-| W0-2 | `docs/SPEC.md` + `AGENTS.md`：四格 + 19 public + 路线 S + **P0 四条** + 视频生成/slides = Later |
+| W0-2 | `docs/SPEC.md` + `AGENTS.md`（宪法）+ `docs/AGENT-ONBOARDING.md`：四格 + 19 public + 路线 S + **P0 四条** + 视频生成/slides = Later |
 | W0-3 | 按模型 capabilities：**Sonar / 纯图像** 关闭会邀请用户开 tool 的项（`code_interpreter`；图像上多余的 `builtin_tools` / `terminal`）。**不**关 Sol Pro 的 code interpreter |
 | W0-4 | `docs/VERSIONS.md` 记 OWUI / Pipe；Pipe 更新 Runbook：更新后跑 W0-1 + 现有 apply 脚本 |
 | W0-5 | Task 默认模型：标题/补全若仍指向非 Pipe `x-ai/grok-4.5`，改为 Pipe 文本模型（避免后台任务走幽灵 id） |

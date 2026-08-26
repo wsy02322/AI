@@ -10,7 +10,7 @@
 | Pipe 名称 | Open WebUI OpenRouter Integration |
 | Pipe content SHA256（前 12） | `a0b95c2cf90d`（S2′ 前为 `081c3773444c`） |
 | Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1` **均存在** |
-| 上次 `verify_stack.py` | **2026-08-22 全绿**（24 ok / 0 err）：**单默认 Grok 4.6**；active picker **19**；19 public；smoke 200 |
+| 上次 `verify_stack.py` | **2026-08-26 全绿**（25 ok / 0 err）：**单默认 Grok 4.6**；active picker **19**；19 public；smoke 200；**Suggested 空**；蓝条只强调 Sonar=联网 / 图像模型=作图 |
 | 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**；STT whisper-large-v3-turbo 可用 |
 | 上次 GA-A `run_ga_a_trial.py` | **2026-08-21**：MiniMax MP3 31149 B / 1.62s 整段；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）；§1 仅关闭问题 3 |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
@@ -25,4 +25,4 @@
 
 ## Pipe 更新后
 
-见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`（若 marker 已在则 no-op）。
+见 `docs/AGENT-ONBOARDING.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`（若 marker 已在则 no-op）。

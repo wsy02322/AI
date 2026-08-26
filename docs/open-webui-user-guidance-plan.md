@@ -3,7 +3,7 @@
 > **Status**: Applied to the live instance (2026-08-19)  
 > **Updated**: 2026-08-19  
 > **User-facing language**: **English only**  
-> **Prominence**: Two **non-dismissible** banners (model picker + Reasoning depth), English model descriptions, English empty-chat chips
+> **Prominence**: Two **non-dismissible** banners (model picker + Reasoning depth), English model descriptions. Empty-chat Suggested chips are **cleared** (OWUI click = send).
 
 ---
 
@@ -89,6 +89,8 @@ Empty-chat chips send text to the **current** model. Every search/image chip mus
 | `["Hard reasoning", "Raise Reasoning depth"]` | On GPT-5.6 Sol Pro or Claude Opus 5, set Valves → Reasoning depth to high or xhigh, then [task]. |
 
 If that feels heavy, **skip suggestions** and ship banner + descriptions only.
+
+**落地（2026-08-26）**：跳过 chips，`ui.prompt_suggestions = []`。
 
 ### 4. Out of scope for this pass
 
