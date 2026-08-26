@@ -148,8 +148,18 @@ def verify(h: dict[str, str]) -> int:
         r.err("guide banner missing Reasoning depth")
     elif "Settings → General → System Prompt" not in guide_html:
         r.err("guide banner missing General System Prompt note")
-    elif "can also affect image models and Perplexity sonar" not in guide_html:
+    elif "may also affect image models and Perplexity sonar" not in guide_html:
         r.err("guide banner missing image/search System Prompt impact")
+    elif any(
+        p in guide_html
+        for p in (
+            "Quick search",
+            "Deep report",
+            "Do not use Sonar for everyday chat",
+            "use <b>high</b> or <b>xhigh</b>",
+        )
+    ):
+        r.err("guide banner still has long usage copy")
     elif any(
         p in guide_html
         for p in ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")

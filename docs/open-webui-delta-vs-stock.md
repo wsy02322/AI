@@ -279,7 +279,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | id | type | 作用 |
 |----|------|------|
-| `usage-guide-v3` | info | 单行全英极简：仅 `<b>` 粗体 + 正文；Sonar=联网、图像=作图 + Reasoning depth + General System Prompt 可能影响图像/Sonar |
+| `usage-guide-v3` | info | 单行全英极简四句：Sonar=联网、图像=作图；Reasoning depth → Valves；General System Prompt 可能影响图像/Sonar |
 
 已替换早期两条 `usage-*-v2` 与拼写错误 banner（`resoning`）。
 

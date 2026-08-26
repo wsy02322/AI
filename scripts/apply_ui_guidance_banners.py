@@ -26,16 +26,11 @@ BANNERS = [
         "title": "",
         "content": (
             "<b>Web search only on Perplexity Sonar. Images only on an image model.</b> "
-            "<b>Quick search</b> Sonar Pro Search · "
-            "<b>Deep report</b> Sonar Deep Research · "
-            "<b>Images</b> Nano Banana Pro or GPT Image 2. "
-            "Do not use Sonar for everyday chat. Do not ask a chat model to draw. "
-            "<b>Reasoning depth</b> (Input box → <b>Valves</b>): use <b>high</b> or <b>xhigh</b> for code, long analysis, "
-            "and multi-step problems. Use <b>low</b> or <b>medium</b> for short or simple tasks (faster). "
-            "<b>Settings → General → System Prompt</b> can also affect image models and Perplexity sonar."
+            "<b>Reasoning depth</b>: Input box → <b>Valves</b>. "
+            "<b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1787100004,
+        "timestamp": 1787100005,
     },
 ]
 
@@ -220,8 +215,19 @@ def verify(h: dict[str, str]) -> int:
     if "Settings → General → System Prompt" not in guide_html:
         print("ERROR guide banner missing General System Prompt note")
         errors += 1
-    if "can also affect image models and Perplexity sonar" not in guide_html:
+    if "may also affect image models and Perplexity sonar" not in guide_html:
         print("ERROR guide banner missing image/search System Prompt impact")
+        errors += 1
+    if any(
+        p in guide_html
+        for p in (
+            "Quick search",
+            "Deep report",
+            "Do not use Sonar for everyday chat",
+            "use <b>high</b> or <b>xhigh</b>",
+        )
+    ):
+        print("ERROR guide banner still has long usage copy")
         errors += 1
     if "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
         print("ERROR guide banner has non-minimal HTML (expect bold only)")
