@@ -31,14 +31,10 @@ BANNERS = [
             '<span style="display:inline-flex;background:#2563eb;color:#fff;padding:1px 8px;'
             'border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;">'
             "PICK A MODEL</span> "
-            "<b>Chat</b> GPT-5.6 Sol Pro or Claude Opus 5 · "
+            "<b>Web search only on Perplexity Sonar. Images only on an image model.</b><br>"
             "<b>Quick search</b> Sonar Pro Search · "
-            "<b>Deep report</b> Sonar Deep Research (2–10 min, keep this tab open) · "
-            "<b>Images</b> switch to Nano Banana Pro or GPT Image 2 first<br>"
-            "<b>Voice / screen share</b> pick Grok 4.6 or a Gemini vision model first "
-            "(not Sonar, not an image-only model). "
-            "<b>Notebook / YouTube</b> Workspace → Knowledge (your sources, with timestamps). "
-            "Web search stays Sonar — do not mix. "
+            "<b>Deep report</b> Sonar Deep Research · "
+            "<b>Images</b> Nano Banana Pro or GPT Image 2. "
             "Do not use Sonar for everyday chat. Do not ask a chat model to draw."
             "</div>"
         ),
@@ -231,6 +227,16 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     else:
         print("ok suggestions empty")
+    pick = next((b for b in banners if b.get("id") == "usage-pick-model-v2"), {})
+    pick_html = str(pick.get("content") or "")
+    if "Web search only on Perplexity Sonar" not in pick_html:
+        print("ERROR pick banner missing Sonar/image lead")
+        errors += 1
+    banned = ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
+    hit = [p for p in banned if p in pick_html]
+    if hit:
+        print("ERROR pick banner still has", hit)
+        errors += 1
     listed = {
         m["id"]: m
         for m in requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=60).json()["data"]

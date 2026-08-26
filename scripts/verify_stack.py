@@ -141,6 +141,17 @@ def verify(h: dict[str, str]) -> int:
             r.err(f"banner missing {bid}")
     if all(bid in banner_ids for bid in BANNER_IDS):
         r.ok(f"banners {banner_ids}")
+    pick = next((b for b in banners if b.get("id") == "usage-pick-model-v2"), {})
+    pick_html = str(pick.get("content") or "")
+    if "Web search only on Perplexity Sonar" not in pick_html:
+        r.err("pick banner missing Sonar/image lead")
+    elif any(
+        p in pick_html
+        for p in ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
+    ):
+        r.err("pick banner still has voice/notebook/chat-grid copy")
+    else:
+        r.ok("pick banner Sonar/image-only")
     suggestions = export.get("ui.prompt_suggestions") or []
     if len(suggestions) != SUGGESTIONS_COUNT:
         r.err(f"suggestions={len(suggestions)} want empty")

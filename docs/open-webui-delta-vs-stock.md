@@ -279,7 +279,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | id | type | 作用 |
 |----|------|------|
-| `usage-pick-model-v2` | info | 四格选模型：Chat / Quick search / Deep report / Images |
+| `usage-pick-model-v2` | info | 粗体：联网只在 Sonar、作图只在图像模型；快搜 / 深研 / Banana·GPT Image 2 |
 | `usage-reasoning-depth-v2` | warning | Valves → Reasoning depth → high/xhigh |
 
 已替换早期拼写错误 banner（`resoning`）。

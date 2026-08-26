@@ -77,7 +77,7 @@
 | ID | 规格 |
 |----|------|
 | UX-1 | **四格能力**：Chat（Sol Pro / Opus）、Quick search（Sonar Pro Search）、Deep report（Sonar Deep Research）、Images（Banana Pro / GPT Image 2）— **换模型即换能力** |
-| UX-2 | **英文指引**：两条常驻 Banner（pick model + Reasoning depth）+ 关键模型 Description。空对话 Suggested **清空**（点击即发送） |
+| UX-2 | **英文指引**：两条常驻 Banner（Sonar=联网 / 图像模型=作图 + Reasoning depth）+ 关键模型 Description。空对话 Suggested **清空** |
 | UX-3 | **Integrations 简约**：日常聊天 **不出现** OR Web Tools、OR Image Gen、OWUI Web Search；保留 Direct Uploads；图像模型保留 native image filter |
 | UX-4 | **Reasoning depth** 在 UI 有可见说明：难题 high/xhigh，简单题 low/medium |
 | UX-5 | Deep Research：**2–10 分钟** 等待写在 Deep 模型说明或 Banner 中 |
