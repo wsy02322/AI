@@ -39,7 +39,7 @@
 | 聊天 / 推理 | Sol Pro 默认；Opus 等 public | **维持**。Reasoning depth 已有 Banner |
 | 快搜 / 深研 | 两档 Sonar public | **维持**。不重开 Web Tools / 原生 Web Search |
 | 作图 | 9 个图像模型 public；切模型即作图 | **P0-A**：维持为主路径（见 §2） |
-| 文件上传 | Direct Uploads | **维持** |
+| 文件上传 | Direct Uploads（默认关）；抽取引擎仍为空 | **维持 Direct 默认关**。Tika T0 / 分流见 `docs/open-webui-file-ingest-plan.md`（**未确认不装**） |
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；缺自动验收（§4 Wave 0） |
 | 英文指引 | 2 Banner + 4 chips + Description | **维持**（Banner 数量不作为本阶段议题） |
@@ -53,6 +53,7 @@
 | **屏幕共享**（P0-C） | L1 Call overlay 已有入口，但不是持续原生 Live 屏流 | 与语音同级最高。顶级标准 = 模型理解刚发生的画面变化。不能因上 rbb L2 而把静态 handoff 写成达标 |
 | **Notebook / YouTube**（P0-D） | N1：RAG OpenRouter + Knowledge 视觉时间线 | 口播抓取受 YouTube 数据中心风控。N2+ 须再确认。详见 **`docs/open-webui-notebook-youtube-plan.md`** |
 | **Slides** | 无产品契约 | 单独表面（Notes / 专用流程），**不要**给聊天模型再挂一套会 404 的 tool。可与 Notebook Studio 产物衔接，但 W2 仍单独确认 |
+| **文件录入 / 解析** | 默认抽取弱；Direct 50MB PDF 直传 | **不要**把 Direct 撑成官网录入。确认后 T0 = 钉死 Tika 3.x。见 **`docs/open-webui-file-ingest-plan.md`** |
 | 多轮图像连续性 | 有漂移 | P0-A 增强；仅当 verify 已稳定、且补丁能跟着 Pipe 更新走，才考虑轻量 preserve |
 | 语音 STT/TTS | MiniMax + Whisper 已配 | Live L1 保留。Audio Overview **另测**，不默认够用 |
 
@@ -68,6 +69,7 @@
 | 锁死 OWUI/Pipe 版本当主策略 | 阻碍更新 |
 | YouTube 转录+RAG 冒充 NotebookLM | 见 P0-D；NL-A ≠ 达标 |
 | 视频生成与 YouTube ingest 混成一轮 | 两套产品 |
+| Direct 默认全开 / 扩 MIME 冒充官网录入 | 见文件录入 plan；失败模式与 token 更差 |
 
 ### 1.4 已开着、本阶段「不推广、不深挖、不随便关」
 

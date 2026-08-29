@@ -1,6 +1,6 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入读 **`docs/open-webui-file-ingest-plan.md`**（T0 未确认：不装 Tika、不改 Direct、不改 Pipe）。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
 
 ## 宪法（所有动作）
 
@@ -89,5 +89,6 @@
 - 用 Call overlay / 现有 MiniMax Read Aloud 冒充 Audio Overview  
 - 未确认就把 gpt-audio 或 Realtime 镜像当 Call S2S 落地  
 - 把语音聊天排在屏享之后，或用 rbb L2 的语音收益掩盖持续屏享缺口
+- 把 Direct Uploads 默认全开或扩 MIME 冒充官网文件录入；未确认不装 Tika、不改抽取引擎（见 `docs/open-webui-file-ingest-plan.md`）
 
 Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
