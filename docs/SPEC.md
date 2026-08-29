@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）
+> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入 / 解析；T0 未确认）
 
 ---
 
@@ -72,6 +72,19 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-NL-6 | YouTube ingest ≠ Wave 1 视频生成 |
 | ST-NL-7 | N2+（独立入口 / Studio）**未确认前** 不上生产。N1 允许改 `rag.*` 为 OpenRouter embedding |
 
+## 文件录入（文档已封存；T0 未确认不生效）
+
+条文全文见 `docs/open-webui-file-ingest-plan.md`。不是 P0，也不等于 P0-D。
+
+| ID | 必须 |
+|----|------|
+| ST-FILE-1 | 不把 Direct 默认全开或扩 MIME 冒充官网录入 |
+| ST-FILE-2 | T0 只用钉死的 Tika 3.x-full；OWUI 0.11.0 不对 Tika 4 |
+| ST-FILE-3 | Tika URL 为 `http://tika:9998`；不发布公网 9998 |
+| ST-FILE-4 | 未确认不装 Tika、不改抽取引擎、不改 Pipe |
+| ST-FILE-5 | T1/T2 / Docling / 换 OWUI 镜像另确认，不得塞进 T0 |
+| ST-FILE-6 | 文件录入 ≠ YouTube ingest ≠ Wave 1 视频生成 |
+
 ## 运维密钥（L0 轻量档，**已确认**）
 
 条文全文见 `docs/open-webui-secret-key-persist-plan.md`。**不执行** JWT 持久化 / Pipe Fernet 加密（K1/K2 冻结）。
@@ -89,8 +102,8 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 - **已落地**：聊天四格 + 路线 S；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
 - **P0 进行中**：图像增强；**语音聊天（S2S / barge-in 未完成，无 Realtime 钥匙故未换镜像）**；**屏幕共享（持续屏流未完成）**；**Notebook/YouTube N1 已落地（视觉时间线可用；口播抓取受 YouTube 风控）**
 - **复杂度确认门**：语音与屏享都不得自行降级；若顶级统一方案过重，先列「顶级」与「略降级但简单稳定」两档，由用户确认。rbb Realtime 只补语音、不补持续屏享，不能作为两项均达标的终态
-- **Later（须单独确认）**：Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio
-- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S 
+- **Later（须单独确认）**：Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio；**文件录入 T0**（Tika 3.x，见 `open-webui-file-ingest-plan.md`；未确认不装）
+- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S、把 Direct Uploads 默认全开或扩 MIME 冒充官网录入 
 
 ---
 
