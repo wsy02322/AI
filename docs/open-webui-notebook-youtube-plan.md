@@ -122,7 +122,7 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 | N2-1 | 集合：YouTube + PDF + 网页 + 音频 + Office；源子集选择 |
 | N2-2 | 只根据选中源作答；越界拒答或「源中无」 |
 | N2-3 | 与四格并列的 **文档化入口**（英文）。不把 RAG 塞进 Sonar 按钮 |
-| N2-4 | 不破坏 `verify_stack` / ST-1～ST-10 / L1 Live |
+| N2-4 | 不破坏 `verify_stack` / ST-1～ST-11 / L1 Live |
 
 ### N3 — Studio 产物
 
