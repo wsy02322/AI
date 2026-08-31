@@ -21,7 +21,7 @@
 | 明确不做：ComfyUI、inpainting、第二套 Pipe | **Task 模型**（标题/补全默认 `x-ai/grok-4.5`，非 Pipe） |
 | | **视频**：catalog 约 24 个 + 20+ Filter，**均未 public** |
 | | **Slides**：无定制，OWUI 侧能力未纳入契约 |
-| | **OAuth / 社区分享 / Autocomplete / Follow-up** |
+| | **OAuth / 社区分享 / Autocomplete** |
 | | **gptsapi + 5 个禁用 OpenRouter slot**（运维噪音） |
 
 因此：上一轮 = **聊天主路径体检**；本文件 = **全功能分层 + 优化后的路线**。
@@ -43,6 +43,7 @@
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；缺自动验收（§4 Wave 0） |
 | 英文指引 | 2 Banner + 4 chips + Description | **维持**（Banner 数量不作为本阶段议题） |
+| Follow-up 建议芯片 | 回复下方可点即发，易误触 | **已关**（`ENABLE_FOLLOW_UP_GENERATION=false`；空对话 chips 保留） |
 
 ### 1.2 Later（已承诺，单独一波，不塞进当前）
 
@@ -68,17 +69,19 @@
 | 锁死 OWUI/Pipe 版本当主策略 | 阻碍更新 |
 | YouTube 转录+RAG 冒充 NotebookLM | 见 P0-D；NL-A ≠ 达标 |
 | 视频生成与 YouTube ingest 混成一轮 | 两套产品 |
+| 回复下方 Follow-up 建议芯片 | 易误触；用户确认关闭。空对话 `prompt_suggestions` 保留 |
 
 ### 1.4 已开着、本阶段「不推广、不深挖、不随便关」
 
 关全局开关容易误伤；这些不是当前用户契约的一部分：
 
-- Memories、Calendar、Automations、Autocomplete、Follow-up、社区分享、OAuth  
+- Memories、Calendar、Automations、Autocomplete、社区分享、OAuth  
+- **Follow-up 建议芯片**：已关（UX-7 / ST-11），不再列在「不随便关」  
 - Notes / Knowledge：**P0-D 可能的宿主**；在 N2 入口拍板前仍不推广、不深挖、不随便关。不得当成已可用的 NotebookLM
 - Code Interpreter（pyodide）：聊天模型可留；**Sonar / 纯图像 / 未来视频模型不应表现为可开的 tool**  
 - 原生 Images：全局 enable=true，但 Sol Pro 的 `capabilities.image_generation=false`，用户主路径已不是「聊天里点 Image」
 
-**处理方式**：Wave 0 只做 **按模型 capabilities 对齐契约**（防 404），不搞功能大扫除。
+**处理方式**：Wave 0 做 **按模型 capabilities 对齐契约**（防 404），并钉死 Follow-up 关闭。不搞其它功能大扫除。
 
 ---
 

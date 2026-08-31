@@ -10,6 +10,8 @@ DEFAULT_MODEL_SECONDARY = f"{PIPE}.anthropic.claude-opus-5"
 DEFAULT_MODELS = DEFAULT_MODEL_PRIMARY
 # Background tasks: same as default chat.
 TASK_MODEL = DEFAULT_MODEL_PRIMARY
+# Reply Follow-up chips: off (mis-tap). Empty-chat prompt_suggestions stay.
+TASK_FOLLOW_UP_ENABLE = False
 
 PINNED_MODELS = [
     f"{PIPE}.perplexity.sonar-pro-search",

@@ -81,7 +81,7 @@
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker 仅 **19 public** 为 `is_active`。
+**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker 仅 **19 public** 为 `is_active`。回复下方 Follow-up 芯片 **已关**（2026-08-31；`ENABLE_FOLLOW_UP_GENERATION=false`）。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -292,12 +292,18 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 **状态（2026-08-20）**：**4 条**已写入；重跑 `scripts/apply_ui_guidance_banners.py` 可恢复。
 
-### 7.3 用户面向语言
+### 7.3 回复下方 Follow-up 芯片（相对 Stock：默认开）
+
+Stock 默认在每条回复下生成可点即发的 Follow-up 建议（Task 模型；`ENABLE_FOLLOW_UP_GENERATION=true`）。
+
+**本实例（2026-08-31）**：**已关**。Admin PersistentConfig `task.follow_up.enable=false`；`apply_wave0.py` merge 钉死。**不是**空对话 `ui.prompt_suggestions`（那 4 条 chips 仍保留）。**不**关 Autocomplete / Title。
+
+### 7.4 用户面向语言
 
 - 所有指引文案：**英文**（Banner、Description、Chips 设计）  
 - Agent/运维文档：**中文**（本仓库 `docs/`）
 
-### 7.4 Reasoning depth
+### 7.5 Reasoning depth
 
 沿用 Pipe **UserValves** 标签 **Reasoning depth**（`none` … `xhigh`）；Banner 引导难题用 **high/xhigh**。
 
@@ -351,7 +357,8 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | 项 | 状态 |
 |----|------|
 | `DEFAULT_MODELS` 指向 Pipe Sol Pro | **已修**（2026-08-20） |
-| Prompt suggestions | **4 条**（export `ui.prompt_suggestions`） |
+| Prompt suggestions | **4 条**（export `ui.prompt_suggestions`；空对话 chips，**不是** Follow-up） |
+| 回复下方 Follow-up 芯片 | **已关**（2026-08-31；`ENABLE_FOLLOW_UP_GENERATION=false`） |
 | Task 模型（标题/补全） | **Grok 4.6** Pipe（Wave 0 后自 Sol Pro 下调成本） |
 | Sonar / 纯图像 `code_interpreter` 等 | **已关**（Wave 0）；Sol Pro / Opus 的 code interpreter **保留** |
 | `web_tools`/`image_gen` Sonar 早退补丁 | **探针未见**；当前靠停用 + Guard |
