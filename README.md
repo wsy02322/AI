@@ -3,6 +3,7 @@
 Open WebUI + OpenRouter 文档见 `docs/`：
 
 - `AGENTS.md` — Agent 入口（先读 SPEC，再动实例）
+- `docs/open-webui-rebuild-archive.md` — **灾后重建存档**（2026-09-01 现网钉子；给新 Agent）
 - `docs/SPEC.md` — 体验与稳定性契约（含 P0 四条并列）
 - `docs/VERSIONS.md` — 上次验收的 OWUI / Pipe 指纹
 - `docs/open-webui-compare-first-class-plan.md` — **多模型对比为一等公民**（连续多轮多图；确认前不改实例）

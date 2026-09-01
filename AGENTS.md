@@ -1,6 +1,6 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
 
 ## 宪法（所有动作）
 

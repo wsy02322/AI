@@ -4,7 +4,7 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | 2026-08-21 |
+| 记录日期 | 2026-08-21（重建存档另记 2026-09-01 现网：Pipe sha `7415c2e4347a`，Banner `usage-guide-v3`，Follow-up 关；见 `open-webui-rebuild-archive.md`） |
 | OWUI | **0.11.0**（`GET /api/version`） |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |

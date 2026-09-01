@@ -1,9 +1,9 @@
 # Open WebUI 灾备与重建 — 重规划（规格驱动）
 
-> **状态**：重规划已记录，待确认后落地  
-> **最后更新**：2026-08-21（v2.1：对齐 VPS 维护摘要 — WEBUI_SECRET_KEY / Pipe API_KEY / 容器重建）  
+> **状态**：方案三 **已作为正式策略**。现网钉子与重建步骤见 **`docs/open-webui-rebuild-archive.md`**（探针 2026-09-01）。  
+> **最后更新**：2026-09-01  
 > **核心转变**：不追求复刻某一天的 **代码与配置字节**，而追求在任何合理新版本上 **复现同一套能力与体验**。  
-> **关联**：`open-webui-openrouter-image-continuity-plan.md`（错误与补丁历史）、`open-webui-user-guidance-plan.md`（界面指引意图）
+> **关联**：`open-webui-rebuild-archive.md`（Agent 入口）、`open-webui-openrouter-image-continuity-plan.md`、`open-webui-user-guidance-plan.md`
 
 ---
 
@@ -70,7 +70,7 @@
 
 ## 2. 能力规格（Agent 的「目标清晰」应清晰到什么程度）
 
-重建成功 = **§2.1 体验** + **§2.2 约束** 全部通过 `verify_stack.py`（待写），而非与 2026-08-19 字节一致。
+重建成功 = **SPEC.md** + **`docs/open-webui-rebuild-archive.md` §2** + `scripts/verify_stack.py` 全绿，而非与某一天的字节一致。下方 §2.1/§2.2 是早期草稿，以 SPEC 现行条文为准。
 
 ### 2.1 用户体验（What users should see）
 
@@ -175,9 +175,10 @@
 
 ### Step 1 — 读规格（15 min）
 
-1. 本文件 §2–§5  
-2. `open-webui-openrouter-image-continuity-plan.md`（图像错误与测试列表）  
-3. `open-webui-user-guidance-plan.md`（界面英文意图）
+1. **`docs/open-webui-rebuild-archive.md`**（现网钉子 + 重建顺序）  
+2. `docs/SPEC.md` + 本文件 §3–§5  
+3. `open-webui-openrouter-image-continuity-plan.md`（图像错误与测试列表）  
+4. `open-webui-user-guidance-plan.md`（界面英文意图；现网 Banner 以 archive §3.3 为准）
 
 ### Step 2 — 搭平台（版本可新）
 
@@ -202,24 +203,24 @@
 
 ### Step 5 — 验收
 
-运行 `verify_stack.py`（待实现）：  
-- ST-1～ST-6 探针  
-- UX-1～UX-5 抽样（API + 可选 UI）  
+运行 `scripts/verify_stack.py`（以及 ops/live/compare/notebook 按 archive §5）：  
+- 以 **SPEC 现行 ST/UX** 为准，不是本文件 §2 旧编号  
+- 注意 archive §4：现网 Banner 已是 `usage-guide-v3`，旧 verify 若仍查 v2 id 会误红  
 - 全绿 = 重建完成；**不必** 与历史快照 diff  
 
 ---
 
-## 8. 仓库待建设（确认后优先级）
+## 8. 仓库工件（2026-09-01）
 
-| 优先级 | 工件 | 作用 |
+| 优先级 | 工件 | 状态 |
 |--------|------|------|
-| **P0** | `docs/SPEC.md`（或本文件 §2 独立化） | 能力规格单一页 |
-| **P0** | `scripts/verify_stack.py` | 机器验收 = 防崩核心 |
-| **P1** | `AGENTS.md` | Agent 入口：读 SPEC → verify → 按需跑 scripts |
-| **P1** | `docs/VERSIONS.md` | 记录「上次验通过的 OWUI / Pipe 版本」；**不锁死** |
-| **P2** | `scripts/*.py` 改为「实现参考」，头部注明 **规格见 SPEC** | |
-| **P3** | 周备 DB + 用户数据（运维，非 Agent 文档重点） | 应急 only |
-| **弃用倾向** | 全量 `export` 入 git、`snapshots/functions` 全文 | 除非做法一应急包 |
+| **P0** | `docs/SPEC.md` | **已有** |
+| **P0** | `scripts/verify_stack.py` | **已有**（对照 archive §4 的 Banner/picker 漂移） |
+| **P0** | `docs/open-webui-rebuild-archive.md` | **已有** — 灾后 / 新 Agent 入口 |
+| **P1** | `AGENTS.md` | **已有** |
+| **P1** | `docs/VERSIONS.md` | **已有**；重建后重填 Pipe sha |
+| **P3** | 周备 DB + 用户数据 | 运维侧；例 `/root/backups/` |
+| **弃用** | 全量 `export` / Function 源码入 git | 密钥与体积；用 archive 脱敏表代替 |
 
 ---
 
@@ -233,14 +234,12 @@
 
 ---
 
-## 10. 待你确认
+## 10. 已确认
 
-- [ ] 采纳 **方案三** 为正式策略，弱化 v1 全量快照思路  
-- [ ] 下一迭代先做 **P0**：`verify_stack.py` + `AGENTS.md`  
-- [ ] 应急 DB 周备：是否由你运维侧做（不进 Agent 主路径）  
-- [ ] `scripts/` 定位改为「可选加速器」，规格以 §2 为准  
-
-**确认前**：不扩大快照范围、不锁 Pipe 版本。
+- [x] 采纳 **方案三**（规格 + verify + 轻量 DB 备份）  
+- [x] `SPEC.md` / `verify_stack.py` / `AGENTS.md`  
+- [x] 2026-09-01 现网脱敏存档：`open-webui-rebuild-archive.md`  
+- 应急 DB 周备仍由运维做，不把密钥和聊天入 git
 
 ---
 
@@ -248,7 +247,7 @@
 
 | 读者 | 读什么 |
 |------|--------|
-| Agent 重建 | 本文件 §2–§7 → `AGENTS.md`（待写）→ `verify_stack.py` |
+| Agent 重建 | **`open-webui-rebuild-archive.md`** → `AGENTS.md` → `SPEC.md` → `verify_stack.py` |
 | 图像细节 | `open-webui-openrouter-image-continuity-plan.md` |
-| 界面文案意图 | `open-webui-user-guidance-plan.md` |
-| 运维应急恢复 | §6 备份表 + DB restore（非 Agent 主路径） |
+| 界面文案意图 | `open-webui-user-guidance-plan.md`（现网 Banner 以 archive §3.3 为准） |
+| 运维应急恢复 | archive §1 + 本文件 §6 + DB restore |

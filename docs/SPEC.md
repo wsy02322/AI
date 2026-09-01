@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）
+> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口）、`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）
 
 ---
 
