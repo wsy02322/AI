@@ -91,10 +91,13 @@ PIPE_PATCH_MARKERS = [
     "middle-out",
     "apply_chat_context_transforms",
     "COMPARE_CROSS_MODEL_REASONING_V1",
+    "FABLE_UNSIGNED_SUMMARY_V1",
 ]
 
-BANNER_IDS = ["usage-pick-model-v2", "usage-reasoning-depth-v2"]
-SUGGESTIONS_COUNT = 4
+# Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
+BANNER_IDS = ["usage-guide-v3"]
+SUGGESTIONS_COUNT = 0
+TASK_FOLLOW_UP_ENABLE = False
 
 # P0-D Notebook / YouTube (N1)
 NOTEBOOK_KNOWLEDGE_NAME = "YouTube Notebook"

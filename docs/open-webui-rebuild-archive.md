@@ -100,7 +100,7 @@
 
 `openai.api_configs` 现网槽（全 disable）：0 `gpt-5.5`；1 `x-ai/grok-4.3` + `grok-4.5`；2 Sol / Sol Pro；3 Fable + Opus；4 `google/gemini-3.1-pro-preview`。
 
-### 3.3 Banner / 空对话 chips（现网 ≠ 仓库脚本）
+### 3.3 Banner / 空对话 chips
 
 现网 **一条** Banner：
 
@@ -110,15 +110,15 @@
 
 现网 `ui.prompt_suggestions` = **`[]`**。
 
-仓库 `scripts/apply_ui_guidance_banners.py` 仍写 **两条** `usage-pick-model-v2` / `usage-reasoning-depth-v2` 和 **4 条** chips。重跑该脚本会 **覆盖** 现网 Banner。灾后若目标是「恢复 2026-09-01 用户所见」，应 **写回 `usage-guide-v3`**，不要默认跑旧 banners 脚本。
+仓库 `scripts/apply_ui_guidance_banners.py` **已对齐** v3 + 空 chips。重跑会写回现网这份指引（不是双条 v2）。若用户后来又改了 Banner，先对照本表再决定是否覆盖。
 
 ### 3.4 Pipe / Filter
 
 | 项 | 现网 |
 |----|------|
 | Pipe id | `open_webui_openrouter_integration`，active |
-| `content` SHA256 前 12 | `7415c2e4347a`（`docs/VERSIONS.md` 里旧记录 `a0b95c2cf90d` 已过期） |
-| 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1` **均在** |
+| `content` SHA256 前 12 | `7415c2e4347a` |
+| 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1` **均应在** |
 | `API_KEY` | 已配置；API 读出为 `encrypted:`（catalog 正常即可） |
 | valves（API 返回的覆盖项） | 下列 **全 false**：`AUTO_ATTACH_WEB_TOOLS_FILTER`、`AUTO_ATTACH_IMAGE_GEN_FILTER`、`AUTO_INSTALL_WEB_TOOLS_FILTER`、`AUTO_INSTALL_IMAGE_GEN_FILTER`、`AUTO_DEFAULT_WEB_TOOLS_FILTER`、`ENABLE_DATETIME`、`ENABLE_WEB_SEARCH`、`UPDATE_MODEL_CAPABILITIES` |
 
@@ -170,17 +170,17 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 ## 4. 现网 vs 仓库脚本（避免救灾时救错）
 
-| 项 | 仓库 / `verify_stack` 当时写法 | 2026-09-01 现网 | 灾后怎么做 |
-|----|-------------------------------|-----------------|------------|
-| Banner | 两条 `usage-*-v2` | 一条 `usage-guide-v3` | **按现网写回 v3**，除非用户改口 |
-| 空对话 chips | 4 条 | 0 | **保持空**，除非用户要恢复 WeChat/@dalapi 等 4 条 |
-| Follow-up | 旧 main 未钉；现网已关 | `false` | **必须关**（`apply_wave0` 应 merge `ENABLE_FOLLOW_UP_GENERATION=false`） |
-| Picker | 19 | 22 | 默认收 19 |
-| Pipe sha | VERSIONS `a0b95c2cf90d` | `7415c2e4347a` | 以现网 / 新装 Pipe + 补丁探针为准，更新 `VERSIONS.md` |
-| openai 槽 | 文档曾写 6 槽含 gptsapi | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
-| Grok Description | apply 脚本较长（含 vision / Voice） | 较短 | 以现网或用户最新 Banner 为准，勿用过时脚本覆盖 UI |
+| 项 | 仓库 / `verify_stack` | 2026-09-01 现网 | 灾后怎么做 |
+|----|----------------------|-----------------|------------|
+| Banner | 一条 `usage-guide-v3` | 一条 `usage-guide-v3` | 跑 `apply_ui_guidance_banners.py` 即可 |
+| 空对话 chips | 0 | 0 | 保持空 |
+| Follow-up | `apply_wave0` merge false | `false` | **必须关** |
+| Picker | 契约 19 | 22（多 3 个未批准 active） | 默认 `apply_model_catalog_visibility.py` 收 19 |
+| Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
+| openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
+| Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 在只验 git 旧 Banner id 时会对现网报红（缺 v2 Banner、suggestions≠4、picker≠19）。**先改 verify 对齐契约，或验收时区分「契约 19 public」与「现网 Banner v3」。** 不要为了脚本绿去把用户已改的 Banner 改回去，除非用户确认。
+`verify_stack.py` 验 Banner v3、suggestions=0、Follow-up 关、Fable marker、**19** picker。现网 picker=22 时会报 extra — **这是现场漂移，不是脚本写错**。不要为了绿而把用户已改的 Banner 改回 v2。
 
 ---
 
@@ -196,10 +196,10 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
 7. `python3 scripts/apply_model_catalog_visibility.py`（19 active）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
-9. **Banner**：写入 §3.3 的 `usage-guide-v3`（不要默认跑会覆盖它的 banners 脚本）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
+9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
-11. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py`（已有 marker 则 no-op）。  
-12. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_notebook_youtube.py`。  
+11. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
+12. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  
 13. 更新 `docs/VERSIONS.md`（日期、Pipe sha、Banner id）。通知用户 **重登**。
 
 **有 DB 备份时**：先还原 `webui.db` + volume，再只跑 L0 / verify；用户重登。不要空 sync，不要重装 Pipe 覆盖 content，除非 catalog 坏了。
@@ -237,5 +237,6 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | `AGENTS.md` | 日常操作禁令与脚本表 |
 | `docs/open-webui-delta-vs-stock.md` | 相对官方差异长表（部分日期早于本快照） |
 | `docs/open-webui-disaster-recovery-rebuild-plan.md` | 为何不靠全量快照 |
-| `scripts/stack_contract.py` | 19 public / Guard / Task 的机器常量 |
+| `scripts/stack_contract.py` | 19 public / Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
+| `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认，重建时不要顺便装 Tika） |
 | `docs/VERSIONS.md` | 上次验收指纹（重建后重填） |

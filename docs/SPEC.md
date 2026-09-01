@@ -1,17 +1,17 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口）、`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）
+> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）
 
 ---
 
 ## 宪法（以往与以后所有动作）
 
-1. **强能力**：媲美甚至超越 ChatGPT / Grok 等 **最顶级付费档** 的功能。特别困难或复杂的实现，**必须先确认**：是否改用 **略微降级、但简单稳定特别多** 的方案。  
+1. **强能力**：媲美甚至超越 ChatGPT / Grok 等 **最顶级付费档**。特别困难复杂：把**顶级方案**和**略降级、简单稳定特别多的方案**一并提案，**先确认再选**。禁止只提降级；禁止把顶级方案留到用户追问之后。  
 2. **务必简单和稳定**，优先 **易维护**（少镜像、少密钥、少与上游分叉）。  
-3. **重大改动**：先出 plan，**你确认后再执行**。未确认不改实例。
+3. **重大改动**：先写成 plan 并**主动提案**，确认后再执行。写 plan、讨论、把能力缺口摆上台 **不是** 执行。禁止把本条理解成「未问就不提」；禁止未确认就改实例 / Pipe / 入口形态。
 
-旧「冲最高就默认砍掉」不再作默认：目标仍是顶级；降级必须是 **你点头的权衡**，不是执行者自行放弃。
+目标仍是顶级；降级必须是 **你点头的权衡**，不是执行者自行放弃。发现与顶级档的能力缺口、或明显更强的实现路径时，当场主动提案（含是否升主线、风险、和不做的代价）；未确认不得动手。
 
 ## 全局最高优先级（P0，四条并列）
 
@@ -33,11 +33,12 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ID | 必须 |
 |----|------|
 | UX-1 | **四格捷径**：Chat = Sol Pro / Opus；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
-| UX-2 | 英文指引：两条 Banner + 关键 Description + 空对话 chips（「Select … first」） |
+| UX-2 | 英文指引：**一条** Banner `usage-guide-v3`（Sonar/图像分流 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
-| UX-4 | **19 个 public** 维持（对比用）；不缩到 6 |
+| UX-4 | **19 个 public** 维持（对比用）；不缩到 6。现网 picker 若多出未批准模型，灾后默认收到 19 |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
 | UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false |
+| UX-7 | 回复下方 **Follow-up 建议芯片关闭**（易误触）。空对话 `prompt_suggestions` 保持 **空**。不关 Autocomplete / Title |
 
 ## 稳定性（Now）
 
@@ -53,6 +54,8 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-8 | 后台 Task 模型 = **Grok 4.6**（与默认聊天同档，低成本） |
 | ST-9 | **全局** `enable_image_generation` / `ENABLE_IMAGE_GENERATION` = false（路线 S；作图只走 Pipe 图像模型） |
 | ST-10 | 对比多轮：跨模型 `encrypted reasoning` 不得让一栏永久 404。Pipe 在 400/404 且错误含 `produced under a different model` / `encrypted reasoning` / `compaction content` 时，剥回放密文并 **内部重试**。`PERSIST_REASONING_TOKENS` 保持 `conversation`（单模型零损失）。**不**把全局 `disabled` 当终态。 |
+| ST-11 | 同模型 Anthropic / Fable 续聊：summary-only thinking 不得回放成假 thinking 导致 `cannot be modified` 400。Pipe 请求 `include: ["reasoning.encrypted_content"]`；emit/persist 原样带密文或签名；无密文则剥 unsigned reasoning；400 文案含 ``thinking` / `redacted_thinking` `` + `cannot be modified` 时内部剥回放并重试。`PERSIST_REASONING_TOKENS` 仍为 conversation。旧线程不保证复活。 |
+| ST-12 | Task `ENABLE_FOLLOW_UP_GENERATION` = false（PersistentConfig `task.follow_up.enable`）。Wave 0 **merge** 钉死；**不**改 Autocomplete / Title。Admin 若重新打开，重跑 `apply_wave0.py` 关回。 |
 | ST-Live-1 | Live / 屏享 / 摄像走 **OWUI Call overlay**；禁止第二套未文档化前端 |
 | ST-Live-2 | 屏享会话必须用 **vision-capable** 模型（Grok 4.6 或 Gemini vision）；禁止对 Sonar / 纯图像开 Live tool 幻觉 |
 | ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 OWUI 默认 voice `alloy` + `response_format=mp3`）；STT = `openai/whisper-large-v3-turbo`。**不要**再用 `openai/tts-1` / `tts-1-hd`（OpenRouter `/audio/speech` 无此模型 → Read Aloud 400）。真正 S2S 仍走 L2（须确认） |
@@ -72,6 +75,19 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-NL-6 | YouTube ingest ≠ Wave 1 视频生成 |
 | ST-NL-7 | N2+（独立入口 / Studio）**未确认前** 不上生产。N1 允许改 `rag.*` 为 OpenRouter embedding |
 
+## 文件录入（Later；T0 **未确认** 不改实例）
+
+条文全文见 `docs/open-webui-file-ingest-plan.md`。不是 P0 四条，也不是 P0-D。
+
+| ID | 必须 |
+|----|------|
+| ST-FILE-1 | 不把 Direct 默认全开或扩 MIME 冒充官网录入 |
+| ST-FILE-2 | T0 只用钉死的 Tika **3.x-full**；OWUI 0.11.0 不对 Tika 4 |
+| ST-FILE-3 | Tika URL 为 `http://tika:9998`；不发布公网 9998 |
+| ST-FILE-4 | 未确认不装 Tika、不改 `CONTENT_EXTRACTION_ENGINE`、不改 Pipe |
+| ST-FILE-5 | T1/T2 / Docling / 换 OWUI 镜像 **另确认**；不得塞进 T0 |
+| ST-FILE-6 | 本方案 ≠ P0-D YouTube ingest ≠ Wave 1 视频生成 |
+
 ## 运维密钥（L0 轻量档，**已确认**）
 
 条文全文见 `docs/open-webui-secret-key-persist-plan.md`。**不执行** JWT 持久化 / Pipe Fernet 加密（K1/K2 冻结）。
@@ -90,7 +106,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 - **P0 进行中**：图像增强；**语音聊天（S2S / barge-in 未完成，无 Realtime 钥匙故未换镜像）**；**屏幕共享（持续屏流未完成）**；**Notebook/YouTube N1 已落地（视觉时间线可用；口播抓取受 YouTube 风控）**
 - **复杂度确认门**：语音与屏享都不得自行降级；若顶级统一方案过重，先列「顶级」与「略降级但简单稳定」两档，由用户确认。rbb Realtime 只补语音、不补持续屏享，不能作为两项均达标的终态
 - **Later（须单独确认）**：Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio
-- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S 
+- **Don't**：ComfyUI / inpainting、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S、未确认装 Tika / 扩 Direct MIME 
 
 ---
 

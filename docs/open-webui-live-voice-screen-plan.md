@@ -201,10 +201,10 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 |------|-----------|
 | UX-5 双模型对比 | Live **默认单栏**；对比仍走文本聊天 |
 | 路线 S 作图 | 不变；Live 屏享 ≠ Image Gen |
-| ST-1～ST-10 | 新增 **ST-Live**（见下）不破坏 Sonar/对比 |
+| ST-1～ST-12 | 新增 **ST-Live**（已在 SPEC）不破坏 Sonar/对比 |
 | 19 public | Live 只 **推荐** 2～3 个 vision 模型，不扩 public 爆炸 |
 
-**拟新增 SPEC（落地 L1 后写入）：**
+**SPEC 已写入（L1 落地后）：** ST-Live-1～ST-Live-4，见 `docs/SPEC.md`。L2+ Realtime 仍须另确认。
 
 | ID | 必须 |
 |----|------|
@@ -222,7 +222,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 1. 新用户：Banner 看懂「先选 vision 模型再开屏享」  
 2. 屏享 + 麦克风：能连续 5 轮问答  
 3. 摄像头：可切换且 0.11 记住上次设备  
-4. `verify_live_baseline.py` 全绿（待写）  
+4. `verify_live_baseline.py` 全绿（脚本已在 `scripts/verify_live_baseline.py`）  
 5. 不影响 `verify_stack` / 对比 ST-10  
 
 ### L2/L3 验收（「官网顶级」）

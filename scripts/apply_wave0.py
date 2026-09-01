@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Wave 0 apply: Sonar/image capabilities + Pipe task models. Merge-only. No global feature kills."""
+"""Wave 0 apply: Sonar/image capabilities + Pipe task models. Merge-only.
+
+Pins ENABLE_FOLLOW_UP_GENERATION=false (reply chips; empty-chat suggestions stay empty).
+Does not kill Autocomplete / Title / other global features.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +19,7 @@ from stack_contract import (
     DEFAULT_MODELS,
     IMAGE_MODEL_IDS,
     SONAR_MODEL_IDS,
+    TASK_FOLLOW_UP_ENABLE,
     TASK_MODEL,
 )
 
@@ -177,6 +182,7 @@ def apply_task_models(h: dict[str, str]) -> None:
     payload = dict(cfg.json())
     payload["TASK_MODEL"] = TASK_MODEL
     payload["TASK_MODEL_EXTERNAL"] = TASK_MODEL
+    payload["ENABLE_FOLLOW_UP_GENERATION"] = TASK_FOLLOW_UP_ENABLE
     resp = requests.post(
         f"{OPENWEBUI_URL}/api/v1/tasks/config/update",
         headers=h,
@@ -188,6 +194,7 @@ def apply_task_models(h: dict[str, str]) -> None:
     saved = resp.json()
     print(f"TASK_MODEL={saved.get('TASK_MODEL')}")
     print(f"TASK_MODEL_EXTERNAL={saved.get('TASK_MODEL_EXTERNAL')}")
+    print(f"ENABLE_FOLLOW_UP_GENERATION={saved.get('ENABLE_FOLLOW_UP_GENERATION')}")
     print(f"DEFAULT_MODEL (task)={TASK_MODEL}")
 
 

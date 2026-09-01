@@ -70,28 +70,17 @@
 
 ## 2. 能力规格（Agent 的「目标清晰」应清晰到什么程度）
 
-重建成功 = **SPEC.md** + **`docs/open-webui-rebuild-archive.md` §2** + `scripts/verify_stack.py` 全绿，而非与某一天的字节一致。下方 §2.1/§2.2 是早期草稿，以 SPEC 现行条文为准。
+重建成功 = **SPEC.md** + **`docs/open-webui-rebuild-archive.md` §2** + `scripts/verify_stack.py` 全绿，而非与某一天的字节一致。
 
-### 2.1 用户体验（What users should see）
+UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～ST-12，ST-Live，ST-NL，ST-FILE，ST-OPS）。下文 §2.1/§2.2 是早期草稿，**不要**当第二套契约；现网 Banner 是 **一条** `usage-guide-v3`，不是双条 v2。
 
-| ID | 规格 |
-|----|------|
-| UX-1 | **四格能力**：Chat（Sol Pro / Opus）、Quick search（Sonar Pro Search）、Deep report（Sonar Deep Research）、Images（Banana Pro / GPT Image 2）— **换模型即换能力** |
-| UX-2 | **英文指引**：两条常驻 Banner（pick model + Reasoning depth）+ 关键模型 Description +（可选）空对话 chips 带 “Select … first” |
-| UX-3 | **Integrations 简约**：日常聊天 **不出现** OR Web Tools、OR Image Gen、OWUI Web Search；保留 Direct Uploads；图像模型保留 native image filter |
-| UX-4 | **Reasoning depth** 在 UI 有可见说明：难题 high/xhigh，简单题 low/medium |
-| UX-5 | Deep Research：**2–10 分钟** 等待写在 Deep 模型说明或 Banner 中 |
+### 2.1 用户体验（What users should see）— 草稿，以 SPEC 为准
 
-### 2.2 稳定性约束（What must NOT happen）
+见 SPEC UX-1～UX-7。摘要：四格捷径；一条英文 Banner + Description；Integrations 无 Web Tools 三件套；19 public；默认单模型 Grok 4.6；路线 S 作图；Follow-up 关。
 
-| ID | 规格 |
-|----|------|
-| ST-1 | Sonar / 纯图像模型：**不得** 向 OpenRouter 发送 tool calling（含 `get_current_timestamp`）→ 无 404 |
-| ST-2 | **不得** 依赖 per-model Web Tools 做搜索（Sonar 自带搜索；双搜易坏） |
-| ST-3 | `gpt-image-*`、`seedream-5*`：**必须** 走 Images API，非 chat/completions |
-| ST-4 | Pipe valves 更新：**必须 merge**，禁止空覆盖（防 API_KEY 丢失） |
-| ST-5 | Pipe auto-install web_tools/image_gen：**应关闭**，防更新覆盖补丁 |
-| ST-6 | `UPDATE_MODEL_CAPABILITIES`：**应 false**，防 catalog 把 `web_search` 写回 |
+### 2.2 稳定性约束（What must NOT happen）— 草稿，以 SPEC 为准
+
+见 SPEC ST-1～ST-12。摘要：Sonar/图像不带非法 tools；valves 只 merge；Task=Grok 4.6；全局 Image Gen 关；跨模型 reasoning 重试；Fable unsigned thinking；Follow-up 关。
 
 ### 2.3 能力范围（What we intentionally do NOT promise）
 
@@ -205,7 +194,7 @@
 
 运行 `scripts/verify_stack.py`（以及 ops/live/compare/notebook 按 archive §5）：  
 - 以 **SPEC 现行 ST/UX** 为准，不是本文件 §2 旧编号  
-- 注意 archive §4：现网 Banner 已是 `usage-guide-v3`，旧 verify 若仍查 v2 id 会误红  
+- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 若仍是 22，按 archive §3.6 默认收到 19  
 - 全绿 = 重建完成；**不必** 与历史快照 diff  
 
 ---

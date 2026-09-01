@@ -29,6 +29,7 @@ from stack_contract import (
     PUBLIC_MODEL_IDS,
     SONAR_MODEL_IDS,
     SUGGESTIONS_COUNT,
+    TASK_FOLLOW_UP_ENABLE,
     TASK_MODEL,
 )
 
@@ -132,6 +133,13 @@ def verify(h: dict[str, str]) -> int:
         r.err(f"TASK_MODEL={tasks.get('TASK_MODEL')} / {tasks.get('TASK_MODEL_EXTERNAL')} want {TASK_MODEL}")
     else:
         r.ok(f"task models {TASK_MODEL}")
+    if tasks.get("ENABLE_FOLLOW_UP_GENERATION") is not TASK_FOLLOW_UP_ENABLE:
+        r.err(
+            f"ENABLE_FOLLOW_UP_GENERATION={tasks.get('ENABLE_FOLLOW_UP_GENERATION')!r} "
+            f"want {TASK_FOLLOW_UP_ENABLE}"
+        )
+    else:
+        r.ok("follow-up generation off")
 
     export = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/export", headers=h, timeout=60).json()
     banners = export.get("ui.banners") or []
@@ -146,6 +154,13 @@ def verify(h: dict[str, str]) -> int:
         r.err(f"suggestions={len(suggestions)} want {SUGGESTIONS_COUNT}")
     else:
         r.ok(f"suggestions {len(suggestions)}")
+    if export.get("task.follow_up.enable") is not TASK_FOLLOW_UP_ENABLE:
+        r.err(
+            f"export task.follow_up.enable={export.get('task.follow_up.enable')!r} "
+            f"want {TASK_FOLLOW_UP_ENABLE}"
+        )
+    else:
+        r.ok("export follow-up off")
 
     valves = requests.get(
         f"{OPENWEBUI_URL}/api/v1/functions/id/{PIPE}/valves", headers=h, timeout=30
