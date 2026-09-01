@@ -144,15 +144,16 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
 Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 
-### 3.6 Picker 漂移（现网 22 ≠ 契约 19）
+### 3.6 Picker 漂移（现网 23 ≠ 契约 19）
 
-`GET /api/models` 另有 3 个 **is_active** 但不在 19 public 契约里：
+`GET /api/models` 另有 4 个 **is_active** 但不在 19 public 契约里：
 
 - `google.gemini-3.1-pro-preview`  
 - `google.gemini-3.7-flash`  
 - `ibm-granite.granite-4.2-8b`  
+- `inception.mercury-2.5-preview`  
 
-灾后默认按契约收成 **19**（`apply_model_catalog_visibility.py`）。这 3 个是否保留要用户另确认，不要当已批准扩编。
+灾后默认按契约收成 **19**（`apply_model_catalog_visibility.py`）。这几个是否保留要用户另确认，不要当已批准扩编。
 
 ### 3.7 Knowledge
 
@@ -175,12 +176,12 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Banner | 一条 `usage-guide-v3` | 一条 `usage-guide-v3` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
-| Picker | 契约 19 | 22（多 3 个未批准 active） | 默认 `apply_model_catalog_visibility.py` 收 19 |
+| Picker | 契约 19 | 23（多 4 个未批准 active） | 默认 `apply_model_catalog_visibility.py` 收 19 |
 | Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 验 Banner v3、suggestions=0、Follow-up 关、Fable marker、**19** picker。现网 picker=22 时会报 extra — **这是现场漂移，不是脚本写错**。不要为了绿而把用户已改的 Banner 改回 v2。
+`verify_stack.py` 验 Banner v3、suggestions=0、Follow-up 关、Fable marker、**19** picker。现网 picker=23 时会报 extra — **这是现场漂移，不是脚本写错**。不要为了绿而把用户已改的 Banner 改回 v2。
 
 ---
 
