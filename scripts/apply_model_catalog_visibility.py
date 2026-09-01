@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disable catalog models that are not in the 19 public list; keep public active."""
+"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (19 public + extra Gemini)."""
 
 from __future__ import annotations
 

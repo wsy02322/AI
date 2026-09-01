@@ -194,7 +194,7 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 
 运行 `scripts/verify_stack.py`（以及 ops/live/compare/notebook 按 archive §5）：  
 - 以 **SPEC 现行 ST/UX** 为准，不是本文件 §2 旧编号  
-- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 若仍是 22，按 archive §3.6 默认收到 19  
+- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 按 archive §3.6：21 = 19 public + 2 Gemini  
 - 全绿 = 重建完成；**不必** 与历史快照 diff  
 
 ---
@@ -204,7 +204,7 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 | 优先级 | 工件 | 状态 |
 |--------|------|------|
 | **P0** | `docs/SPEC.md` | **已有** |
-| **P0** | `scripts/verify_stack.py` | **已有**（对照 archive §4 的 Banner/picker 漂移） |
+| **P0** | `scripts/verify_stack.py` | **已有**（picker = `ACTIVE_MODEL_IDS`） |
 | **P0** | `docs/open-webui-rebuild-archive.md` | **已有** — 灾后 / 新 Agent 入口 |
 | **P1** | `AGENTS.md` | **已有** |
 | **P1** | `docs/VERSIONS.md` | **已有**；重建后重填 Pipe sha |

@@ -144,16 +144,16 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
 Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 
-### 3.6 Picker 漂移（现网 23 ≠ 契约 19）
+### 3.6 Picker（19 public + 2 Gemini）
 
-`GET /api/models` 另有 4 个 **is_active** 但不在 19 public 契约里：
+`GET /api/models` 应为 **21**：`PUBLIC_MODEL_IDS`（19）加：
 
-- `google.gemini-3.1-pro-preview`  
-- `google.gemini-3.7-flash`  
-- `ibm-granite.granite-4.2-8b`  
-- `inception.mercury-2.5-preview`  
+- `google.gemini-3.1-pro-preview` — **保留** active；**不**在 19 public 名单（现网 grants 为空，管理员可见）  
+- `google.gemini-3.7-flash` — **保留** active；**不**并进 19 名单（现网已有 `*` read，不要剥掉）
 
-灾后默认按契约收成 **19**（`apply_model_catalog_visibility.py`）。这几个是否保留要用户另确认，不要当已批准扩编。
+**去除（is_active=false）**：`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`。
+
+灾后跑 `apply_model_catalog_visibility.py`（按 `ACTIVE_MODEL_IDS`，不是只留 19）。不要把这两个 Gemini 写成已批准扩编 public。
 
 ### 3.7 Knowledge
 
@@ -176,12 +176,12 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Banner | 一条 `usage-guide-v3` | 一条 `usage-guide-v3` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
-| Picker | 契约 19 | 23（多 4 个未批准 active） | 默认 `apply_model_catalog_visibility.py` 收 19 |
+| Picker | 21（19 public + 2 Gemini） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py`；Granite / Mercury 关掉 |
 | Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 验 Banner v3、suggestions=0、Follow-up 关、Fable marker、**19** picker。现网 picker=23 时会报 extra — **这是现场漂移，不是脚本写错**。不要为了绿而把用户已改的 Banner 改回 v2。
+`verify_stack.py` 验 Banner v3、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（21）。不要为了绿把 Banner 改回 v2。
 
 ---
 
@@ -195,7 +195,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 4. 确认 3 个 Guard global active；web_tools / image_gen **inactive**。  
 5. `python3 scripts/apply_plan_a_hide_integrations.py`  
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
-7. `python3 scripts/apply_model_catalog_visibility.py`（19 active）  
+7. `python3 scripts/apply_model_catalog_visibility.py`（21 = 19 public + 2 Gemini）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
@@ -238,6 +238,6 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | `AGENTS.md` | 日常操作禁令与脚本表 |
 | `docs/open-webui-delta-vs-stock.md` | 相对官方差异长表（部分日期早于本快照） |
 | `docs/open-webui-disaster-recovery-rebuild-plan.md` | 为何不靠全量快照 |
-| `scripts/stack_contract.py` | 19 public / Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
+| `scripts/stack_contract.py` | 19 public / picker 21（+2 Gemini）/ Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认，重建时不要顺便装 Tika） |
 | `docs/VERSIONS.md` | 上次验收指纹（重建后重填） |
