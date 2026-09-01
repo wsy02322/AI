@@ -57,8 +57,14 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
-# Runtime picker: only these stay active (matches 19 public).
-ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS
+# Extra picker models (user 2026-09-01): keep Gemini; not added to the 19 public list.
+EXTRA_ACTIVE_MODEL_IDS = [
+    f"{PIPE}.google.gemini-3.1-pro-preview",
+    f"{PIPE}.google.gemini-3.7-flash",
+]
+
+# Runtime picker: 19 public + extra Gemini. Granite / Mercury stay inactive.
+ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [
     f"{PIPE}.openai.gpt-5.6-sol-pro",

@@ -43,7 +43,7 @@
 | `scripts/verify_fable_thinking_replay.py` | ST-11 验收 |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
-| `scripts/apply_model_catalog_visibility.py` | 仅保留 19 public 为 `is_active`；其余 Pipe catalog 禁用 |
+| `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
 | `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |

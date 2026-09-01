@@ -81,7 +81,7 @@
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker 仅 **19 public** 为 `is_active`。
+**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker = **19 public** + `gemini-3.1-pro-preview` / `gemini-3.7-flash`。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
