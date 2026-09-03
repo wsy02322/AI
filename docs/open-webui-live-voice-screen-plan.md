@@ -258,7 +258,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | B2 rbb L2 | **未确认**。只提升 P0-B；新钥匙 + fork；该 overlay 无持续屏享 |
 | L3a 统一 Live | **未确认**。用户计划 **另建新 GitHub 仓库** 独立部署（交接包 `handoff/gemini-live-standalone/`） |
 | gpt-audio 改 Call | **不做捷径** |
-| gpt-audio 体验对照 | **GA-A 已执行** — Pipe **`/responses`** 拒 `modalities.audio` → 聊天 API 无 `output_audio`（听感/延迟/usage 未测）；维持 L1，见 `open-webui-gpt-audio-trial-plan.md` §5 |
+| gpt-audio 体验对照 | **GA-A 已执行** — Pipe **`/responses`** 拒 `modalities.audio` → 聊天 API 无 `output_audio`；维持 L1（见 SPEC Don't） |
 | P0-D Notebook | 与 Live 两项同级；独立 plan/确认，不要求 Live 让出优先级 |
 
 **现在不做：** 未选档就改实例、L3 三家并行、stock+realtime 双容器、为 Overview 改 Live TTS。
@@ -288,7 +288,7 @@ Agent 必须先给出三档的模型能力、密钥、镜像/中继、屏享、�
 - Gemini Live：https://ai.google.dev/gemini-api/docs/live-api  
 - Grok Voice Agent：https://docs.x.ai/developers/model-capabilities/audio/voice-agent  
 - rbb-dev Realtime 讨论：https://github.com/open-webui/open-webui/discussions/22622  
-- 本仓库：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`、`docs/open-webui-notebook-youtube-plan.md`
+- 本仓库：`docs/SPEC.md`、`docs/open-webui-notebook-youtube-plan.md`
 
 *L1 已落地但不是顶级终态。P0-B/P0-C 后续档位未确认前不改实例。*
 

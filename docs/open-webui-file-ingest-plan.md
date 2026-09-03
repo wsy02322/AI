@@ -6,7 +6,7 @@
 > **优先级**：Later（须单独确认）。**不是** P0 四条之一，也**不是** P0-D Notebook/YouTube。  
 > **宪法**：（1）顶级与略降级一并提案、确认再选；（2）简单稳定易维护；（3）重大改动主动 plan/提案，确认后再执行（讨论≠执行）。
 
-关联：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`、`docs/open-webui-notebook-youtube-plan.md`（Knowledge ≠ 本方案）
+关联：`docs/SPEC.md`、`docs/open-webui-notebook-youtube-plan.md`（Knowledge ≠ 本方案）
 
 ---
 

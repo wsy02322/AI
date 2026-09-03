@@ -2,7 +2,7 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
 **ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关。不要把两条都写成 ST-11。
 
@@ -49,7 +49,6 @@
 | `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 21 public `access_grants`，并剥掉契约外 `*` read（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
-| `scripts/run_ga_a_trial.py` | GA-A：MiniMax TTS vs gpt-audio（不改 Call/public；写 `open-webui-gpt-audio-trial-plan.md` §5） |
 | `scripts/apply_notebook_n1.py` | N1：RAG embedding → OpenRouter、YouTube loader 语言、Knowledge 集合 |
 | `scripts/ingest_youtube_notebook.py` | N1：YouTube 字幕/ASR + 视觉时间线写入 Knowledge |
 | `scripts/verify_notebook_youtube.py` | N1 验收：RAG 槽、集合、字幕+shown、Banner |

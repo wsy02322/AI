@@ -16,7 +16,7 @@
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
 | 上次 `verify_stack.py` | **2026-09-03**：Banner v3、chips=0、Follow-up 关、Fable marker、**21 public**（含 `claude-fable-5.1`、`gemini-3.1-pro-preview`、`gemini-3.8-flash`）。picker **21** = public。旧 `claude-fable-5` / `gemini-3.7-flash` 及新家族不在 picker |
 | 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**；STT whisper-large-v3-turbo 可用 |
-| 上次 GA-A `run_ga_a_trial.py` | **2026-08-21**：MiniMax MP3 31149 B / 1.62s 整段；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）；§1 仅关闭问题 3 |
+| 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
 | 上次 `verify_compare_cross_model.py` | **2026-08-20 全绿**（5 ok / 0 err）：Opus 跟在 Grok persist marker 后 200；`usage.input_tokens` = 2× 状态栏 Input（内部重试一次）；同模型 Grok 续聊 200；`PERSIST_REASONING_TOKENS` 仍为默认 conversation |
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关**；Follow-up **关** |

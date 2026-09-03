@@ -6,7 +6,7 @@
 > **旗舰源**：YouTube（转录不够；须视觉时间线 + 可点击 timestamp）  
 > **宪法**：（1）媲美甚至超越市面最顶级（NotebookLM / Gemini Notebook 及视频向竞品）；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行  
 
-关联：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`、`docs/open-webui-live-voice-screen-plan.md`
+关联：`docs/SPEC.md`、`docs/open-webui-live-voice-screen-plan.md`
 
 ---
 
@@ -192,6 +192,6 @@ Google 原文：**Only the text transcript of the video is imported as a source.
 - Audio Overview：https://support.google.com/notebooklm/answer/16212820  
 - Video Overview：https://support.google.com/notebooklm/answer/16454555  
 - YouTube + Audio 源发布：https://blog.google/innovation-and-ai/products/notebooklm-audio-video-sources/  
-- 本仓库：`docs/SPEC.md`、`docs/open-webui-optimized-plan.md`、`docs/open-webui-live-voice-screen-plan.md`
+- 本仓库：`docs/SPEC.md`、`docs/open-webui-live-voice-screen-plan.md`
 
 *未确认执行步之前不改实例。*

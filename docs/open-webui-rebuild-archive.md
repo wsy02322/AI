@@ -3,7 +3,7 @@
 > **用途**：站点没了、容器重建、或新 Agent 接手时，先读这一份，再动实例。  
 > **GitHub**：几乎仅用于灾后重建（本文件 + SPEC + 脚本）。不是演示库；重建成功不靠截屏。  
 > **探针**：2026-09-01T11:16Z，`https://micropigeon.com`，OWUI **0.11.0**。  
-> **策略**：规格 + 脚本验收 + DB 备份（见 `open-webui-disaster-recovery-rebuild-plan.md`）。**不要**把某一天的 Function 全文当唯一真相。  
+> **策略**：规格 + 脚本验收 + DB 备份。不锁死某一版 Function 全文；不靠全量配置快照。  
 > **密钥不入库**。OpenRouter / TTS / RAG 的 key 由运维注入；本文件只记「已配置」与形状。
 
 重建成功 ≠ 字节级复刻 2026-09-01。重建成功 = **`docs/SPEC.md` 契约** + 本文件 **§2 钉子** + **`scripts/verify_stack.py` 全绿**。§3 是当天现场；与 git 脚本不一致处见 §4，不要盲目用旧 apply 覆盖用户后来改过的 Banner。
@@ -15,8 +15,9 @@
 1. 本文件  
 2. `AGENTS.md`（禁令、Pipe merge、空 `models/sync`、L0）  
 3. `docs/SPEC.md`（UX / ST / P0 / Later / Don't）  
-4. `docs/open-webui-secret-key-persist-plan.md` §2（容器重建 SOP）  
-5. 按任务再读：图像 continuity、Live、Notebook、对比 ST-10  
+4. `docs/VERSIONS.md`（指纹）  
+5. `docs/open-webui-secret-key-persist-plan.md` §2（容器重建 SOP）  
+6. 按任务再读：图像 continuity、Live、Notebook、文件录入  
 
 独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**与本 OWUI 重建无关**。
 
@@ -99,7 +100,9 @@
 | `webui.url` | `https://micropigeon.com` |
 | `auth.jwt_expiry` | `-1` |
 
-`openai.api_configs` 现网槽（全 disable）：0 `gpt-5.5`；1 `x-ai/grok-4.3` + `grok-4.5`；2 Sol / Sol Pro；3 Fable + Opus；4 `google/gemini-3.1-pro-preview`。
+`openai.api_configs` 现网槽（全 disable）：0 `gpt-5.5`；1 `x-ai/grok-4.3` + `grok-4.5`；2 Sol / Sol Pro；3 Fable + Opus；4 `google/gemini-3.1-pro-preview`。**不要**复活已删的 gptsapi 槽。
+
+`www.micropigeon.com` **无 DNS**。`http://78.47.152.85` 是另一套中文页（`/api/version` 404），不是本 OWUI。`http://micropigeon.com` Caddy **308** → https。
 
 ### 3.3 Banner / 空对话 chips
 
@@ -109,16 +112,20 @@
 |----|----------------|
 | `usage-guide-v3` | `<b>Web search only on Perplexity Sonar. Images only on an image model.</b> <b>Reasoning depth</b>: Input box → <b>Valves</b>. <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar.` ；`dismissible: false` |
 
-现网 `ui.prompt_suggestions` = **`[]`**。
+现网 `ui.prompt_suggestions` = **`[]`**。OWUI Suggested 点击即发送，空 chips 不是缺功能。Follow-up 是另一开关（ST-12）。
 
-仓库 `scripts/apply_ui_guidance_banners.py` **已对齐** v3 + 空 chips。重跑会写回现网这份指引（不是双条 v2）。若用户后来又改了 Banner，先对照本表再决定是否覆盖。
+**指引规则**：英文；一条全局 Banner，型号事实放 Description；不要教用户打开已隐藏的 Integrations；Banner 只吃 HTML（换行会变 `<br>`）；改 Banner `id` 会让已看过的人再看到。历史双条 v2 / 4 chips **不要重放**。
+
+`POST /api/v1/configs/banners` body 是 `{"banners":[...]}`，不是裸数组。`POST /api/v1/configs/suggestions` 同理 `{"suggestions":[...]}`。
+
+仓库 `scripts/apply_ui_guidance_banners.py` **已对齐** v3 + 空 chips。重跑会写回现网这份指引。若用户后来又改了 Banner，先对照本表再决定是否覆盖。
 
 ### 3.4 Pipe / Filter
 
 | 项 | 现网 |
 |----|------|
 | Pipe id | `open_webui_openrouter_integration`，active |
-| `content` SHA256 前 12 | `7415c2e4347a` |
+| `content` SHA256 前 12 | 以 `verify_stack` INFO / `VERSIONS.md` 为准（2026-09-01 探针 `7415c2e4347a`；现网若已 ST-13 则为 `f797e92d6d3f`） |
 | 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1` **均应在** |
 | `API_KEY` | 已配置；API 读出为 `encrypted:`（catalog 正常即可） |
 | valves（API 返回的覆盖项） | 下列 **全 false**：`AUTO_ATTACH_WEB_TOOLS_FILTER`、`AUTO_ATTACH_IMAGE_GEN_FILTER`、`AUTO_INSTALL_WEB_TOOLS_FILTER`、`AUTO_INSTALL_IMAGE_GEN_FILTER`、`AUTO_DEFAULT_WEB_TOOLS_FILTER`、`ENABLE_DATETIME`、`ENABLE_WEB_SEARCH`、`UPDATE_MODEL_CAPABILITIES` |
@@ -175,7 +182,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
 | Picker | 21 public（留下家族最新 id） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（21 public + 剥额外 `*`）；新家族关掉 |
-| Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
+| Pipe sha | VERSIONS 表；以 `verify_stack` INFO 为准 | 可能已是 ST-13 `f797e92d6d3f` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
@@ -221,21 +228,40 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 ## 7. Later / Don't（尚未落地，重建时不要「顺便做」）
 
-**Later（须另确认）**：Wave 1 视频 public；Wave 2 slides；Notebook N2+ Studio；图像 Studio / 语义画布；语音 S2S / 持续屏流；Tika T0（现网抽取引擎为空）。  
+**Later（须另确认）**：见 SPEC。重建时不要顺便做。含 Wave 1 视频、Wave 2 slides、对比 S3 真分栏、Notebook N2+、独立画图 Studio（含蒙版）、Tika T0、语音 S2S / 持续屏流。
 
-**Don't**：ComfyUI / 蒙版、第二套 Pipe、重开 Web Search 三件套、466 全 public。
+**Don't**：ComfyUI（除非 Studio 方案选它）、第二套 Pipe、重开 Web Search 三件套、466 全 public。
 
 ---
 
-## 8. 文档地图
+## 8. 错误目录（现象 → 根因模式 → 修复；不要盲贴旧 Pipe `content`）
+
+| 现象 | 根因模式 | 修复 |
+|------|----------|------|
+| `No endpoints found that support tool use` + `get_current_timestamp` | 向不支持 tools 的模型灌了 builtin / OR tools | 3 Guard 剥 tools；Sonar/图像 `builtin_tools=false`；web_tools / image_gen **停用** |
+| `gpt-image-*` / `seedream-5` 端点错或 500 | 走错 chat 而非 Images API | Pipe Images API 路由 + Seedream resolution |
+| 多轮图像 131072 | 历史 data URI / 多图整段进上下文 | image context guard；ST-13 落盘（若 Pipe 有 `IMAGE_DATA_URI_PERSIST_V1`） |
+| Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑方案 A / Guard |
+| `model/update` 500 | 缺 `access_grants` | 更新必须带 grants |
+| valves 更新后全站断 | 全量覆盖 valves | **只 merge** |
+| picker 空 / `Model not found` | env 非空 `WEBUI_SECRET_KEY` 与 `encrypted:` Pipe key 冲突，或空 `models/sync` | env 改回 `""`；merge 明文 key；**禁止空 sync** |
+| 容器重建后全员掉线 | JWT 不持久化（L0） | **可接受** — 用户重登；agent 跑 verify |
+
+Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后（per-model Filter 会在 Guard 之后再注入）。
+
+**决策（勿擅自改回）**：方案 A 藏 Web Tools 三件套；搜索只走两档 Sonar；不装第二套 Pipe；界面英文；Banner 不可 dismiss；`openai.api_configs` 全 disable；L0 不持久化 JWT。
+
+## 9. 文档地图
 
 | 文件 | 角色 |
 |------|------|
-| **本文件** | 灾后 / 新 Agent **入口** + 现网钉子 |
+| **本文件** | 灾后入口 + 现网钉子 + 错误目录 |
+| `AGENTS.md` | 禁令、Pipe merge、脚本表 |
 | `docs/SPEC.md` | 产品契约 |
-| `AGENTS.md` | 日常操作禁令与脚本表 |
-| `docs/open-webui-delta-vs-stock.md` | 相对官方差异长表（部分日期早于本快照） |
-| `docs/open-webui-disaster-recovery-rebuild-plan.md` | 为何不靠全量快照 |
-| `scripts/stack_contract.py` | 21 public = picker / Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
-| `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认，重建时不要顺便装 Tika） |
-| `docs/VERSIONS.md` | 上次验收指纹（重建后重填） |
+| `docs/VERSIONS.md` | 上次验收指纹 |
+| `scripts/stack_contract.py` | 21 public = picker |
+| `docs/open-webui-secret-key-persist-plan.md` | L0 SOP |
+| `docs/open-webui-live-voice-screen-plan.md` | P0-B / P0-C |
+| `docs/open-webui-notebook-youtube-plan.md` | P0-D |
+| `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
+| `docs/open-webui-openrouter-image-continuity-plan.md` | 图像错误模式 |
