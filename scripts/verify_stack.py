@@ -20,6 +20,7 @@ from stack_contract import (
     DEFAULT_MODELS,
     DETACH_FILTERS,
     DISABLED_FILTERS,
+    GUARD_PATCH_MARKERS,
     GUARDS,
     IMAGE_MODEL_IDS,
     PINNED_MODELS,
@@ -193,6 +194,16 @@ def verify(h: dict[str, str]) -> int:
             r.err(f"guard inactive {gid}")
         else:
             r.ok(f"guard active {gid}")
+    for gid, marker in GUARD_PATCH_MARKERS.items():
+        # The list endpoint omits content; fetch the guard by id.
+        detail = requests.get(
+            f"{OPENWEBUI_URL}/api/v1/functions/id/{gid}", headers=h, timeout=60
+        )
+        guard_content = detail.json().get("content") or "" if detail.status_code == 200 else ""
+        if marker not in guard_content:
+            r.err(f"guard {gid} missing patch marker {marker}")
+        else:
+            r.ok(f"guard patch marker {marker}")
     for fid in DISABLED_FILTERS:
         fn = by_id.get(fid)
         if fn and fn.get("is_active"):

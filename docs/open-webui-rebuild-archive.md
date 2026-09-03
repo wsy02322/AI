@@ -29,6 +29,8 @@
 | OpenRouter API key | 控制台重开，**merge** 进 Pipe `API_KEY`（明文输入；保存后 DB 常为 `encrypted:`） |
 | JWT / 登录态 | **不必备份**。L0：`WEBUI_SECRET_KEY=""`，重建后 **用户重登** |
 | Pipe / Guard / 19 public / Banner / Task | 本仓库脚本可重放 |
+| chrome overlay `custom.css` | 本仓库 `deploy/owui-ui/custom.css`；重建时拷回 bind **和** served（见 `deploy/owui-ui/README.md`） |
+| `/opt/open-webui/custom/entrypoint.sh` | **仍在 VPS**，不在 git。建议 VPS 侧备份 |
 | 某一版 Pipe `content` 全文 | 一般不还原旧 blob；装**当时**上游 Pipe，再按 §5 打补丁与 merge valves |
 
 备份口令（运维，不进 git）：升配 / 换镜像 / 大改前复制 `webui.db`。例：`/root/backups/webui-valves-fix-20260821-154729.db`。
@@ -44,6 +46,7 @@
 | 容器名 | `open-webui` |
 | 镜像 | **钉死 digest** `e97bf9531916`（OWUI 0.11.0）。**不要**漂 `:main`。无 OpenAI/Google Realtime 钥匙时 **不换** Realtime 镜像 |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`）。新镜像上补丁可能失效，须再验 |
+| chrome overlay | `deploy/owui-ui/custom.css`。bind `/opt/open-webui/custom/custom.css` → `/app/build/static/custom.css`；浏览器读 `/app/backend/open_webui/static/custom.css`。热改两处、`curl` 公网，**不要为了 CSS 重启**。助手左边 **单层 4px**（`:has(.chat-assistant)`）；`.flex-auto.pl-1` 保持 `0` |
 | env 文件 | `/root/open-webui.env` |
 | `WEBUI_SECRET_KEY` | **必须 `""`**。禁止写入新的随机非空值（与 `encrypted:` Pipe key 冲突 → catalog 空） |
 | 运行时 JWT 文件 | `/app/backend/.webui_secret_key`（容器内，**不在 volume**） |
@@ -118,14 +121,14 @@
 |----|------|
 | Pipe id | `open_webui_openrouter_integration`，active |
 | `content` SHA256 前 12 | `7415c2e4347a` |
-| 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1` **均应在** |
+| 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`IMAGE_DATA_URI_PERSIST_V1` **均应在** |
 | `API_KEY` | 已配置；API 读出为 `encrypted:`（catalog 正常即可） |
 | valves（API 返回的覆盖项） | 下列 **全 false**：`AUTO_ATTACH_WEB_TOOLS_FILTER`、`AUTO_ATTACH_IMAGE_GEN_FILTER`、`AUTO_INSTALL_WEB_TOOLS_FILTER`、`AUTO_INSTALL_IMAGE_GEN_FILTER`、`AUTO_DEFAULT_WEB_TOOLS_FILTER`、`ENABLE_DATETIME`、`ENABLE_WEB_SEARCH`、`UPDATE_MODEL_CAPABILITIES` |
 
 **全局 Guard（is_global + active）**
 
 - `openrouter_image_tool_guard`  
-- `openrouter_image_context_guard`  
+- `openrouter_image_context_guard`（须含 ST-13 marker `IMAGE_CONTEXT_DATA_URI_CAP_V1`）  
 - `openrouter_search_native_tool_guard`  
 
 **必须停用**：`openrouter_web_tools`、`openrouter_image_gen`。
@@ -180,6 +183,8 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
+| ST-13 图像落盘 | Pipe `IMAGE_DATA_URI_PERSIST_V1` + Guard `IMAGE_CONTEXT_DATA_URI_CAP_V1` | 2026-09-03 已打 | `patch_pipe_image_data_uri_persist.py` + `patch_guard_image_context_data_uri.py` |
+| chrome overlay | `deploy/owui-ui/custom.css` | 全宽 + 藏头像 + 助手 **4px** | 拷到 bind **和** `STATIC_DIR`；`curl` 公网 `Last-Modified`，不要只看容器文件 |
 
 `verify_stack.py` 验 Banner v3、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（21）。不要为了绿把 Banner 改回 v2。
 
@@ -199,9 +204,10 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
-11. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
-12. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  
-13. 更新 `docs/VERSIONS.md`（日期、Pipe sha、Banner id）。通知用户 **重登**。
+11. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。ST-13：`patch_pipe_image_data_uri_persist.py` + `patch_guard_image_context_data_uri.py`，再跑 `verify_image_data_uri_persist.py`。  
+12. 拷 `deploy/owui-ui/custom.css` 到 bind `/opt/open-webui/custom/custom.css`；容器已在跑则再拷到 `/app/backend/open_webui/static/custom.css`。`curl` 公网 `/static/custom.css` 须看到 `:has(.chat-assistant)` 的 `4px`。  
+13. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  
+14. 更新 `docs/VERSIONS.md`（日期、Pipe sha、Banner id）。通知用户 **重登**。
 
 **有 DB 备份时**：先还原 `webui.db` + volume，再只跑 L0 / verify；用户重登。不要空 sync，不要重装 Pipe 覆盖 content，除非 catalog 坏了。
 
@@ -218,6 +224,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 - 关全局 Code Interpreter  
 - 未确认换 OWUI Realtime 镜像、装第二前端、改 Notebook 入口  
 - 把 YouTube 字幕当成 NotebookLM 达标；Call overlay 冒充 Audio Overview  
+- 只改 bind 的 `custom.css` 就当 overlay 已生效；把助手 padding 叠两层；用 `.prose` 当 0.11 选择器  
 
 ---
 
@@ -241,3 +248,4 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | `scripts/stack_contract.py` | 19 public / picker 21（+2 Gemini）/ Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认，重建时不要顺便装 Tika） |
 | `docs/VERSIONS.md` | 上次验收指纹（重建后重填） |
+| `deploy/owui-ui/` | 全宽 chrome overlay + 助手 4px；操作见该目录 `README.md` |

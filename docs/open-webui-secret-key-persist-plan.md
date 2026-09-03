@@ -93,9 +93,9 @@
 | 资产 | 频率 | 说明 |
 |------|------|------|
 | **`webui.db` / data volume** | 周备 + 大改前 | 聊天、用户、Knowledge、Pipe valves |
-| **Git（SPEC + scripts + verify）** | 每次合并 | 功能契约可重建 |
+| **Git（SPEC + scripts + verify + `deploy/owui-ui`）** | 每次合并 | 功能契约可重建；chrome overlay 跟 git |
 | **OpenRouter 密钥** | 密码库 / OpenRouter 控制台 | 不入 git |
-| **`/opt/open-webui/custom`** | 建议 VPS 侧备份 | entrypoint 不在本仓库 |
+| **`/opt/open-webui/custom/entrypoint.sh`** | 建议 VPS 侧备份 | BetterUI entrypoint **不在**本仓库；`custom.css` 已入库 `deploy/owui-ui/` |
 
 JWT / `.webui_secret_key`：**不必**单独备份。
 
@@ -107,3 +107,4 @@ JWT / `.webui_secret_key`：**不必**单独备份。
 |------|------|
 | 2026-08-21 | **已执行** `apply_ops_l0.py` / `verify_ops_l0.py`；实例 5 ok + verify_stack 24 ok |
 | 2026-08-21 | 默认档定为 **L0**；SPEC ST-OPS-* 与本文件一致 |
+| 2026-09-03 | chrome overlay `custom.css` 入库 `deploy/owui-ui/`；entrypoint 仍只在 VPS |

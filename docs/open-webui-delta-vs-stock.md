@@ -132,6 +132,7 @@
 | `_stream_via_images_api` / images 路由 | `gpt-image-*`、`seedream-5*` **不走** `chat/completions` |
 | Seedream 5.x | `image_config.image_size` → `resolution`；非法 `4K` 降为 `2K` |
 | `apply_chat_context_transforms` | chat 路径增加 `middle-out`、`context-compression` |
+| `IMAGE_DATA_URI_PERSIST_V1` | **ST-13**：`_materialize_image_entry` 的 dict-url 分支把 `data:` 交给 `_materialize_image_from_str` 落盘；落盘失败回退原 URI。`http(s)` / file URL / 相对路径不变 |
 | 图像/视频模型 | Pipe 层对 `image_output` / `video_generation` 禁止发送 tools |
 | `COMPARE_CROSS_MODEL_REASONING_V1` | 扩 `_should_retry_dropping_signed_reasoning`：400/404 跨模型加密 reasoning 拒绝时剥密文内部重试（对比 ST-10；不关 `PERSIST_REASONING_TOKENS`） |
 
@@ -171,7 +172,7 @@
 | id | active | priority（代码默认 / valves） | 作用 |
 |----|--------|-------------------------------|------|
 | `openrouter_image_tool_guard` | **true** | **1** | 对 image/video 模型 **剥离** `tools`、`builtin_tools`、`server_tools` |
-| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位 |
+| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位。**ST-13**（`IMAGE_CONTEXT_DATA_URI_CAP_V1`）：保留的画布只剥 `data:image`、保留 `/api/v1/files/` |
 | `openrouter_search_native_tool_guard` | **true** | **99**（valves **100**） | 对 Sonar/Perplexity 等 **最后** 再剥 tools，防其他 Filter 晚注入 |
 
 **相对 Stock**：不存在；为修复 `No endpoints found that support tool use` 与 131072 token 溢出。
@@ -300,6 +301,14 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 沿用 Pipe **UserValves** 标签 **Reasoning depth**（`none` … `xhigh`）；Banner 引导难题用 **high/xhigh**。
 
+### 7.5 chrome overlay（相对 Stock：无）
+
+现网加载 `/static/custom.css`（ai-ui-2）：消息全宽、藏助手头像、有消息时顶栏/输入框 overlay 淡出。源在本仓库 **`deploy/owui-ui/custom.css`**。
+
+**助手左边（2026-09-03）**：只一层 `#messages-container .message-listitem:has(.chat-assistant) { padding-left: 4px }`。主题把 listitem 和 `.flex-auto.pl-1` 打成 `0`；**不要**再给 `.flex-auto.pl-1` 加 padding（会与 listitem 相加）。OWUI 0.11 正文 class 是 `.chat-assistant` / `.markdown-prose`，不是 `.prose`。
+
+VPS 有两份：bind `/opt/open-webui/custom/custom.css` → `/app/build/static/`；浏览器读 `/app/backend/open_webui/static/custom.css`。热改两处并 `curl` 公网 `Last-Modified`。详见 `deploy/owui-ui/README.md`。
+
 ---
 
 ## 8. 本 Git 仓库（相对 Stock 空仓库）
@@ -315,6 +324,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `docs/open-webui-user-guidance-plan.md` | 界面英文指引（现网 v3） |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
 | `docs/open-webui-disaster-recovery-rebuild-plan.md` | 灾备：规格 + verify，非全量快照 |
+| `deploy/owui-ui/custom.css` | 全宽 chrome overlay；助手左边单层 4px |
 
 ### 8.2 可重复脚本
 
@@ -392,6 +402,7 @@ Stock OWUI 0.11.0
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
     ├─ N1：RAG embedding → OpenRouter；Knowledge「YouTube Notebook」+ 视觉时间线
+    ├─ chrome overlay：`deploy/owui-ui/custom.css`（全宽、藏头像、助手左边 4px）
     └─ Git：docs + apply/verify 脚本
 ```
 
