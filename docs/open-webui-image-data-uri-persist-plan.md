@@ -1,8 +1,9 @@
-# 生成图 data URI 落盘（ST-13）— plan，**未执行**
+# 生成图 data URI 落盘（ST-13）— **已执行**
 
-> **状态**：**待确认**。本文只是 plan。**实例、Pipe、Guard 均未改。**
-> **探针**：2026-09-03，`https://micropigeon.com`，OWUI 0.11.0，Pipe sha `7415c2e4347a`。
+> **状态**：**已执行**（2026-09-03）。P1 + P2 均已上现网，`verify_image_data_uri_persist.py` **16 ok / 0 err**。
+> **Pipe sha**：`7415c2e4347a` → **`f797e92d6d3f`**。Guard sha `2201a71cb229` → **`1cef7c0da5ac`**。
 > **ST 编号**：**ST-13** = 生成图落盘为 file URL。不要和 ST-11（Fable 续聊）/ ST-12（Follow-up 关）混号。
+> **未动**：valves / `API_KEY` / Banner / models / 镜像 / `api_configs` / `WEBUI_SECRET_KEY`。蒙版 inpainting 仍为 Later。
 
 关联：`docs/open-webui-openrouter-image-continuity-plan.md` §10（131072 溢出旧记录）、`AGENTS.md` Pipe 更新 Runbook。
 
@@ -198,4 +199,22 @@ Runbook 插入位置：`AGENTS.md` → Pipe 更新 Runbook，第 8 步（Fable m
 | 日期 | 决策 |
 |------|------|
 | 2026-08-18 | 旧 131072 修复：`openrouter_image_context_guard` + chat 路径 `middle-out` / `context-compression`（挡不住「保留的画布本身是巨型 data URI」） |
-| 2026-09-03 | 定位到 `_materialize_image_entry` dict-url 分支不落盘；写成本 plan（ST-13）。**待确认，未执行** |
+| 2026-09-03 | 定位到 `_materialize_image_entry` dict-url 分支不落盘；写成本 plan（ST-13） |
+| 2026-09-03 | 用户确认「先处理本次，蒙版等顶级功能后续再做」→ **P1 + P2 已执行**；落盘失败**回退 data URI**、P2 **不设阈值**（见 §3.1 / §4.1） |
+
+## 10. 执行结果（2026-09-03）
+
+`python3 scripts/verify_image_data_uri_persist.py` → **16 ok / 0 err**：
+
+| 探针 | 结果 |
+|------|------|
+| 7 个 Pipe marker（含 `IMAGE_DATA_URI_PERSIST_V1`） | 全在 |
+| Guard `IMAGE_CONTEXT_DATA_URI_CAP_V1` + active + global | 通过 |
+| valves ST-4/5/6 与 `API_KEY` | 未漂、仍在（content-only 更新） |
+| Qwen Image 3 Pro 出图 | 助手回复 **81 字符**（事故那条是 5,385,652），含 `/api/v1/files/`，无 `data:image` |
+| Nano Banana 2 在该画布上续聊改图 | **200**（正是 `77de6621c4ab134c` 那一轮） |
+| history 塞 2MB 内联 data URI | **200**（Guard 已剥） |
+
+`verify_stack.py`：**26 ok / 1 err**。唯一 err 是 **picker 27 ≠ 21**，改前 baseline 即存在，与 ST-13 无关；见 `docs/VERSIONS.md`「未决漂移」。
+
+离线单测 `scripts/test_patch_pipe_image_data_uri_persist.py`：**16 tests OK**（含落盘失败回退、`http(s)`/file URL 不变、当前用户消息不动、非图像模型不动）。

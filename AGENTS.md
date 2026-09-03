@@ -2,7 +2,7 @@
 
 灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-13** = 生成图落盘为 file URL（`docs/open-webui-image-data-uri-persist-plan.md`，**待确认未执行**）。不要复用号。
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-13** = 生成图落盘为 file URL（`docs/open-webui-image-data-uri-persist-plan.md`，**已执行**）。不要复用号。
 
 ## 宪法（所有动作）
 
@@ -41,6 +41,9 @@
 | `scripts/verify_fable_thinking_replay.py` | ST-11：Fable 两轮续聊不得 `cannot be modified` |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
 | `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable unsigned thinking（content-only，不碰 valves；S2′ 之后跑） |
+| `scripts/patch_pipe_image_data_uri_persist.py` | **ST-13**：生成图 data URI 落盘（content-only；marker 已在则 no-op） |
+| `scripts/patch_guard_image_context_data_uri.py` | **ST-13** 兜底：Guard 只剥画布里的 `data:image`，保留 file URL |
+| `scripts/verify_image_data_uri_persist.py` | **ST-13** 验收：marker + 出图落盘 + Banana 续聊 200 + 2MB data URI 200 |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
@@ -64,9 +67,10 @@
 5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v3` + 空 chips；**不要**写回已废弃的双条 v2 Banner）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
-8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-9. `python3 scripts/verify_stack.py` 全绿  
-10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
+8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op） 
+9. 若 Pipe 丢了 ST-13 marker：`python3 scripts/patch_pipe_image_data_uri_persist.py`（已有 `IMAGE_DATA_URI_PERSIST_V1` 则 no-op） 
+10. `python3 scripts/verify_stack.py` 全绿；图像相关另跑 `python3 scripts/verify_image_data_uri_persist.py` 
+11. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹 
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 
@@ -114,5 +118,7 @@
 - 把助手左边距叠在 `message-listitem` **和** `.flex-auto.pl-1` 两层
 - 用 `.prose` / `.message-assistant` 当 OWUI 0.11 选择器
 - 把 4px 左边距写进 BetterUI patch（overlay 在 `deploy/owui-ui/`）
+- 让生成图以 `data:image` 进助手消息（ST-13：必须落盘成 `/api/v1/files/`）
+- 给 `openrouter_image_context_guard` 的 data URI 剥离加尺寸阈值（1MB base64 本身已超 131k）
 
 Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。

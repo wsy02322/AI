@@ -132,6 +132,7 @@
 | `_stream_via_images_api` / images 路由 | `gpt-image-*`、`seedream-5*` **不走** `chat/completions` |
 | Seedream 5.x | `image_config.image_size` → `resolution`；非法 `4K` 降为 `2K` |
 | `apply_chat_context_transforms` | chat 路径增加 `middle-out`、`context-compression` |
+| `IMAGE_DATA_URI_PERSIST_V1` | **ST-13**：`_materialize_image_entry` 的 dict-url 分支把 `data:` 交给 `_materialize_image_from_str` 落盘；落盘失败回退原 URI。`http(s)` / file URL / 相对路径不变 |
 | 图像/视频模型 | Pipe 层对 `image_output` / `video_generation` 禁止发送 tools |
 | `COMPARE_CROSS_MODEL_REASONING_V1` | 扩 `_should_retry_dropping_signed_reasoning`：400/404 跨模型加密 reasoning 拒绝时剥密文内部重试（对比 ST-10；不关 `PERSIST_REASONING_TOKENS`） |
 
@@ -171,7 +172,7 @@
 | id | active | priority（代码默认 / valves） | 作用 |
 |----|--------|-------------------------------|------|
 | `openrouter_image_tool_guard` | **true** | **1** | 对 image/video 模型 **剥离** `tools`、`builtin_tools`、`server_tools` |
-| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位 |
+| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位。**ST-13**（`IMAGE_CONTEXT_DATA_URI_CAP_V1`）：保留的画布只剥 `data:image`、保留 `/api/v1/files/` |
 | `openrouter_search_native_tool_guard` | **true** | **99**（valves **100**） | 对 Sonar/Perplexity 等 **最后** 再剥 tools，防其他 Filter 晚注入 |
 
 **相对 Stock**：不存在；为修复 `No endpoints found that support tool use` 与 131072 token 溢出。
