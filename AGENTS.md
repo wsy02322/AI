@@ -38,9 +38,9 @@
 |------|------|
 | `scripts/verify_stack.py` | 任何改动后；Pipe 更新后 |
 | `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
+| `scripts/verify_fable_thinking_replay.py` | ST-11：Fable 两轮续聊不得 `cannot be modified` |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
-| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable / Anthropic 同模型续聊剥 unsigned thinking（content-only） |
-| `scripts/verify_fable_thinking_replay.py` | ST-11 验收 |
+| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable unsigned thinking（content-only，不碰 valves；S2′ 之后跑） |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
@@ -63,9 +63,10 @@
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
 5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v3` + 空 chips；**不要**写回已废弃的双条 v2 Banner）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
-7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-8. `python3 scripts/verify_stack.py` 全绿  
-9. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
+7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
+8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
+9. `python3 scripts/verify_stack.py` 全绿  
+10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 
@@ -78,6 +79,16 @@
 | env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
 | `openai.api_configs` | 5 条，**全部 `enable: false`** |
 | 重建后 | 通知用户重登 + agent 跑 verify / 必要时 merge Pipe key（§2 SOP） |
+| chrome overlay | `deploy/owui-ui/custom.css`（全宽 + 藏头像 + 助手左边 **单层 4px**） |
+
+**`custom.css` 有两份**（容器里看得见 ≠ 浏览器加载到）：
+
+| 角色 | 路径 |
+|------|------|
+| bind 源 | `/opt/open-webui/custom/custom.css` → `/app/build/static/custom.css` |
+| 正在 serve | `/app/backend/open_webui/static/custom.css` |
+
+启动时从 build 拷到 `STATIC_DIR`。热改 **两处一起写**，然后 `curl` 公网 `Last-Modified` / 文件尾巴；**不要为了 CSS 重启**（L0 会逼重登）。助手只改 `#messages-container .message-listitem:has(.chat-assistant)` 为 `4px`；`.flex-auto.pl-1` 保持 `0`（父子 padding 会相加）。OWUI 0.11 是 `.chat-assistant` / `.markdown-prose`，不是 `.prose`。操作说明见 `deploy/owui-ui/README.md`。
 
 升配 / 重建容器前：备份 `webui.db`（护聊天/Knowledge，不护 JWT）；重建后跑 `verify_stack.py`。
 
@@ -99,5 +110,9 @@
 - 未确认装 Tika / 扩 Direct MIME（见 `docs/open-webui-file-ingest-plan.md`）
 - 把 Follow-up 关（ST-12）和 Fable 续聊（ST-11）写成同一个 ST 号
 - 新增第二份 Agent 入口（不要再写 `AGENT-ONBOARDING.md`；本文件即入口）
+- 只改 bind 的 `custom.css` 就当页面已生效（必须 `curl` 公网 `Last-Modified`）
+- 把助手左边距叠在 `message-listitem` **和** `.flex-auto.pl-1` 两层
+- 用 `.prose` / `.message-assistant` 当 OWUI 0.11 选择器
+- 把 4px 左边距写进 BetterUI patch（overlay 在 `deploy/owui-ui/`）
 
 Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。

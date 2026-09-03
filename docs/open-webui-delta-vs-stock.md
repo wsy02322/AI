@@ -300,6 +300,14 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 沿用 Pipe **UserValves** 标签 **Reasoning depth**（`none` … `xhigh`）；Banner 引导难题用 **high/xhigh**。
 
+### 7.5 chrome overlay（相对 Stock：无）
+
+现网加载 `/static/custom.css`（ai-ui-2）：消息全宽、藏助手头像、有消息时顶栏/输入框 overlay 淡出。源在本仓库 **`deploy/owui-ui/custom.css`**。
+
+**助手左边（2026-09-03）**：只一层 `#messages-container .message-listitem:has(.chat-assistant) { padding-left: 4px }`。主题把 listitem 和 `.flex-auto.pl-1` 打成 `0`；**不要**再给 `.flex-auto.pl-1` 加 padding（会与 listitem 相加）。OWUI 0.11 正文 class 是 `.chat-assistant` / `.markdown-prose`，不是 `.prose`。
+
+VPS 有两份：bind `/opt/open-webui/custom/custom.css` → `/app/build/static/`；浏览器读 `/app/backend/open_webui/static/custom.css`。热改两处并 `curl` 公网 `Last-Modified`。详见 `deploy/owui-ui/README.md`。
+
 ---
 
 ## 8. 本 Git 仓库（相对 Stock 空仓库）
@@ -315,6 +323,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `docs/open-webui-user-guidance-plan.md` | 界面英文指引（现网 v3） |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
 | `docs/open-webui-disaster-recovery-rebuild-plan.md` | 灾备：规格 + verify，非全量快照 |
+| `deploy/owui-ui/custom.css` | 全宽 chrome overlay；助手左边单层 4px |
 
 ### 8.2 可重复脚本
 
@@ -392,6 +401,7 @@ Stock OWUI 0.11.0
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
     ├─ N1：RAG embedding → OpenRouter；Knowledge「YouTube Notebook」+ 视觉时间线
+    ├─ chrome overlay：`deploy/owui-ui/custom.css`（全宽、藏头像、助手左边 4px）
     └─ Git：docs + apply/verify 脚本
 ```
 
