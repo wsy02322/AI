@@ -38,9 +38,9 @@
 |------|------|
 | `scripts/verify_stack.py` | 任何改动后；Pipe 更新后 |
 | `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
+| `scripts/verify_fable_thinking_replay.py` | ST-11：Fable 两轮续聊不得 `cannot be modified` |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
-| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable / Anthropic 同模型续聊剥 unsigned thinking（content-only） |
-| `scripts/verify_fable_thinking_replay.py` | ST-11 验收 |
+| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable unsigned thinking（content-only，不碰 valves；S2′ 之后跑） |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
@@ -63,9 +63,10 @@
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
 5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v3` + 空 chips；**不要**写回已废弃的双条 v2 Banner）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
-7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-8. `python3 scripts/verify_stack.py` 全绿  
-9. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
+7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
+8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
+9. `python3 scripts/verify_stack.py` 全绿  
+10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 

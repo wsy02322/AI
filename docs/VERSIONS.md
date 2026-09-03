@@ -18,7 +18,8 @@
 | 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**；STT whisper-large-v3-turbo 可用 |
 | 上次 GA-A `run_ga_a_trial.py` | **2026-08-21**：MiniMax MP3 31149 B / 1.62s 整段；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）；§1 仅关闭问题 3 |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
-| 上次 `verify_compare_cross_model.py` | **2026-08-20 全绿**（5 ok / 0 err）：Opus 跟在 Grok persist marker 后 200；`usage.input_tokens` = 2× 状态栏 Input（内部重试一次）；同模型 Grok 续聊 200；`PERSIST_REASONING_TOKENS` 仍为默认 conversation |
+| 上次 `verify_compare_cross_model.py` | **2026-08-26 全绿**（5 ok / 0 err）：Opus 跟在 Grok persist marker 后 200；`usage.input_tokens` = 2× 状态栏 Input（内部重试一次）；同模型 Grok 续聊 200；`PERSIST_REASONING_TOKENS` 仍为默认 conversation |
+| 上次 `verify_fable_thinking_replay.py` | **2026-08-26 全绿**（7 ok / 0 err）：Fable 第 1 轮 thinking `output` 带 `signature` + `format=anthropic-claude-v1`；续聊 200，无 `cannot be modified` |
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关**；Follow-up **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |
 | ST-11 Fable | Pipe marker `FABLE_UNSIGNED_SUMMARY_V1`（sha `7415c2e4347a`） |
@@ -30,4 +31,4 @@
 
 ## Pipe 更新后
 
-见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`。重放 ST-11：`python3 scripts/patch_pipe_fable_thinking_replay.py`（marker 已在则 no-op）。
+见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`（若 marker 已在则 no-op）。重放 ST-11：`python3 scripts/patch_pipe_fable_thinking_replay.py`（若 marker 已在则 no-op）。
