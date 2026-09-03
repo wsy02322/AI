@@ -1,6 +1,7 @@
 # Open WebUI 灾后重建存档（给 Agent）
 
 > **用途**：站点没了、容器重建、或新 Agent 接手时，先读这一份，再动实例。  
+> **GitHub**：几乎仅用于灾后重建（本文件 + SPEC + 脚本）。不是演示库；重建成功不靠截屏。  
 > **探针**：2026-09-01T11:16Z，`https://micropigeon.com`，OWUI **0.11.0**。  
 > **策略**：规格 + 脚本验收 + DB 备份（见 `open-webui-disaster-recovery-rebuild-plan.md`）。**不要**把某一天的 Function 全文当唯一真相。  
 > **密钥不入库**。OpenRouter / TTS / RAG 的 key 由运维注入；本文件只记「已配置」与形状。

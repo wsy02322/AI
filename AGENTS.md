@@ -1,5 +1,7 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
+**GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
+
 灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
 **ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关。不要把两条都写成 ST-11。
@@ -100,6 +102,13 @@
 - 未确认开独立画图 Studio / 蒙版入口（不塞进聊天主路径）
 - 把新家族塞进 picker / public；留下的家族升到 catalog 最新 id，且全部 public
 - 把 Follow-up 关（ST-12）和 Fable 续聊（ST-11）写成同一个 ST 号
+- 把截屏 / 录屏当验收，或把演示媒体塞进 GitHub
 - 新增第二份 Agent 入口（不要再写 `AGENT-ONBOARDING.md`；本文件即入口）
 
 Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
+
+## Cursor Cloud specific instructions
+
+- 本仓库 **几乎仅用于灾后重建**。PR / commit 写规格与可重放脚本；不要为了「给 GitHub 看」去截屏、录屏、堆 walkthrough 媒体。
+- **一般不要截屏或录屏**。现网验收以 `scripts/verify_stack.py` 等脚本 / API 探针为准。
+- 仅在少数情况才截屏或录屏：脚本证明不了用户可见结果（例如纯 CSS/布局），或用户明确要求看画面。
