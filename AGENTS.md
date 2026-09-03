@@ -45,7 +45,7 @@
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
 | `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
-| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
+| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`，并剥掉契约外 `*` read（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/run_ga_a_trial.py` | GA-A：MiniMax TTS vs gpt-audio（不改 Call/public；写 `open-webui-gpt-audio-trial-plan.md` §5） |
 | `scripts/apply_notebook_n1.py` | N1：RAG embedding → OpenRouter、YouTube loader 语言、Knowledge 集合 |
@@ -97,6 +97,8 @@
 - 未确认就把 gpt-audio 或 Realtime 镜像当 Call S2S 落地  
 - 把语音聊天排在屏享之后，或用 rbb L2 的语音收益掩盖持续屏享缺口
 - 未确认装 Tika / 扩 Direct MIME（见 `docs/open-webui-file-ingest-plan.md`）
+- 未确认开独立画图 Studio / 蒙版入口（不塞进聊天主路径）
+- 把新家族塞进 picker / public；只把当前留下的家族升到 catalog 最新 id
 - 把 Follow-up 关（ST-12）和 Fable 续聊（ST-11）写成同一个 ST 号
 - 新增第二份 Agent 入口（不要再写 `AGENT-ONBOARDING.md`；本文件即入口）
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (19 public + extra Gemini)."""
+"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (19 public + extra Gemini).
+
+Kept/public families stay on the newest catalog id. New families stay inactive.
+"""
 
 from __future__ import annotations
 

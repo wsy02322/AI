@@ -34,6 +34,7 @@ from ops_l0_common import (
     st_valves_need_update,
 )
 from stack_contract import PUBLIC_MODEL_IDS
+from restore_public_grants import strip_non_public_star
 
 PUBLIC_GRANT = {"principal_type": "user", "principal_id": "*", "permission": "read"}
 
@@ -163,6 +164,10 @@ def main() -> int:
         return 1
 
     ensure_public_grants(h)
+    stripped_errors = strip_non_public_star(h)
+    if stripped_errors:
+        print(f"ERR stripped extra public grants failed: {stripped_errors}")
+        return 1
     print("apply_ops_l0: done")
     return 0
 

@@ -194,7 +194,7 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 
 运行 `scripts/verify_stack.py`（以及 ops/live/compare/notebook 按 archive §5）：  
 - 以 **SPEC 现行 ST/UX** 为准，不是本文件 §2 旧编号  
-- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 按 archive §3.6：21 = 19 public + 2 Gemini  
+- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 按 archive §3.6：21 = 19 public + 2 Gemini（最新 id；extra 非 public）  
 - 全绿 = 重建完成；**不必** 与历史快照 diff  
 
 ---

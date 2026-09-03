@@ -35,8 +35,10 @@ IMAGE_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
+# Picker policy: kept/public families stay on the newest catalog id; new families
+# do not join picker or the 19 public list. Verify extra * read, not only the 19.
 PUBLIC_MODEL_IDS = [
-    f"{PIPE}.anthropic.claude-fable-5",
+    f"{PIPE}.anthropic.claude-fable-5.1",
     f"{PIPE}.anthropic.claude-opus-5",
     f"{PIPE}.bytedance-seed.seedream-5-0-lite",
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
@@ -57,13 +59,19 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
-# Extra picker models (user 2026-09-01): keep Gemini; not added to the 19 public list.
+# Extra picker models: latest of the kept Gemini lines; not added to the 19 public list.
 EXTRA_ACTIVE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3.1-pro-preview",
+    f"{PIPE}.google.gemini-3.8-flash",
+]
+
+# Previous latest ids of kept families. Stay inactive; strip leftover * read.
+RETIRED_MODEL_IDS = [
+    f"{PIPE}.anthropic.claude-fable-5",
     f"{PIPE}.google.gemini-3.7-flash",
 ]
 
-# Runtime picker: 19 public + extra Gemini. Granite / Mercury stay inactive.
+# Runtime picker: 19 public + extra Gemini. Granite / Mercury / new families stay inactive.
 ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [

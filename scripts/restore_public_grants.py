@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Recreate the 19 public model rows + access_grants after a catalog wipe.
 
+Also strips leftover `*` read from extra / retired / non-public picker rows
+so verify_stack does not miss a 21st public model.
+
 Does NOT call POST /api/v1/models/sync (empty sync deletes every DB model).
 Requires the Pipe catalog to already be visible on GET /api/models.
 """
@@ -14,7 +17,7 @@ import time
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import PUBLIC_MODEL_IDS
+from stack_contract import EXTRA_ACTIVE_MODEL_IDS, PUBLIC_MODEL_IDS, RETIRED_MODEL_IDS
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
@@ -57,8 +60,44 @@ def is_public(grants: list) -> bool:
     )
 
 
-def main() -> int:
-    h = headers(signin())
+def _get_model(h: dict[str, str], model_id: str) -> tuple[int, dict | None]:
+    for attempt in range(4):
+        resp = requests.get(
+            f"{OPENWEBUI_URL}/api/v1/models/model",
+            headers=h,
+            params={"id": model_id},
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            return 200, resp.json()
+        if resp.status_code == 404:
+            return 404, None
+        if resp.status_code == 429:
+            time.sleep(4 * (attempt + 1))
+            continue
+        return resp.status_code, None
+    return 429, None
+
+
+def _access_update(h: dict[str, str], model_id: str, name: str, grants: list) -> tuple[int, dict | None]:
+    payload = {"id": model_id, "name": name or model_id, "access_grants": grants}
+    for attempt in range(4):
+        resp = requests.post(
+            f"{OPENWEBUI_URL}/api/v1/models/model/access/update",
+            headers=h,
+            json=payload,
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            return 200, resp.json()
+        if resp.status_code == 429:
+            time.sleep(4 * (attempt + 1))
+            continue
+        return resp.status_code, None
+    return 429, None
+
+
+def grant_public(h: dict[str, str]) -> int:
     listed = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=120).json().get("data") or []
     by_id = {m["id"]: m for m in listed}
     print(f"runtime catalog {len(listed)}")
@@ -66,28 +105,65 @@ def main() -> int:
     for model_id in PUBLIC_MODEL_IDS:
         model = by_id.get(model_id)
         if not model:
-            print(f"ERR missing in catalog {model_id}")
-            errors += 1
-            continue
-        resp = requests.post(
-            f"{OPENWEBUI_URL}/api/v1/models/model/access/update",
-            headers=h,
-            json={
-                "id": model_id,
-                "name": model.get("name") or model_id,
-                "access_grants": [PUBLIC_GRANT],
-            },
-            timeout=30,
+            status, detail = _get_model(h, model_id)
+            if status != 200 or not detail:
+                print(f"ERR missing in catalog {model_id}")
+                errors += 1
+                continue
+            model = detail
+        status, body = _access_update(
+            h, model_id, model.get("name") or model_id, [PUBLIC_GRANT]
         )
-        if resp.status_code != 200:
-            print(f"ERR grant {model_id} {resp.status_code} {resp.text[:200]}")
+        if status != 200 or not body:
+            print(f"ERR grant {model_id} {status}")
             errors += 1
             continue
-        if not is_public(resp.json().get("access_grants") or []):
+        if not is_public(body.get("access_grants") or []):
             print(f"ERR not public after grant {model_id}")
             errors += 1
             continue
         print(f"OK public {model.get('name')}")
+    return errors
+
+
+def strip_non_public_star(h: dict[str, str]) -> int:
+    listed = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=120).json().get("data") or []
+    inspect = {m["id"] for m in listed}
+    inspect.update(EXTRA_ACTIVE_MODEL_IDS)
+    inspect.update(RETIRED_MODEL_IDS)
+    public_set = set(PUBLIC_MODEL_IDS)
+    errors = 0
+    stripped = 0
+    for model_id in sorted(inspect):
+        if model_id in public_set:
+            continue
+        status, model = _get_model(h, model_id)
+        if status == 404:
+            continue
+        if status != 200 or not model:
+            print(f"ERR get {model_id} {status}")
+            errors += 1
+            continue
+        if not is_public(model.get("access_grants") or []):
+            continue
+        status, body = _access_update(h, model_id, model.get("name") or model_id, [])
+        if status != 200 or not body:
+            print(f"ERR strip {model_id} {status}")
+            errors += 1
+            continue
+        if is_public(body.get("access_grants") or []):
+            print(f"ERR still public after strip {model_id}")
+            errors += 1
+            continue
+        stripped += 1
+        print(f"OK stripped * {model.get('name')}")
+    print(f"stripped extra public grants: {stripped}")
+    return errors
+
+
+def main() -> int:
+    h = headers(signin())
+    errors = grant_public(h) + strip_non_public_star(h)
     if errors:
         print(f"restore errors: {errors}")
         return 1

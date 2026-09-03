@@ -20,6 +20,7 @@ from stack_contract import (
     DEFAULT_MODELS,
     DETACH_FILTERS,
     DISABLED_FILTERS,
+    EXTRA_ACTIVE_MODEL_IDS,
     GUARDS,
     IMAGE_MODEL_IDS,
     PINNED_MODELS,
@@ -27,6 +28,7 @@ from stack_contract import (
     PIPE_PATCH_MARKERS,
     PIPE_VALVES_FALSE,
     PUBLIC_MODEL_IDS,
+    RETIRED_MODEL_IDS,
     SONAR_MODEL_IDS,
     SUGGESTIONS_COUNT,
     TASK_FOLLOW_UP_ENABLE,
@@ -258,6 +260,28 @@ def verify(h: dict[str, str]) -> int:
         missing = set(PUBLIC_MODEL_IDS) - public_found
         if missing:
             r.err(f"public missing {sorted(missing)}")
+
+    extra_public: list[str] = []
+    inspect = set(listed_ids) | set(EXTRA_ACTIVE_MODEL_IDS) | set(RETIRED_MODEL_IDS)
+    inspect -= set(PUBLIC_MODEL_IDS)
+    for mid in sorted(inspect):
+        detail = requests.get(
+            f"{OPENWEBUI_URL}/api/v1/models/model",
+            headers=h,
+            params={"id": mid},
+            timeout=30,
+        )
+        if detail.status_code == 404:
+            continue
+        if detail.status_code != 200:
+            r.err(f"extra-public get fail {mid} {detail.status_code}")
+            continue
+        if is_public(detail.json().get("access_grants") or []):
+            extra_public.append(mid)
+    if extra_public:
+        r.err(f"extra public {extra_public}")
+    else:
+        r.ok("no extra public grants")
 
     if SMOKE:
         for mid, label in (

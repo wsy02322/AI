@@ -81,7 +81,7 @@
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker = **19 public** + `gemini-3.1-pro-preview` / `gemini-3.7-flash`。
+**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker = **19 public** + `gemini-3.1-pro-preview` / `gemini-3.8-flash`（extra 非 public；只跟已留家族最新 id）。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -223,7 +223,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | 模型 id 后缀 | 备注 |
 |-------------|------|
-| `anthropic.claude-fable-5` | 文本 |
+| `anthropic.claude-fable-5.1` | 文本 |
 | `anthropic.claude-opus-5` | 文本旗舰 |
 | `deepseek.deepseek-v4-pro-0813` | 文本 |
 | `moonshotai.kimi-k3` | 文本 |

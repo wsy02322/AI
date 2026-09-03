@@ -39,7 +39,7 @@
 | 聊天 / 推理 | **Grok 4.6** 默认；Sol Pro / Opus 等 public | **维持**。Reasoning depth 走 Valves（Banner 提示） |
 | 快搜 / 深研 | 两档 Sonar public | **维持**。不重开 Web Tools / 原生 Web Search |
 | 作图 | 9 个图像模型 public；切模型即作图；全局 Image Gen **关** | **P0-A**：维持为主路径（见 §2） |
-| 文件上传 | Direct Uploads（默认关；Tika T0 未确认） | **维持**。见 `open-webui-file-ingest-plan.md` |
+| 文件上传 | Direct Uploads（默认关；Tika T0 未确认） | **Later**：对标官网最高档。见 `open-webui-file-ingest-plan.md`。未确认不装 Tika / 不扩 MIME |
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；`verify_stack.py` 已落地 |
 | 英文指引 | **一条** `usage-guide-v3` + Description；**0** chips | **维持现网**；不要写回双条 v2 / 4 chips |
@@ -55,12 +55,14 @@
 | **Slides** | 无产品契约 | 单独表面（Notes / 专用流程），**不要**给聊天模型再挂一套会 404 的 tool。可与 Notebook Studio 产物衔接，但 W2 仍单独确认 |
 | 多轮图像连续性 | 有漂移 | P0-A 增强；仅当 verify 已稳定、且补丁能跟着 Pipe 更新走，才考虑轻量 preserve |
 | 语音 STT/TTS | MiniMax + Whisper 已配 | Live L1 保留。Audio Overview **另测**，不默认够用 |
+| **文件上传对标官网最高档** | Direct + 内置抽取；Tika T0 未确认 | 见 `open-webui-file-ingest-plan.md`。未确认不装 Tika / 不扩 Direct MIME / 不改 Pipe |
+| **独立顶级画图 Studio** | 聊天路线 S；无蒙版 | 含蒙版 inpainting 等。独立产品，不塞进聊天主路径。须单独 plan 确认后再改入口。ComfyUI 不是默认实现 |
 
 ### 1.3 Don't（当前与后续都默认不做，除非三条要求改写）
 
 | 项 | 原因 |
 |----|------|
-| ComfyUI / 蒙版 inpainting | 过复杂 |
+| ComfyUI | 过复杂；仅当独立画图 Studio 方案明确选它才再议 |
 | 第二套 Pipe / Workspace 包装 | 冲突 |
 | 重开 OR Web Tools / 原生 Web Search | 已证不稳定 |
 | 466 模型全部 public | 摧毁简单 |

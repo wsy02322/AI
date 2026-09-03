@@ -14,7 +14,7 @@
 | Banner | **一条** `usage-guide-v3`（不可 dismiss） |
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
-| 上次 `verify_stack.py` | **2026-09-01**：Banner v3、chips=0、Follow-up 关、Fable marker、19 public。picker 契约改为 **21**（保留 `gemini-3.1-pro-preview` / `gemini-3.7-flash`；去掉 Granite / Mercury） |
+| 上次 `verify_stack.py` | **2026-09-03**：Banner v3、chips=0、Follow-up 关、Fable marker、19 public（`claude-fable-5.1`）。picker **21**（`gemini-3.1-pro-preview` / `gemini-3.8-flash`，extra 非 public）。旧 `claude-fable-5` / `gemini-3.7-flash` 及新家族不在 picker |
 | 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**；STT whisper-large-v3-turbo 可用 |
 | 上次 GA-A `run_ga_a_trial.py` | **2026-08-21**：MiniMax MP3 31149 B / 1.62s 整段；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）；§1 仅关闭问题 3 |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
