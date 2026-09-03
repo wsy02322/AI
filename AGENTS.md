@@ -2,7 +2,7 @@
 
 灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关。不要把两条都写成 ST-11。
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-13** = 生成图落盘为 file URL（`docs/open-webui-image-data-uri-persist-plan.md`，**待确认未执行**）。不要复用号。
 
 ## 宪法（所有动作）
 

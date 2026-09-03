@@ -19,6 +19,7 @@ Open WebUI + OpenRouter。生产：`https://micropigeon.com`。
 - `docs/open-webui-notebook-youtube-plan.md` — **P0-D** Notebook / YouTube（N1 已执行；口播受 YouTube 风控）
 - `docs/open-webui-live-voice-screen-plan.md` — **P0-B/P0-C** Live（L1 已落地；`verify_live_baseline.py` 已有）
 - `docs/open-webui-openrouter-image-continuity-plan.md` — 图像能力、错误与补丁历史
+- `docs/open-webui-image-data-uri-persist-plan.md` — **ST-13** 生成图落盘（待确认，未执行）
 - `docs/open-webui-compare-first-class-plan.md` — 多模型对比（确认前不改实例）
 - `docs/open-webui-gpt-audio-trial-plan.md` — gpt-audio GA-A 已执行（改 Call 仍为 Don't）
 - `docs/open-webui-file-ingest-plan.md` — 文件录入（T0 未确认，不装 Tika）

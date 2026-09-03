@@ -235,6 +235,8 @@ Pipe 默认将纯图像模型设为仅管理员可见；上述 7 个模型已显
 1. 新建全局 Filter `openrouter_image_context_guard`（已启用）：仅保留「当前用户消息 + 紧邻上一轮 assistant 图」，其余历史图片替换为占位文本。
 2. Pipe 补丁 `apply_chat_context_transforms`：在 `/chat/completions` 路径自动加 `transforms: ["middle-out"]` 与 `context-compression` 插件。
 
+**2026-09-03 复发，上述两条挡不住**：`_materialize_image_entry` 的 dict-url 分支不落盘，Qwen Image 3 Pro 的生成图以 5.4MB `data:image` markdown 进了助手消息；Guard 按设计**保留**这张画布，middle-out 也保最近几轮 → 约 130 万文本 token → Nano Banana 2 报 400。根因与方案见 **`docs/open-webui-image-data-uri-persist-plan.md`（ST-13，待确认未执行）**。
+
 ### 待处理
 - **Reve 2.1**：当前 OpenRouter Pipe 目录中无此模型（Reve 主要在 fal.ai）；若需接入需单独集成。
 - **MAI-Image-2.6**：OpenRouter 仅有 `mai-image-2.5` / `mai-image-2.5-pro`，已用 Pro 替代测试并开放。
