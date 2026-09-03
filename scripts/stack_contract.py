@@ -98,7 +98,13 @@ PIPE_PATCH_MARKERS = [
     "apply_chat_context_transforms",
     "COMPARE_CROSS_MODEL_REASONING_V1",
     "FABLE_UNSIGNED_SUMMARY_V1",
+    "IMAGE_DATA_URI_PERSIST_V1",
 ]
+
+# ST-13 backstop lives on the image context guard, not the pipe.
+GUARD_PATCH_MARKERS = {
+    "openrouter_image_context_guard": "IMAGE_CONTEXT_DATA_URI_CAP_V1",
+}
 
 # Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
 BANNER_IDS = ["usage-guide-v3"]
