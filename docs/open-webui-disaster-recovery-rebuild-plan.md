@@ -1,6 +1,7 @@
 # Open WebUI 灾备与重建 — 重规划（规格驱动）
 
 > **状态**：方案三 **已作为正式策略**。现网钉子与重建步骤见 **`docs/open-webui-rebuild-archive.md`**（探针 2026-09-01）。  
+> **GitHub**：几乎仅用于灾后重建（规格 + 脚本 + 钉子）。自动验收是客观依据，不是截屏。  
 > **最后更新**：2026-09-01  
 > **核心转变**：不追求复刻某一天的 **代码与配置字节**，而追求在任何合理新版本上 **复现同一套能力与体验**。  
 > **关联**：`open-webui-rebuild-archive.md`（Agent 入口）、`open-webui-openrouter-image-continuity-plan.md`、`open-webui-user-guidance-plan.md`
@@ -194,7 +195,7 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 
 运行 `scripts/verify_stack.py`（以及 ops/live/compare/notebook 按 archive §5）：  
 - 以 **SPEC 现行 ST/UX** 为准，不是本文件 §2 旧编号  
-- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 按 archive §3.6：21 = 19 public + 2 Gemini  
+- Banner 契约 = `usage-guide-v3`；`verify_stack` 已对齐。picker 按 archive §3.6：21 public（留下家族最新 id）  
 - 全绿 = 重建完成；**不必** 与历史快照 diff  
 
 ---

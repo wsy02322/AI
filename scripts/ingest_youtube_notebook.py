@@ -26,7 +26,7 @@ from stack_contract import NOTEBOOK_KNOWLEDGE_NAME
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
-VISION_MODEL = os.environ.get("NOTEBOOK_VISION_MODEL", "google/gemini-3.7-flash")
+VISION_MODEL = os.environ.get("NOTEBOOK_VISION_MODEL", "google/gemini-3.8-flash")
 MAX_FRAMES = int(os.environ.get("NOTEBOOK_MAX_FRAMES", "6"))
 YOUTUBE_ID_RE = re.compile(r"(?:v=|/shorts/|/embed/|youtu\.be/)([A-Za-z0-9_-]{11})")
 

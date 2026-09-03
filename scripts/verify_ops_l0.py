@@ -19,7 +19,7 @@ from ops_l0_common import (
     headers,
     signin,
 )
-from stack_contract import PUBLIC_MODEL_IDS
+from stack_contract import EXTRA_ACTIVE_MODEL_IDS, PUBLIC_MODEL_IDS, RETIRED_MODEL_IDS
 
 
 class Report:
@@ -86,6 +86,27 @@ def main() -> int:
             r.err(f"not public {mid}")
     if public == len(PUBLIC_MODEL_IDS):
         r.ok(f"public {public}")
+
+    leaked = []
+    for mid in list(EXTRA_ACTIVE_MODEL_IDS) + list(RETIRED_MODEL_IDS):
+        detail = requests.get(
+            f"{OPENWEBUI_URL}/api/v1/models/model",
+            headers=h,
+            params={"id": mid},
+            timeout=30,
+        )
+        if detail.status_code == 404:
+            continue
+        if detail.status_code != 200:
+            r.err(f"extra-public get fail {mid} {detail.status_code}")
+            continue
+        grants = detail.json().get("access_grants") or []
+        if any(g.get("principal_id") == "*" and g.get("permission") == "read" for g in grants):
+            leaked.append(mid)
+    if leaked:
+        r.err(f"extra public {leaked}")
+    else:
+        r.ok("no extra public grants")
 
     print(f"\nverify_ops_l0: {len(r.oks)} ok, {len(r.errors)} err")
     for e in r.errors:

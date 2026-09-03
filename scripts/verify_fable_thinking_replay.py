@@ -16,7 +16,7 @@ from stack_contract import PIPE
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
-FABLE_MODEL = f"{PIPE}.anthropic.claude-fable-5"
+FABLE_MODEL = f"{PIPE}.anthropic.claude-fable-5.1"
 
 
 def _login_candidates() -> list[str]:
