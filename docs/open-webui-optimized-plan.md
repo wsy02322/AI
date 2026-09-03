@@ -3,7 +3,7 @@
 > **状态**：Wave 0 **已应用到实例**。**P0 四条并列已写入契约**。P0-D **N1 已落地**（RAG + 视觉时间线；口播受 YouTube 风控）。现网 UX：一条 `usage-guide-v3`、空 chips、Follow-up 关（见 `open-webui-rebuild-archive.md`）。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。
 > **日期**：2026-09-01（路线仍以 2026-08-21 拍板为准；UX/Task 钉子已按现网改）  
 > **宪法**：（1）顶级为目标；难则顶级与略降级一并提案、确认再选；（2）简单稳定易维护；（3）重大改动主动 plan/提案，确认后再执行（讨论≠执行）。  
-> **用户约束**：维持 **19 个 public**；**P0-A 图像、P0-B 语音聊天、P0-C 屏享、P0-D Notebook/YouTube** 同为最高优先级；语音和屏享都受宪法复杂度确认门约束；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
+> **用户约束**：维持 **21 个 public**（留下家族最新 id）；**P0-A 图像、P0-B 语音聊天、P0-C 屏享、P0-D Notebook/YouTube** 同为最高优先级；语音和屏享都受宪法复杂度确认门约束；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
 
 ---
 
@@ -40,7 +40,7 @@
 | 快搜 / 深研 | 两档 Sonar public | **维持**。不重开 Web Tools / 原生 Web Search |
 | 作图 | 9 个图像模型 public；切模型即作图；全局 Image Gen **关** | **P0-A**：维持为主路径（见 §2） |
 | 文件上传 | Direct Uploads（默认关；Tika T0 未确认） | **Later**：对标官网最高档。见 `open-webui-file-ingest-plan.md`。未确认不装 Tika / 不扩 MIME |
-| 模型对比 | **19 public** | **维持 19**，不收到 6 |
+| 模型对比 | **21 public** | **维持留下的家族**，不收到 6、不扩新家族 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；`verify_stack.py` 已落地 |
 | 英文指引 | **一条** `usage-guide-v3` + Description；**0** chips | **维持现网**；不要写回双条 v2 / 4 chips |
 
@@ -129,17 +129,17 @@
 
 ---
 
-## 3. 19 个 public：维持，并当产品资产
+## 3. 21 个 public：维持留下的家族，并当产品资产
 
-不缩名单。用法：
+不缩名单、不扩新家族。用法：
 
 | 角色 | 模型 |
 |------|------|
-| 默认 / 对比锚 | Sol Pro；Opus、Sol、Grok 4.6、Kimi、DeepSeek、Qwen Max、Fable 等文本 |
+| 默认 / 对比锚 | Sol Pro；Opus、Sol、Grok 4.6、Kimi、DeepSeek、Qwen Max、Fable、Gemini 3.1 Pro Preview / 3.8 Flash 等文本 |
 | 搜索两档 | Sonar Pro Search / Deep Research |
 | 作图对比 | Banana Pro/2、GPT Image 2、GPT-5.4 Image 2、Seedream Pro/Lite、MAI、Qwen Image、Grok Imagine |
 
-指引继续以四格为 **入门捷径**（Banner），19 个为 **对比清单**。不要把 Banner 改成「只有四个能用」。
+指引继续以四格为 **入门捷径**（Banner），21 个为 **对比清单**。不要把 Banner 改成「只有四个能用」。
 
 后续视频 public 时：**少量旗舰加入对比清单**，不要一次 24 个。
 
@@ -222,7 +222,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 
 **现在（Wave 0 后）**
 
-- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；19 public 仍在；picker = 19 public + 两个 extra Gemini  
+- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；**21 public** = picker  
 - Sonar / 图像无 tool 404；Integrations 仍无 Web Tools / Image Gen / Web Search  
 - `verify_stack` 可重复跑绿  
 

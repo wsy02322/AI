@@ -28,7 +28,7 @@
 | `webui.db` / data volume（聊天、Knowledge 文件、用户） | **必须从备份还原**。脚本重建不出聊天记录 |
 | OpenRouter API key | 控制台重开，**merge** 进 Pipe `API_KEY`（明文输入；保存后 DB 常为 `encrypted:`） |
 | JWT / 登录态 | **不必备份**。L0：`WEBUI_SECRET_KEY=""`，重建后 **用户重登** |
-| Pipe / Guard / 19 public / Banner / Task | 本仓库脚本可重放 |
+| Pipe / Guard / 21 public / Banner / Task | 本仓库脚本可重放 |
 | 某一版 Pipe `content` 全文 | 一般不还原旧 blob；装**当时**上游 Pipe，再按 §5 打补丁与 merge valves |
 
 备份口令（运维，不进 git）：升配 / 换镜像 / 大改前复制 `webui.db`。例：`/root/backups/webui-valves-fix-20260821-154729.db`。
@@ -134,26 +134,23 @@
 
 Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
-### 3.5 19 个 public（契约；id 前缀皆 `open_webui_openrouter_integration.`）
+### 3.5 21 个 public（契约；id 前缀皆 `open_webui_openrouter_integration.`）
 
-与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。现网这 19 个 **均 public + is_active**。
+与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。现网这 21 个 **均 public + is_active**。picker = 这 21 个。
 
-聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5.1`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max`  
+聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5.1`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max`、`google.gemini-3.1-pro-preview`、`google.gemini-3.8-flash`  
 搜索：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`  
 图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
 
 Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 
-### 3.6 Picker（19 public + 2 Gemini；只跟已留家族的最新 id）
+### 3.6 Picker（= 21 public；只跟已留家族的最新 id）
 
-`GET /api/models` 应为 **21**：`PUBLIC_MODEL_IDS`（19）加：
-
-- `google.gemini-3.1-pro-preview` — **保留** active；**不**在 19 public 名单（grants 为空，管理员可见）  
-- `google.gemini-3.8-flash` — **保留** active；**不**并进 19 名单；**剥掉** `*` read（对齐 3.1-pro-preview）
+`GET /api/models` 应为 **21**：与 `PUBLIC_MODEL_IDS` 相同。两条 Gemini 也是 public（不是管理员专属）。
 
 **去除（is_active=false）**：旧 id `claude-fable-5`、`gemini-3.7-flash`；`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`；以及新出现的家族（现网曾漂过：`inclusionai.ling-3.0-flash-fin`、`meta.muse-spark-1.3`、`meta.muse-spark-1.3-contributor`、`minimax.hailuo-3-max`、`~z-ai.glm-flash-latest`）。契约外模型若带 `*` read，跑 `restore_public_grants.py` 剥掉。
 
-灾后跑 `apply_model_catalog_visibility.py`（按 `ACTIVE_MODEL_IDS`，不是只留 19），再跑 `restore_public_grants.py`（19 public + 剥额外 `*`）。不要把 extra Gemini 写成已批准扩编 public。不要把新家族塞进 picker。
+灾后跑 `apply_model_catalog_visibility.py`（按 `ACTIVE_MODEL_IDS`），再跑 `restore_public_grants.py`（21 public + 剥额外 `*`）。不要把新家族塞进 picker。
 
 ### 3.7 Knowledge
 
@@ -176,7 +173,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Banner | 一条 `usage-guide-v3` | 一条 `usage-guide-v3` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
-| Picker | 21（19 public + 2 Gemini 最新 id） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（剥额外 `*`）；新家族关掉 |
+| Picker | 21 public（留下家族最新 id） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（21 public + 剥额外 `*`）；新家族关掉 |
 | Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
@@ -195,7 +192,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 4. 确认 3 个 Guard global active；web_tools / image_gen **inactive**。  
 5. `python3 scripts/apply_plan_a_hide_integrations.py`  
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
-7. `python3 scripts/apply_model_catalog_visibility.py`（21 = 19 public + 2 Gemini）  
+7. `python3 scripts/apply_model_catalog_visibility.py`（21 public）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
@@ -238,6 +235,6 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | `AGENTS.md` | 日常操作禁令与脚本表 |
 | `docs/open-webui-delta-vs-stock.md` | 相对官方差异长表（部分日期早于本快照） |
 | `docs/open-webui-disaster-recovery-rebuild-plan.md` | 为何不靠全量快照 |
-| `scripts/stack_contract.py` | 19 public / picker 21（+2 Gemini）/ Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
+| `scripts/stack_contract.py` | 21 public = picker / Guard / Task / Banner v3 / Follow-up 关 / Fable marker |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认，重建时不要顺便装 Tika） |
 | `docs/VERSIONS.md` | 上次验收指纹（重建后重填） |

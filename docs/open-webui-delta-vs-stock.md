@@ -81,7 +81,7 @@
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker = **19 public** + `gemini-3.1-pro-preview` / `gemini-3.8-flash`（extra 非 public；只跟已留家族最新 id）。
+**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker = **21 public**（含 `gemini-3.1-pro-preview` / `gemini-3.8-flash`；只跟已留家族最新 id）。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -217,7 +217,7 @@
 | Chat / 推理 | GPT-5.6 Sol Pro、Claude Opus 5 | `…openai.gpt-5.6-sol-pro`、`…anthropic.claude-opus-5` |
 | Images | Nano Banana Pro、GPT Image 2 等 | 见 §6.2 |
 
-### 6.2 全员可读（public）模型 — 19 个
+### 6.2 全员可读（public）模型 — 21 个
 
 Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants: principal_id=* read`（2026-08-20）：
 
@@ -235,6 +235,8 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `x-ai.grok-4.6` | 文本 |
 | `google.gemini-3-pro-image` | Nano Banana Pro |
 | `google.gemini-3.1-flash-image` | Nano Banana 2 |
+| `google.gemini-3.1-pro-preview` | 文本 / vision |
+| `google.gemini-3.8-flash` | 文本 / vision |
 | `openai.gpt-image-2` | 图像 |
 | `openai.gpt-5.4-image-2` | 图像 |
 | `bytedance-seed.seedream-5-0-pro` / `lite` | Seedream 5 |
@@ -324,7 +326,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `scripts/apply_plan_a_hide_integrations.py` | 方案 A 一键：Valves merge、停用 Filter、剥模型 filterIds、关原生 Web Search |
 | `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + 一条 `usage-guide-v3` + Description + **空** chips |
 | `scripts/apply_wave0.py` | capabilities + Task=Grok 4.6 + Follow-up 关 + 全局 Image Gen 关 |
-| `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public |
+| `scripts/restore_public_grants.py` | catalog 恢复后重建 21 public |
 | `scripts/verify_stack.py` | Wave 0 契约验收 |
 | `scripts/verify_live_baseline.py` | L1 STT/TTS + 屏享指引验收 |
 | `scripts/patch_pipe_fable_thinking_replay.py` | ST-11 Fable unsigned thinking |
@@ -387,7 +389,7 @@ Stock OWUI 0.11.0
     ├─ − Direct Connections OFF
     ├─ − 全部 OpenAI 兼容槽禁用（5 槽全 disable）
     ├─ WEBUI_URL=https://micropigeon.com
-    ├─ 19 public 模型 + 4 置顶 + 英文 Description
+    ├─ 21 public 模型 + 4 置顶 + 英文 Description
     ├─ 1 条常驻英文 Banner（usage-guide-v3）；空对话 chips=0；Follow-up 关
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay

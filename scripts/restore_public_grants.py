@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recreate the 19 public model rows + access_grants after a catalog wipe.
+"""Recreate the public model rows + access_grants after a catalog wipe.
 
 Also strips leftover `*` read from extra / retired / non-public picker rows
 so verify_stack does not miss a 21st public model.
