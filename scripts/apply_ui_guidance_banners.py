@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Apply prominent English in-app guidance (banners, descriptions, prompt chips)."""
+"""Apply prominent English in-app guidance (banners, descriptions).
+
+Empty-chat Suggested chips are cleared: OWUI always auto-sends on click,
+so they are a misfire surface, not hints. Banners + descriptions stay.
+"""
 
 from __future__ import annotations
 
@@ -17,61 +21,28 @@ PIPE = "open_webui_openrouter_integration"
 
 BANNERS = [
     {
-        "id": "usage-pick-model-v2",
+        "id": "usage-guide-v3",
         "type": "info",
-        "title": "Pick the right model — this is the main quality switch",
+        "title": "",
         "content": (
-            '<div style="background:#eff6ff;color:#1e3a8a;border:1px solid #93c5fd;'
-            "border-left:6px solid #2563eb;border-radius:12px;padding:10px 14px;"
-            'line-height:1.35;display:block;width:100%;box-sizing:border-box;">'
-            '<span style="display:inline-flex;background:#2563eb;color:#fff;padding:1px 8px;'
-            'border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;">'
-            "PICK A MODEL</span> "
-            "<b>Chat</b> GPT-5.6 Sol Pro or Claude Opus 5 · "
-            "<b>Quick search</b> Sonar Pro Search · "
-            "<b>Deep report</b> Sonar Deep Research (2–10 min, keep this tab open) · "
-            "<b>Images</b> switch to Nano Banana Pro or GPT Image 2 first<br>"
-            "<b>Voice / screen share</b> pick Grok 4.6 or a Gemini vision model first "
-            "(not Sonar, not an image-only model). "
-            "<b>Notebook / YouTube</b> Workspace → Knowledge (your sources, with timestamps). "
-            "Web search stays Sonar — do not mix. "
-            "Do not use Sonar for everyday chat. Do not ask a chat model to draw."
-            "</div>"
+            "<b>Web search only on Perplexity Sonar. Images only on an image model.</b> "
+            "<b>Reasoning depth</b>: Input box → <b>Valves</b>. "
+            "<b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1787100000,
-    },
-    {
-        "id": "usage-reasoning-depth-v2",
-        "type": "warning",
-        "title": "Turn up Reasoning depth for hard work",
-        "content": (
-            '<div style="background:#fff7ed;color:#9a3412;border:1px solid #fdba74;'
-            "border-left:6px solid #ea580c;border-radius:12px;padding:10px 14px;"
-            'line-height:1.35;display:block;width:100%;box-sizing:border-box;">'
-            '<span style="display:inline-flex;background:#ea580c;color:#fff;padding:1px 8px;'
-            'border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;">'
-            "REASONING DEPTH</span> "
-            "Input box → <b>Valves</b> → <b>Reasoning depth</b>: "
-            "use <b>high</b> or <b>xhigh</b> for code, long analysis, and multi-step problems. "
-            "Use <b>low</b> / <b>medium</b> for short or simple tasks (faster). "
-            "This often changes quality more than switching between Sol Pro and Opus."
-            "</div>"
-        ),
-        "dismissible": False,
-        "timestamp": 1787100001,
+        "timestamp": 1787100005,
     },
 ]
 
 DESCRIPTIONS = {
     f"{PIPE}.x-ai.grok-4.6": (
-        "DEFAULT CHAT default. Vision-capable — pick this or Gemini before Voice / screen share. Use Compare to add a second model. Raise Reasoning depth for hard problems."
+        "DEFAULT CHAT. Use Compare to add a second model. Raise Reasoning depth for hard problems."
     ),
     f"{PIPE}.perplexity.sonar-pro-search": (
-        "QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
+        "PERPLEXITY is the only model with live web search. QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
     ),
     f"{PIPE}.perplexity.sonar-deep-research": (
-        "DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models."
+        "PERPLEXITY is the only model with live web search. DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models."
     ),
     f"{PIPE}.openai.gpt-5.6-sol-pro": (
         "DEFAULT CHAT and hard reasoning. For difficult tasks: Valves → Reasoning depth → high or xhigh. Not live web search."
@@ -90,36 +61,8 @@ DESCRIPTIONS = {
     ),
 }
 
-SUGGESTIONS = [
-    {
-        "title": ["Message me on WeChat @dalapi", "Let's improve this together"],
-        "content": (
-            "Message me on WeChat @dalapi — let's improve this together. "
-            "Tell me one thing that confused you or one feature you'd like to see."
-        ),
-    },
-    {
-        "title": ["Deep report", "Select Sonar Deep Research first"],
-        "content": (
-            "After you select Perplexity: Sonar Deep Research, write a sourced industry brief on "
-            "the latest foundation-model landscape. Keep this tab open; it can take 2–10 minutes."
-        ),
-    },
-    {
-        "title": ["Images", "Select Nano Banana Pro first"],
-        "content": (
-            "After you select Google: Nano Banana Pro (Gemini 3 Pro Image), generate a clean product "
-            "render of a ceramic coffee mug on a white background."
-        ),
-    },
-    {
-        "title": ["Hard reasoning", "Set Reasoning depth to xhigh"],
-        "content": (
-            "On GPT-5.6 Sol Pro or Claude Opus 5, set input-box Valves → Reasoning depth to xhigh, "
-            "then explain a multi-step strategy for evaluating two competing research papers."
-        ),
-    },
-]
+# OWUI Suggested chips always submit on click. Clear them; banners carry the hints.
+SUGGESTIONS: list[dict] = []
 
 
 def signin() -> str:
@@ -207,6 +150,9 @@ def set_descriptions(h: dict[str, str]) -> None:
             continue
         model = detail.json()
         meta = dict(model.get("meta") or {})
+        if meta.get("description") == description:
+            print(f"desc {model.get('name')}: unchanged")
+            continue
         meta["description"] = description
         payload = {
             "id": model["id"],
@@ -235,8 +181,11 @@ def verify(h: dict[str, str]) -> int:
     ).json().get("ui.prompt_suggestions") or []
     ids = [b.get("id") for b in banners]
     print("verify banners", ids)
-    if "usage-pick-model-v2" not in ids or "usage-reasoning-depth-v2" not in ids:
-        print("ERROR missing banners")
+    if len(banners) != 1 or "usage-guide-v3" not in ids:
+        print("ERROR want single usage-guide-v3 banner")
+        errors += 1
+    if any(bid in ids for bid in ("usage-pick-model-v2", "usage-reasoning-depth-v2")):
+        print("ERROR legacy dual banners still present")
         errors += 1
     old = [b for b in banners if "resoning" in str(b.get("content") or "").lower()]
     if old:
@@ -247,14 +196,49 @@ def verify(h: dict[str, str]) -> int:
         text = f"{b.get('title')} {b.get('content')}"
         if any("\u4e00" <= ch <= "\u9fff" for ch in text):
             chinese += 1
-    for s in suggestions:
-        text = " ".join(s.get("title") or []) + " " + str(s.get("content") or "")
-        if any("\u4e00" <= ch <= "\u9fff" for ch in text):
-            chinese += 1
     if chinese:
         print(f"ERROR Chinese in user-facing copy: {chinese}")
         errors += 1
-    print(f"suggestions count {len(suggestions)}")
+    if suggestions:
+        print(f"ERROR suggestions still present: {len(suggestions)}")
+        errors += 1
+    else:
+        print("ok suggestions empty")
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v3"), {})
+    guide_html = str(guide.get("content") or "")
+    if "Web search only on Perplexity Sonar" not in guide_html:
+        print("ERROR guide banner missing Sonar/image lead")
+        errors += 1
+    if "Reasoning depth" not in guide_html:
+        print("ERROR guide banner missing Reasoning depth")
+        errors += 1
+    if "Settings → General → System Prompt" not in guide_html:
+        print("ERROR guide banner missing General System Prompt note")
+        errors += 1
+    if "may also affect image models and Perplexity sonar" not in guide_html:
+        print("ERROR guide banner missing image/search System Prompt impact")
+        errors += 1
+    if any(
+        p in guide_html
+        for p in (
+            "Quick search",
+            "Deep report",
+            "Do not use Sonar for everyday chat",
+            "use <b>high</b> or <b>xhigh</b>",
+        )
+    ):
+        print("ERROR guide banner still has long usage copy")
+        errors += 1
+    if "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
+        print("ERROR guide banner has non-minimal HTML (expect bold only)")
+        errors += 1
+    banned = ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
+    hit = [p for p in banned if p in guide_html]
+    if hit:
+        print("ERROR guide banner still has", hit)
+        errors += 1
+    elif guide_html and "Web search only on Perplexity Sonar" in guide_html:
+        print("ok guide banner merged English")
     listed = {
         m["id"]: m
         for m in requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=60).json()["data"]
@@ -271,6 +255,26 @@ def verify(h: dict[str, str]) -> int:
             errors += 1
         else:
             print("ok desc", model.get("name"))
+    grok_desc = (
+        (listed.get(f"{PIPE}.x-ai.grok-4.6", {}).get("info") or {}).get("meta") or {}
+    ).get("description") or ""
+    if "Vision-capable" in grok_desc:
+        print("ERROR Grok description still contains Vision-capable guidance")
+        errors += 1
+    else:
+        print("ok Grok description removed Vision-capable guidance")
+    for model_id in (
+        f"{PIPE}.perplexity.sonar-pro-search",
+        f"{PIPE}.perplexity.sonar-deep-research",
+    ):
+        desc = (
+            (listed.get(model_id, {}).get("info") or {}).get("meta") or {}
+        ).get("description") or ""
+        if "only model with live web search" not in desc:
+            print("ERROR Perplexity description missing unique live web search claim", model_id)
+            errors += 1
+        else:
+            print("ok Perplexity unique live web search", model_id)
     return errors
 
 

@@ -1,8 +1,8 @@
 # 相对纯官方 Open WebUI 的全部改动记录
 
 > **基准（Stock）**：Open WebUI **0.11.0**，无第三方 Pipe、无自定义 Function、无本仓库脚本与文档所描述的配置。  
-> **对比对象（本实例）**：`https://micropigeon.com`（探针日期 **2026-08-21**）  
-> **本文件地位**：相对官方的 **单一真相源**；灾备规格见 `open-webui-disaster-recovery-rebuild-plan.md`。
+> **对比对象（本实例）**：`https://micropigeon.com`（表体按 **2026-09-01** 现网对齐；部分工程段落仍标 2026-08 探针日）  
+> **本文件地位**：相对官方的 **差异长表**，不是产品契约。契约以 `docs/SPEC.md` 为准；现网钉子以 `docs/open-webui-rebuild-archive.md` 为准。
 
 ---
 
@@ -81,7 +81,7 @@
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
-**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker 仅 **19 public** 为 `is_active`。
+**说明**：新对话默认 **仅 Grok 4.6**（2026-08-22）；compare 由用户手动开启。后台 Task 仍用 Grok 4.6。Picker = **19 public** + `gemini-3.1-pro-preview` / `gemini-3.7-flash`。
 
 ### 2.4 原生 Image Generation（Admin > Images）
 
@@ -275,26 +275,25 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 ### 7.1 General UI Banners（相对 Stock：无）
 
-两条 **不可 dismiss**（`dismissible: false`）英文 Banner（`POST /api/v1/configs/banners`）：
+**现网（2026-09-01）**：一条 **不可 dismiss** 英文 Banner（`POST /api/v1/configs/banners`）：
 
 | id | type | 作用 |
 |----|------|------|
-| `usage-pick-model-v2` | info | 四格选模型：Chat / Quick search / Deep report / Images |
-| `usage-reasoning-depth-v2` | warning | Valves → Reasoning depth → high/xhigh |
+| `usage-guide-v3` | info | Sonar/图像分流 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar |
 
-已替换早期拼写错误 banner（`resoning`）。
+已废弃：拼写错误 `resoning` banner；双条 `usage-pick-model-v2` / `usage-reasoning-depth-v2`。**不要**重跑旧脚本把 v3 盖回去。
 
 ### 7.2 Prompt suggestions（空对话 chips）
 
-**设计**（`apply_ui_guidance_banners.py`）：4 条英文 chip；第 1 条为 WeChat 反馈（`@dalapi`），其余 3 条含 “Select … first”。
+**现网**：`ui.prompt_suggestions = []`。OWUI chips 点击即发送，不作捷径。
 
-**存储**：`POST /api/v1/configs/suggestions`；导出键 **`ui.prompt_suggestions`**（flat，非 `export.ui` 嵌套）。`GET /api/config` 的嵌套 `ui.prompt_suggestions` 可能为空，以 export 为准。
+**存储**：`POST /api/v1/configs/suggestions`；导出键 **`ui.prompt_suggestions`**（flat）。`GET /api/config` 嵌套字段可能为空，以 export 为准。
 
-**状态（2026-08-20）**：**4 条**已写入；重跑 `scripts/apply_ui_guidance_banners.py` 可恢复。
+历史（2026-08-20）曾写 4 条「Select … first」+ WeChat 反馈；**已清空**。回复下方 Follow-up 是另一开关（ST-12，已关）。
 
 ### 7.3 用户面向语言
 
-- 所有指引文案：**英文**（Banner、Description、Chips 设计）  
+- 所有指引文案：**英文**（Banner、Description）  
 - Agent/运维文档：**中文**（本仓库 `docs/`）
 
 ### 7.4 Reasoning depth
@@ -309,10 +308,13 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | 文件 | 内容 |
 |------|------|
-| `docs/open-webui-delta-vs-stock.md` | **本文件** — 相对官方全量差异 |
+| `docs/SPEC.md` | 产品契约（真相源） |
+| `docs/open-webui-rebuild-archive.md` | 灾后入口 / 现网钉子 |
+| `docs/open-webui-delta-vs-stock.md` | **本文件** — 相对官方差异长表 |
 | `docs/open-webui-openrouter-image-continuity-plan.md` | 图像修复、public 列表、方案 A、错误史 |
-| `docs/open-webui-user-guidance-plan.md` | 界面英文指引设计与决策 |
-| `docs/open-webui-disaster-recovery-rebuild-plan.md` | 灾备 v2：规格 + verify 思路 |
+| `docs/open-webui-user-guidance-plan.md` | 界面英文指引（现网 v3） |
+| `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
+| `docs/open-webui-disaster-recovery-rebuild-plan.md` | 灾备：规格 + verify，非全量快照 |
 
 ### 8.2 可重复脚本
 
@@ -320,15 +322,18 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 |------|------|
 | `scripts/fix_sonar_tool_guard.py` | Sonar 防 tool 注入：Guard priority、web_tools/image_gen 早退、Sonar filterIds |
 | `scripts/apply_plan_a_hide_integrations.py` | 方案 A 一键：Valves merge、停用 Filter、剥模型 filterIds、关原生 Web Search |
-| `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + Banners + Description + Prompt chips + 校验 |
+| `scripts/apply_ui_guidance_banners.py` | **DEFAULT_MODELS** + 一条 `usage-guide-v3` + Description + **空** chips |
+| `scripts/apply_wave0.py` | capabilities + Task=Grok 4.6 + Follow-up 关 + 全局 Image Gen 关 |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public |
+| `scripts/verify_stack.py` | Wave 0 契约验收 |
 | `scripts/verify_live_baseline.py` | L1 STT/TTS + 屏享指引验收 |
+| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11 Fable unsigned thinking |
 
 **环境变量**：`OPENWEBUI_URL`、`OPENWEBUI_PASSWORD`、`OPENWEBUI_USERNAME`（优先于 email 登录）。
 
-### 8.3 尚未入库（讨论中，非当前差异）
+### 8.3 仓库已入库（勿再当「讨论中」）
 
-- `SPEC.md`、`AGENTS.md`、`scripts/verify_stack.py`、`docs/VERSIONS.md`（见灾备规划 P0）
+`SPEC.md`、`AGENTS.md`、`scripts/verify_stack.py`、`docs/VERSIONS.md`、`docs/open-webui-rebuild-archive.md` 均已在 git。未合入 main 的专题 PR 内容在 2026-09 整合进同一套契约（ST-11 Fable、ST-12 Follow-up、Banner v3、文件录入 plan）。
 
 ---
 
@@ -351,8 +356,9 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | 项 | 状态 |
 |----|------|
 | `DEFAULT_MODELS` 指向 Pipe Sol Pro | **已修**（2026-08-20） |
-| Prompt suggestions | **4 条**（export `ui.prompt_suggestions`） |
-| Task 模型（标题/补全） | **Grok 4.6** Pipe（Wave 0 后自 Sol Pro 下调成本） |
+| Prompt suggestions | **0 条**（export `ui.prompt_suggestions=[]`） |
+| Follow-up 芯片 | **关**（ST-12） |
+| Task 模型（标题/补全） | **Grok 4.6** Pipe |
 | Sonar / 纯图像 `code_interpreter` 等 | **已关**（Wave 0）；Sol Pro / Opus 的 code interpreter **保留** |
 | `web_tools`/`image_gen` Sonar 早退补丁 | **探针未见**；当前靠停用 + Guard |
 | 图像画布连续性（canonical canvas） | **未实现** — 见 continuity plan §5 |
@@ -375,14 +381,14 @@ Stock OWUI 0.11.0
     │
     ├─ + OpenRouter Pipe（~473 模型）+ API_KEY（当前 DB 明文；env WEBUI_SECRET_KEY 空）
     ├─ + 3 个自定义 Guard Filter
-    ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩、跨模型 reasoning 重试）
+    ├─ + Pipe content 补丁（Images API、Seedream 5、上下文压缩、跨模型 reasoning 重试、Fable unsigned thinking）
     ├─ − 停用 web_tools / image_gen（方案 A）
     ├─ − 原生 Web Search OFF
     ├─ − Direct Connections OFF
-    ├─ − 全部 OpenAI 兼容槽禁用（含原 gptsapi slot0）
+    ├─ − 全部 OpenAI 兼容槽禁用（5 槽全 disable）
     ├─ WEBUI_URL=https://micropigeon.com
-    ├─ 19 public 模型 + 4 置顶 + 英文 Description（含屏享）
-    ├─ 2 条常驻英文 Banner
+    ├─ 19 public 模型 + 4 置顶 + 英文 Description
+    ├─ 1 条常驻英文 Banner（usage-guide-v3）；空对话 chips=0；Follow-up 关
     ├─ filterIds：仅 direct_uploads（+ 图像 native filter）
     ├─ L1：MiniMax Speech 2.8 Turbo TTS + Whisper turbo STT + Call overlay
     ├─ N1：RAG embedding → OpenRouter；Knowledge「YouTube Notebook」+ 视觉时间线
@@ -418,7 +424,7 @@ python3 scripts/fix_sonar_tool_guard.py
 
 - `GET /api/version` → 0.11.0  
 - `GET /api/config` → `enable_web_search=false`  
-- `GET /api/v1/configs/banners` → 两条 `usage-*-v2`  
+- `GET /api/v1/configs/banners` → 一条 `usage-guide-v3`  
 - Sonar / 图像模型聊天 → 无 tool use 404  
 - 样本模型 Integrations → 无 OR Web Tools / Image Gen  
 
@@ -431,8 +437,10 @@ python3 scripts/fix_sonar_tool_guard.py
 | 图像细节与测试列表 | `open-webui-openrouter-image-continuity-plan.md` |
 | Voice / Realtime（P0-B）+ 屏享（P0-C） | `open-webui-live-voice-screen-plan.md` |
 | Notebook / YouTube（P0-D，N1 已落地） | `open-webui-notebook-youtube-plan.md` |
-| 界面文案设计意图 | `open-webui-user-guidance-plan.md` |
-| 灾备与重建流程 | `open-webui-disaster-recovery-rebuild-plan.md` |
+| 界面文案 | `open-webui-user-guidance-plan.md`（现网 v3） |
+| 灾后钉子 | `open-webui-rebuild-archive.md` |
+| 灾备策略 | `open-webui-disaster-recovery-rebuild-plan.md` |
+| 文件录入 | `open-webui-file-ingest-plan.md` |
 
 ---
 

@@ -57,8 +57,14 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
-# Runtime picker: only these stay active (matches 19 public).
-ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS
+# Extra picker models (user 2026-09-01): keep Gemini; not added to the 19 public list.
+EXTRA_ACTIVE_MODEL_IDS = [
+    f"{PIPE}.google.gemini-3.1-pro-preview",
+    f"{PIPE}.google.gemini-3.7-flash",
+]
+
+# Runtime picker: 19 public + extra Gemini. Granite / Mercury stay inactive.
+ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [
     f"{PIPE}.openai.gpt-5.6-sol-pro",
@@ -94,8 +100,10 @@ PIPE_PATCH_MARKERS = [
     "FABLE_UNSIGNED_SUMMARY_V1",
 ]
 
-BANNER_IDS = ["usage-pick-model-v2", "usage-reasoning-depth-v2"]
-SUGGESTIONS_COUNT = 4
+# Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
+BANNER_IDS = ["usage-guide-v3"]
+SUGGESTIONS_COUNT = 0
+TASK_FOLLOW_UP_ENABLE = False
 
 # P0-D Notebook / YouTube (N1)
 NOTEBOOK_KNOWLEDGE_NAME = "YouTube Notebook"

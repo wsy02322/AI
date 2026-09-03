@@ -1,8 +1,8 @@
 # 优化计划：强能力 · 简单 · 稳定
 
-> **状态**：Wave 0 **已应用到实例**。**P0 四条并列已写入契约**。P0-D **N1 已落地**（RAG + 视觉时间线；口播受 YouTube 风控）。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。
-> **日期**：2026-08-21  
-> **宪法**：（1）媲美甚至超越 ChatGPT / Grok / 市面最顶级付费档；特别困难复杂须确认是否略降级换简单稳定；（2）务必简单稳定、易维护；（3）重大改动先 plan、确认后再执行。  
+> **状态**：Wave 0 **已应用到实例**。**P0 四条并列已写入契约**。P0-D **N1 已落地**（RAG + 视觉时间线；口播受 YouTube 风控）。现网 UX：一条 `usage-guide-v3`、空 chips、Follow-up 关（见 `open-webui-rebuild-archive.md`）。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。
+> **日期**：2026-09-01（路线仍以 2026-08-21 拍板为准；UX/Task 钉子已按现网改）  
+> **宪法**：（1）顶级为目标；难则顶级与略降级一并提案、确认再选；（2）简单稳定易维护；（3）重大改动主动 plan/提案，确认后再执行（讨论≠执行）。  
 > **用户约束**：维持 **19 个 public**；**P0-A 图像、P0-B 语音聊天、P0-C 屏享、P0-D Notebook/YouTube** 同为最高优先级；语音和屏享都受宪法复杂度确认门约束；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
 
 ---
@@ -16,12 +16,12 @@
 | Pipe + 466 模型 catalog | **原生 Images / Images Edit**（开着，模型 id 非 Pipe） |
 | 方案 A、3 Guard | **Code Interpreter / Code Execution**（pyodide，开） |
 | 19 public、4 置顶、DEFAULT_MODELS | **Audio STT/TTS**（OpenRouter whisper / tts，已配） |
-| Banner / suggestions / Description | **RAG / Knowledge**（配置在，但 **未产品化**；embedding 槽仍 401 → 已升格 **P0-D**，见 notebook plan） |
+| Banner / suggestions / Description | **RAG / Knowledge**（N1 已产品化：OpenRouter embedding + YouTube Notebook；口播受风控） |
 | 关原生 Web Search、关 Direct Connections | **Memories / Notes / Automations / Calendar**（均 enable） |
-| 明确不做：ComfyUI、inpainting、第二套 Pipe | **Task 模型**（标题/补全默认 `x-ai/grok-4.5`，非 Pipe） |
+| 明确不做：ComfyUI、inpainting、第二套 Pipe | **Task 模型**（**已改** Pipe `grok-4.6`；旧幽灵 id `x-ai/grok-4.5` 不再用） |
 | | **视频**：catalog 约 24 个 + 20+ Filter，**均未 public** |
 | | **Slides**：无定制，OWUI 侧能力未纳入契约 |
-| | **OAuth / 社区分享 / Autocomplete / Follow-up** |
+| | **OAuth / 社区分享 / Autocomplete**（**Follow-up 已关**，ST-12） |
 | | **gptsapi + 5 个禁用 OpenRouter slot**（运维噪音） |
 
 因此：上一轮 = **聊天主路径体检**；本文件 = **全功能分层 + 优化后的路线**。
@@ -36,13 +36,13 @@
 
 | 能力 | 现状 | 对本阶段的处理 |
 |------|------|----------------|
-| 聊天 / 推理 | Sol Pro 默认；Opus 等 public | **维持**。Reasoning depth 已有 Banner |
+| 聊天 / 推理 | **Grok 4.6** 默认；Sol Pro / Opus 等 public | **维持**。Reasoning depth 走 Valves（Banner 提示） |
 | 快搜 / 深研 | 两档 Sonar public | **维持**。不重开 Web Tools / 原生 Web Search |
-| 作图 | 9 个图像模型 public；切模型即作图 | **P0-A**：维持为主路径（见 §2） |
-| 文件上传 | Direct Uploads | **维持** |
+| 作图 | 9 个图像模型 public；切模型即作图；全局 Image Gen **关** | **P0-A**：维持为主路径（见 §2） |
+| 文件上传 | Direct Uploads（默认关；Tika T0 未确认） | **维持**。见 `open-webui-file-ingest-plan.md` |
 | 模型对比 | **19 public** | **维持 19**，不收到 6 |
-| 稳定性护栏 | Guard + 方案 A + valves | **维持**；缺自动验收（§4 Wave 0） |
-| 英文指引 | 2 Banner + 4 chips + Description | **维持**（Banner 数量不作为本阶段议题） |
+| 稳定性护栏 | Guard + 方案 A + valves | **维持**；`verify_stack.py` 已落地 |
+| 英文指引 | **一条** `usage-guide-v3` + Description；**0** chips | **维持现网**；不要写回双条 v2 / 4 chips |
 
 ### 1.2 Later（已承诺，单独一波，不塞进当前）
 
@@ -73,10 +73,11 @@
 
 关全局开关容易误伤；这些不是当前用户契约的一部分：
 
-- Memories、Calendar、Automations、Autocomplete、Follow-up、社区分享、OAuth  
+- Memories、Calendar、Automations、Autocomplete、社区分享、OAuth  
+- **Follow-up 建议芯片**：已关（ST-12）；不要再当「不随便关」  
 - Notes / Knowledge：**P0-D 可能的宿主**；在 N2 入口拍板前仍不推广、不深挖、不随便关。不得当成已可用的 NotebookLM
 - Code Interpreter（pyodide）：聊天模型可留；**Sonar / 纯图像 / 未来视频模型不应表现为可开的 tool**  
-- 原生 Images：全局 enable=true，但 Sol Pro 的 `capabilities.image_generation=false`，用户主路径已不是「聊天里点 Image」
+- 原生 Images：全局 `ENABLE_IMAGE_GENERATION=false`（路线 S）；Sol Pro 的 `capabilities.image_generation=false`
 
 **处理方式**：Wave 0 只做 **按模型 capabilities 对齐契约**（防 404），不搞功能大扫除。
 
@@ -90,7 +91,7 @@
 |--|----------------------|----------------------|
 | 用户怎么画 | 切到 Banana / GPT Image 2 / Seedream… 再下指令 | 留在 Sol Pro，像 ChatGPT 一样说 “draw…” |
 | 实现 | Pipe 图像模型（已测通） | OWUI Native Images / `generate_image` tool |
-| 当前线上 | **已是事实主路径**（Banner 也这么教） | 全局 Images 开着，但 Sol Pro **未**开 `image_generation` capability；引擎模型 id 还是非 Pipe 的 `google/gemini-3-pro-image` |
+| 当前线上 | **已是事实主路径**（Banner 也这么教） | 全局 Image Gen **已关**；Sol Pro **未**开 `image_generation` capability |
 
 ### 2.2 对照三条根本要求
 
@@ -103,7 +104,7 @@
 
 **（2）简单 — 一条路比两条路简单。**
 
-- 已有 Banner：「Images → switch to Banana / GPT Image 2 first」。  
+- 已有 Banner：`Images only on an image model.`  
 - 若再开同会话作图：用户会问「到底切模型还是点 Image？为什么 Sol 画出来和 Banana 不一样？」  
 - 简单 = **一种能力一个入口**（与视频后续一致：切 Veo/Sora，而不是给聊天灌 video tool）。
 
@@ -154,9 +155,9 @@
 | W0-2 | `docs/SPEC.md` + `AGENTS.md`：四格 + 19 public + 路线 S + **P0 四条** + 视频生成/slides = Later |
 | W0-3 | 按模型 capabilities：**Sonar / 纯图像** 关闭会邀请用户开 tool 的项（`code_interpreter`；图像上多余的 `builtin_tools` / `terminal`）。**不**关 Sol Pro 的 code interpreter |
 | W0-4 | `docs/VERSIONS.md` 记 OWUI / Pipe；Pipe 更新 Runbook：更新后跑 W0-1 + 现有 apply 脚本 |
-| W0-5 | Task 默认模型：标题/补全若仍指向非 Pipe `x-ai/grok-4.5`，改为 Pipe 文本模型（避免后台任务走幽灵 id） |
+| W0-5 | Task 默认模型：**已改** Pipe Grok 4.6（旧幽灵 id `x-ai/grok-4.5` 不再用） |
 
-**不做**：关全局 Image Gen、关 Code Interpreter、缩 public、改 Banner、连续性补丁、开视频 public。
+**当时「本波次不做」**（有的后来已另确认落地）：不关全局 Code Interpreter、不缩 public、不开视频 public。全局 Image Gen **后来按路线 S 已关**。Banner 以现网 `usage-guide-v3` 为准，不要用本段冻结 2026-08 的双条 v2。
 
 ### Wave 1 — 视频（必做，独立验收）
 
@@ -203,7 +204,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 
 | 旧条目 | 新判定 |
 |--------|--------|
-| P0 关闭 `enable_image_generation` | **不做**。路线 S；全局开关先不动 |
+| P0 关闭 `enable_image_generation` | **已做**（路线 S；`ENABLE_IMAGE_GENERATION=false`） |
 | 全局关闭 code interpreter | **不做**。只收 Sonar/图像的 capability |
 | 缩 public 到 6 | **撤销**。维持 19 |
 | 清理 MODEL_ORDER_LIST 当 P1 | **降为顺便**。admin 列表已是 466 Pipe |
@@ -219,7 +220,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 
 **现在（Wave 0 后）**
 
-- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；19 public 仍在；picker 仅 public 为 active  
+- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；19 public 仍在；picker = 19 public + 两个 extra Gemini  
 - Sonar / 图像无 tool 404；Integrations 仍无 Web Tools / Image Gen / Web Search  
 - `verify_stack` 可重复跑绿  
 
@@ -244,14 +245,16 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 | 文件 | 角色 |
 |------|------|
 | **本文件** | 路线与波次 |
-| `SPEC.md` | 体验与稳定性契约（含 P0） |
+| `SPEC.md` | 体验与稳定性契约（含 P0；ST-11 Fable、ST-12 Follow-up） |
+| `open-webui-rebuild-archive.md` | 灾后入口 / 现网钉子 |
 | `open-webui-notebook-youtube-plan.md` | **P0-D** Notebook / YouTube |
 | `open-webui-live-voice-screen-plan.md` | **P0-B 语音 + P0-C 屏享** |
-| `open-webui-delta-vs-stock.md` | 相对官方已落地差异 |
-| `open-webui-disaster-recovery-rebuild-plan.md` | 重建/验收思路 |
+| `open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
+| `open-webui-delta-vs-stock.md` | 相对官方已落地差异长表 |
+| `open-webui-disaster-recovery-rebuild-plan.md` | 为何不靠全量快照 |
 | `open-webui-secret-key-persist-plan.md` | **运维 L0**（接受重登；JWT / Pipe 加密 K1+K2 冻结） |
 | `open-webui-openrouter-image-continuity-plan.md` | 图像错误史；连续性仍属 Wave 3 |
-| `open-webui-user-guidance-plan.md` | 英文指引意图 |
+| `open-webui-user-guidance-plan.md` | 英文指引（现网 v3） |
 
 ---
 

@@ -1,12 +1,16 @@
 # AGENTS.md — 本仓库怎么动 Open WebUI
 
-先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关。不要把两条都写成 ST-11。
 
 ## 宪法（所有动作）
 
-1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：**先确认**是否改用略微降级、简单稳定特别多的方案。  
+1. 媲美甚至超越 ChatGPT / Grok 等最顶级付费档。特别困难复杂：把**顶级方案**和**略降级、简单稳定特别多的方案**一并提案，**先确认再选**。禁止只提降级；禁止把顶级方案留到用户追问之后。  
 2. 务必简单和稳定，优先易维护。  
-3. 重大改动：先 plan，确认后再执行。
+3. 重大改动：先写成 plan 并**主动提案**，确认后再执行。写 plan、讨论、把能力缺口摆上台 **不是** 执行，未问也要提。禁止把本条理解成「未问就不提」；禁止未确认就改实例 / Pipe / 入口形态。
+
+目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。发现与顶级档的能力缺口、或明显更强的实现路径时，当场主动提案（含是否升主线、风险、和不做的代价）；未确认不得动手。
 
 **P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **19 个 public**。
 
@@ -36,11 +40,11 @@
 | `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
 | `scripts/verify_fable_thinking_replay.py` | ST-11：Fable 两轮续聊不得 `cannot be modified` |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
-| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable unsigned summary（content-only，不碰 valves；S2′ 之后跑） |
-| `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 |
+| `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable unsigned thinking（content-only，不碰 valves；S2′ 之后跑） |
+| `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
-| `scripts/apply_model_catalog_visibility.py` | 仅保留 19 public 为 `is_active`；其余 Pipe catalog 禁用 |
-| `scripts/apply_ui_guidance_banners.py` | Banner / Description / chips / DEFAULT_MODELS |
+| `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
+| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/run_ga_a_trial.py` | GA-A：MiniMax TTS vs gpt-audio（不改 Call/public；写 `open-webui-gpt-audio-trial-plan.md` §5） |
@@ -57,10 +61,10 @@
 2. **Merge** valves：见 SPEC ST-4～ST-6（`apply_plan_a_hide_integrations.py` 会 merge）  
 3. 确认 3 个 Guard 仍 global active：`image_tool_guard`、`image_context_guard`、`search_native_tool_guard`  
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
-5. `python3 scripts/apply_ui_guidance_banners.py`  
-6. `python3 scripts/apply_wave0.py`  
+5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v3` + 空 chips；**不要**写回已废弃的双条 v2 Banner）  
+6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
-8. `python3 scripts/patch_pipe_fable_thinking_replay.py`（Fable marker 已在则 no-op）  
+8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
 9. `python3 scripts/verify_stack.py` 全绿  
 10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
@@ -93,5 +97,8 @@
 - 用 Call overlay / 现有 MiniMax Read Aloud 冒充 Audio Overview  
 - 未确认就把 gpt-audio 或 Realtime 镜像当 Call S2S 落地  
 - 把语音聊天排在屏享之后，或用 rbb L2 的语音收益掩盖持续屏享缺口
+- 未确认装 Tika / 扩 Direct MIME（见 `docs/open-webui-file-ingest-plan.md`）
+- 把 Follow-up 关（ST-12）和 Fable 续聊（ST-11）写成同一个 ST 号
+- 新增第二份 Agent 入口（不要再写 `AGENT-ONBOARDING.md`；本文件即入口）
 
 Filter inlet：**priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
