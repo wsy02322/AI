@@ -12,6 +12,7 @@ Open WebUI + OpenRouter。生产：`https://micropigeon.com`。
 | `docs/VERSIONS.md` | 上次验收的 OWUI / Pipe 指纹 |
 | `docs/open-webui-optimized-plan.md` | 波次与 Later / Don't |
 | `docs/open-webui-delta-vs-stock.md` | 相对官方差异长表（不是契约） |
+| `deploy/owui-ui/` | 现网 chrome overlay（全宽 + 助手 4px）；改 CSS 先读该目录 README |
 
 ## 专题 plan
 
