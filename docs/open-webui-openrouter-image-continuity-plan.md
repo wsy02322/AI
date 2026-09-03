@@ -273,5 +273,4 @@ Pipe 默认将纯图像模型设为仅管理员可见；上述 7 个模型已显
 - OWUI 图像文档：https://github.com/open-webui/docs/blob/main/docs/features/chat-conversations/image-generation-and-editing/usage.md
 - OpenRouter Image Models：https://openrouter.ai/collections/image-models
 - OWUI Issue #19522：https://github.com/open-webui/open-webui/issues/19522
-- **普通用户使用指引规划**：`docs/open-webui-user-guidance-plan.md`（2026-08-19）
-- **灾备与从零重建规划**：`docs/open-webui-disaster-recovery-rebuild-plan.md`（2026-08-20）
+- 现网指引与重建：`docs/open-webui-rebuild-archive.md` §3.3 / §5

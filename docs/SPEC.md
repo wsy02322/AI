@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-optimized-plan.md`（波次）、`docs/open-webui-delta-vs-stock.md`（已落地差异）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）
+> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）、`docs/open-webui-openrouter-image-continuity-plan.md`（图像错误模式）、`docs/open-webui-secret-key-persist-plan.md`（L0）
 
 ---
 
@@ -37,7 +37,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **21 个 public**（对比用）；不缩到 6、不扩新家族。**原则**：目前留下的家族只跟 catalog **最新 id**，且 **全部 public**。含 `claude-fable-5.1`（替换 `claude-fable-5`）、`gemini-3.1-pro-preview`、`gemini-3.8-flash`（替换已下线的 `gemini-3.7-flash`）。`granite-4.2-8b`、`mercury-2.5-preview` 及新出现的家族（Ling / Muse / Hailuo / GLM Flash 等）**不** active。契约外模型不得带 `*` read |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
-| UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false |
+| UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false。同会话作图会把图像模型藏进一个开关、再灌 tools（已爆 404）；对比能力比「少点一次切换」更接近宪法 1。视频同一模式：能力在模型上，不在聊天 tool 条上 |
 | UX-7 | 回复下方 **Follow-up 建议芯片关闭**（易误触）。空对话 `prompt_suggestions` 保持 **空**。不关 Autocomplete / Title |
 
 ## 稳定性（Now）
@@ -105,8 +105,8 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 - **已落地**：聊天四格 + 路线 S；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
 - **P0 进行中**：图像增强；**语音聊天（S2S / barge-in 未完成，无 Realtime 钥匙故未换镜像）**；**屏幕共享（持续屏流未完成）**；**Notebook/YouTube N1 已落地（视觉时间线可用；口播抓取受 YouTube 风控）**
 - **复杂度确认门**：语音与屏享都不得自行降级；若顶级统一方案过重，先列「顶级」与「略降级但简单稳定」两档，由用户确认。rbb Realtime 只补语音、不补持续屏享，不能作为两项均达标的终态
-- **Later（须单独确认）**：Wave 1 **视频生成**；Wave 2 slides；Notebook N3/N4 Studio；**文件上传对标官网最高档**（见 `open-webui-file-ingest-plan.md`，T0 未确认）；**独立顶级画图 Studio**（含蒙版 inpainting 等；不塞进聊天主路径，须单独 plan）
-- **Don't**：ComfyUI（除非画图 Studio 方案明确选它）、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S、未确认装 Tika / 扩 Direct MIME / 未确认改 Notebook 入口或装第二前端 
+- **Later（须单独确认）**：Wave 1 **视频生成**（至少 1 个旗舰 public 且实测出片；聊天模型不得因 video tool 404）；Wave 2 slides（独立入口，聊天主路径无新 tool）；对比 **S3 真并行分栏**（ST-10 重试已落地，S3 未做）；Notebook N3/N4 Studio；**文件上传对标官网最高档**（见 `open-webui-file-ingest-plan.md`，T0 未确认）；**独立顶级画图 Studio**（含蒙版 inpainting 等；不塞进聊天主路径，须单独 plan）
+- **Don't**：ComfyUI（除非画图 Studio 方案明确选它）、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S（GA-A：Pipe `/responses` 拒 `modalities.audio`）、未确认装 Tika / 扩 Direct MIME / 未确认改 Notebook 入口或装第二前端 
 
 ---
 

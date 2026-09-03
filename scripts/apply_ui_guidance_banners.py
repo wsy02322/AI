@@ -3,6 +3,11 @@
 
 Empty-chat Suggested chips are cleared: OWUI always auto-sends on click,
 so they are a misfire surface, not hints. Banners + descriptions stay.
+
+Rules: English only; one global banner (per-model facts in descriptions);
+never tell users to open hidden Integrations; compact HTML (newlines
+become <br>); changing banner id re-shows the bar. Do not replay v2.
+POST /api/v1/configs/banners body is {"banners":[...]}, not a bare list.
 """
 
 from __future__ import annotations
