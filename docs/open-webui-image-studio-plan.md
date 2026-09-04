@@ -1,6 +1,6 @@
 # 独立图像 Studio（对标官网最高订阅档）
 
-> **状态**：**IS-A+ 产品决策已锁**（见 §7）。**未说「开工」前不改实例、不装前端、不向 VPS 要容器。**  
+> **状态**：**施工中（IS-A+）**。决策见 §7。代码在 `image-studio/`。VPS 按 `image-studio/DEPLOY.md` 起独立容器并注入钥匙；**尚未**关 OWUI 图像模型。  
 > **日期**：2026-09-04  
 > **现网**：OWUI **0.11.3**；作图仍是路线 S。Pipe sha `f797e92d6d3f`。  
 > **档位**：独立站点 `image.micropigeon.com`；OpenAI + Gemini + xAI **直连** + OpenRouter 长尾。ComfyUI 不上。视频 Later。  
@@ -212,16 +212,19 @@ v1 **不做这个库**。需要像某个人时，**这一次上传参考图** �
 
 ---
 
-## 8. 开工还差什么
+## 8. 开工进度
 
-产品决策齐了。还差一句 **「按 §7 开工」**。开工顺序：
+2026-09-04 已说开工。仓库侧 A1–A3 已落地（`image-studio/`）：登录、画布、版本、OpenAI 笔刷蒙版归一化、无钥匙 503。
 
-1. **IS0** 只读探针（OpenRouter catalog + 各直连一条最小请求）。钥匙用环境变量，**不要贴到聊天**。  
-2. A1 薄后端（路由 + 落盘）。  
-3. A2 画布页。  
-4. A3 OpenAI 笔刷蒙版。  
-5. A4 多参考 / 4K / 流式。  
-6. VPS：Caddy → `image.micropigeon.com`，独立容器，**不进** `open-webui`。  
-7. OWUI 关图像模型：**另确认**，现在不动。
+| 步 | 状态 |
+|----|------|
+| IS0 OpenRouter catalog 探针 | 仓库脚本 `image-studio/scripts/probe_capabilities.py`（无需 key） |
+| IS0 直连最小出图 | **VPS 注入四把钥匙后**再打。本仓库 agent **没有**这些 key，不要往聊天贴 |
+| A1 薄后端 | 已写：`app/main.py` 路由 OpenAI/Gemini/xAI/OpenRouter + 独立 volume 落盘 |
+| A2 画布页 | 已写：`templates/` + `static/` |
+| A3 OpenAI 笔刷蒙版 | 已写：UI 白笔 = 编辑区 → OpenAI 透明像素。其它模型灰显选区 |
+| A4 多参考 / 4K 流式 | **未做**（下一波） |
+| VPS 容器 + Caddy `image.` | **转达 VPS**，清单 `image-studio/DEPLOY.md` |
+| 关 OWUI 图像模型 | **另确认**，现在不动 |
 
-未说开工前：不改 Pipe、不改 picker、不装前端。
+未注入钥匙前：`verify_studio.py` 必须对 generate/edit 得到 **503 missing key**，且错误里没有 key。

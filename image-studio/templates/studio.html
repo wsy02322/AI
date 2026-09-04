@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Studio</title>
+  <link rel="stylesheet" href="/static/studio.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="eyebrow">Image Studio</p>
+      <h1>画布</h1>
+    </div>
+    <div class="top-right">
+      <span>{{ user.name or user.email }}</span>
+      <form method="post" action="/api/logout">
+        <button type="submit" class="ghost">退出</button>
+      </form>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="rail">
+      <button id="new-work" type="button">新建作品</button>
+      <ul id="works"></ul>
+    </aside>
+    <main class="stage">
+      <section class="controls">
+        <label>模型
+          <select id="model"></select>
+        </label>
+        <label>比例
+          <select id="aspect">
+            <option value="">默认</option>
+            <option value="1:1">1:1</option>
+            <option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+            <option value="4:3">4:3</option>
+            <option value="3:4">3:4</option>
+            <option value="3:2">3:2</option>
+            <option value="2:3">2:3</option>
+          </select>
+        </label>
+        <label>分辨率
+          <select id="size">
+            <option value="">默认</option>
+            <option value="1K">1K</option>
+            <option value="2K">2K</option>
+            <option value="4K">4K</option>
+          </select>
+        </label>
+        <label>质量
+          <select id="quality">
+            <option value="">默认</option>
+          </select>
+        </label>
+        <p id="model-hint" class="hint"></p>
+      </section>
+      <textarea id="prompt" rows="4" placeholder="描述要生成或改动的内容"></textarea>
+      <div class="actions">
+        <button id="generate" type="button">生成</button>
+        <button id="edit" type="button" class="ghost">按提示编辑</button>
+        <button id="edit-mask" type="button" class="ghost">用选区编辑</button>
+        <label class="inline">笔刷
+          <input id="brush" type="range" min="8" max="80" value="28" />
+        </label>
+        <button id="clear-mask" type="button" class="ghost">清除选区</button>
+        <label class="inline">打开图片
+          <input id="upload" type="file" accept="image/png,image/jpeg,image/webp" />
+        </label>
+      </div>
+      <p id="status" class="status"></p>
+      <div class="canvas-wrap">
+        <canvas id="image-canvas" width="1024" height="1024"></canvas>
+        <canvas id="mask-canvas" width="1024" height="1024"></canvas>
+      </div>
+    </main>
+    <aside class="versions">
+      <h2>版本</h2>
+      <ol id="version-list"></ol>
+    </aside>
+  </div>
+  <script src="/static/studio.js"></script>
+</body>
+</html>

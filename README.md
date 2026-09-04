@@ -12,17 +12,20 @@ GitHub **几乎仅用于灾后重建**（规格 + 脚本 + 钉子）。
 | `AGENTS.md` | 禁令、Pipe merge、脚本表 |
 | `docs/SPEC.md` | **产品契约** |
 | `docs/VERSIONS.md` | 上次验收指纹 |
+| `image-studio/` | 独立画图 Studio（IS-A+ 施工中；不经过 OWUI） |
 
 ## 专题 plan（未完成主线；重建时不要顺便做）
 
 - `docs/open-webui-upgrade-0113-plan.md` — **已落地**：官方 **0.11.3** 钉 digest（VPS 换镜像 + 仓库脚本重放）
 - `docs/open-webui-notebook-youtube-plan.md` — P0-D
 - `docs/open-webui-live-voice-screen-plan.md` — P0-B / P0-C
-- `docs/open-webui-image-studio-plan.md` — **提案**：独立图像 Studio（对标官网最高档；未确认不改实例）
+- `docs/open-webui-image-studio-plan.md` — **施工中**：独立图像 Studio（`image-studio/`；VPS 独立容器，先双轨）
 - `docs/open-webui-openrouter-image-continuity-plan.md` — 图像错误模式（聊天路径，不是 Studio）
 - `docs/open-webui-file-ingest-plan.md` — 文件录入（T0 未确认）
 - `docs/open-webui-secret-key-persist-plan.md` — 运维 L0
 
 ## 独立产品（不要并进 OWUI）
+
+`image-studio/` — 画图 Studio（`image.micropigeon.com`）。钥匙不进 git。部署 `image-studio/DEPLOY.md`。
 
 `handoff/gemini-live-standalone/` — Gemini Live 新产品交接。工作源是该目录下的拆分文件。

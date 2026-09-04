@@ -221,14 +221,15 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 - 给 Sonar / 纯图像灌 tools；开 Sol Pro `image_generation` 当同会话作图主路径  
 - 一次 public 全部视频模型  
 - 关全局 Code Interpreter  
-- 未确认换 OWUI Realtime 镜像、装第二前端、改 Notebook 入口  
+- 未确认换 OWUI Realtime 镜像、改 Notebook 入口  
+- 把 Image Studio 绑进 `open-webui` 容器 / `/custom/entrypoint.sh`，或把 Studio 钥匙写入 Pipe / `api_configs`  
 - 把 YouTube 字幕当成 NotebookLM 达标；Call overlay 冒充 Audio Overview  
 
 ---
 
 ## 7. Later / Don't（尚未落地，重建时不要「顺便做」）
 
-**Later（须另确认）**：见 SPEC。重建时不要顺便做。含 Wave 1 视频、Wave 2 slides、对比 S3 真分栏、Notebook N2+、独立画图 Studio（`open-webui-image-studio-plan.md`，未确认不执行）、Tika T0、语音 S2S / 持续屏流。
+**Later（须另确认）**：见 SPEC。重建时不要顺便做。含 Wave 1 视频、Wave 2 slides、对比 S3 真分栏、Notebook N2+、Tika T0、语音 S2S / 持续屏流。独立画图 Studio 在 `image-studio/`，**不要**并进 OWUI 镜像。
 
 **Don't**：ComfyUI（除非 Studio 方案选它）、第二套 Pipe、重开 Web Search 三件套、466 全 public。
 
@@ -267,5 +268,5 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后（p
 | `docs/open-webui-notebook-youtube-plan.md` | P0-D |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
 | `docs/open-webui-openrouter-image-continuity-plan.md` | 图像错误模式（聊天路径） |
-| `docs/open-webui-image-studio-plan.md` | 独立画图 Studio（**提案**；未确认不改实例） |
+| `docs/open-webui-image-studio-plan.md` | 独立画图 Studio（**IS-A+ 施工中**；代码 `image-studio/`；不进 OWUI 容器） |
 | `docs/open-webui-upgrade-0113-plan.md` | **已落地**官方 0.11.3（VPS 换镜像 + 仓库脚本重放） |
