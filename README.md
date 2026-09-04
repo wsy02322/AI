@@ -18,7 +18,8 @@ GitHub **几乎仅用于灾后重建**（规格 + 脚本 + 钉子）。
 - `docs/open-webui-upgrade-0113-plan.md` — **已落地**：官方 **0.11.3** 钉 digest（VPS 换镜像 + 仓库脚本重放）
 - `docs/open-webui-notebook-youtube-plan.md` — P0-D
 - `docs/open-webui-live-voice-screen-plan.md` — P0-B / P0-C
-- `docs/open-webui-openrouter-image-continuity-plan.md` — 图像错误模式
+- `docs/open-webui-image-studio-plan.md` — **提案**：独立图像 Studio（对标官网最高档；未确认不改实例）
+- `docs/open-webui-openrouter-image-continuity-plan.md` — 图像错误模式（聊天路径，不是 Studio）
 - `docs/open-webui-file-ingest-plan.md` — 文件录入（T0 未确认）
 - `docs/open-webui-secret-key-persist-plan.md` — 运维 L0
 

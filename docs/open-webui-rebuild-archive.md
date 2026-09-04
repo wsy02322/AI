@@ -266,5 +266,6 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后（p
 | `docs/open-webui-live-voice-screen-plan.md` | P0-B / P0-C |
 | `docs/open-webui-notebook-youtube-plan.md` | P0-D |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
-| `docs/open-webui-openrouter-image-continuity-plan.md` | 图像错误模式 |
+| `docs/open-webui-openrouter-image-continuity-plan.md` | 图像错误模式（聊天路径） |
+| `docs/open-webui-image-studio-plan.md` | 独立画图 Studio（**提案**；未确认不改实例） |
 | `docs/open-webui-upgrade-0113-plan.md` | **已落地**官方 0.11.3（VPS 换镜像 + 仓库脚本重放） |
