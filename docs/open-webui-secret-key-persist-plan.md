@@ -49,7 +49,7 @@
 
 1. 大改前备份 `webui.db`（聊天 / Knowledge 才需要；JWT 不需要）。  
 2. `/root/open-webui.env`：**保持** `WEBUI_SECRET_KEY=""`；**禁止**写入新的随机密钥。  
-3. 重建容器时保持：镜像 `e97bf9531916`、entrypoint `/custom/entrypoint.sh`、`127.0.0.1:8080`、`api_configs` 未改。  
+3. 重建容器时保持：entrypoint `/custom/entrypoint.sh`、`127.0.0.1:8080`、`api_configs` 未改。**当前**镜像官方 **v0.11.3**（image id `129f4038ec70`；RepoDigest `sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`）。不要漂 `:latest`。回滚目标仍是旧钉 `e97bf9531916`。  
 4. 通知用户：**请重新登录**（预期行为，不是故障）。
 
 4. Agent：`python3 scripts/apply_ops_l0.py` → `verify_ops_l0.py` → 全套 verify  

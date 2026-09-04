@@ -2,7 +2,7 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
 **ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关。不要把两条都写成 ST-11。
 
@@ -16,7 +16,7 @@
 
 **P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **21 个 public**（留下的家族最新 id，含两条 Gemini）。
 
-未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
+未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换 Realtime 镜像**。官方 **0.11.3** 已落地（钉 digest，不是 `:latest`），见 **`docs/open-webui-upgrade-0113-plan.md`**。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
 
 ## 改实例前
 
@@ -74,7 +74,8 @@
 
 | 项 | 当前值 / 约束 |
 |----|----------------|
-| 容器 | `open-webui`，`127.0.0.1:8080`，镜像 `e97bf9531916` |
+| 容器 | `open-webui`，`127.0.0.1:8080`，官方 **v0.11.3** |
+| 镜像钉子 | image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`。**不要**漂 `:latest` / `:main`。无 Realtime 钥匙时 **不换** Realtime 镜像。过程见 `docs/open-webui-upgrade-0113-plan.md` |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
 | env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
 | `openai.api_configs` | 5 条，**全部 `enable: false`** |

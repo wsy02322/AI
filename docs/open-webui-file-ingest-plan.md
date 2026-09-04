@@ -45,7 +45,7 @@ Direct 只覆盖「原件 base64 进模型文件槽」。ChatGPT Plus 日常 Off
 
 | 项 | 值 |
 |----|-----|
-| OWUI | **0.11.0**（镜像钉死 `e97bf9531916`） |
+| OWUI | **0.11.0**（当时镜像 `e97bf9531916`）。**2026-09-04** 起现网为 **0.11.3**（`129f4038ec70`）；本表抽取探针未重跑，引擎仍空 |
 | `CONTENT_EXTRACTION_ENGINE` | **空** → 内置 `PyPDF` / `Docx2txt` / `PptxLoader`（幻灯片只抽文本框） |
 | `TIKA_SERVER_URL` | 默认占位 `http://tika:9998`（引擎未开，**没有在用 Tika**） |
 | `PDF_EXTRACT_IMAGES` | `false` |
@@ -128,7 +128,7 @@ Docling 表/版式优于 Tika，运维（worker、超时）更重，不作为第
 | 镜像 | T0 |
 |------|-----|
 | `apache/tika:…` | 钉 **3.x-full** |
-| OWUI `e97bf9531916` | **不动** |
+| OWUI `129f4038ec70`（0.11.3） | **T0 仍不动镜像**（升级已另做） |
 
 0.11.0 的 `TikaLoader`：`PUT /tika/text` + `r.json()` + `X-TIKA:content`。  
 Tika 4 的 `/tika/text` 改为纯文本；JSON 键改为 `tk:`。对上 4 → `JSONDecodeError`。  
@@ -155,7 +155,7 @@ T0 要的「Office 读全」，3.x 已够。Tika 4 不值「换整站」；表/�
 | ID | 必须 |
 |----|------|
 | ST-FILE-1 | 不把 Direct 默认全开或扩 MIME 冒充官网录入 |
-| ST-FILE-2 | T0 只用钉死的 Tika **3.x-full**；OWUI 0.11.0 不对 Tika 4 |
+| ST-FILE-2 | T0 只用钉死的 Tika **3.x-full**；OWUI 0.11.x 不对 Tika 4 |
 | ST-FILE-3 | Tika URL 为 `http://tika:9998`；不发布公网 9998 |
 | ST-FILE-4 | 未确认不装 Tika、不改 `CONTENT_EXTRACTION_ENGINE`、不改 Pipe |
 | ST-FILE-5 | T1/T2 / Docling / 换 OWUI 镜像 **另确认**；不得塞进 T0 |
