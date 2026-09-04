@@ -2,7 +2,7 @@
 
 给 VPS agent 复制。**不要**改 `open-webui` 容器、**不要**改 `/custom/entrypoint.sh`、**不要**写 `WEBUI_SECRET_KEY`、**不要** enable `openai.api_configs`、**不要** merge 这些钥匙进 Pipe、**不要**拷现网 `openai.api_keys[0]` 进 Studio（除非用户书面说复用）。
 
-仓库现已 **public**：`https://github.com/wsy02322/AI`。分支 `cursor/image-studio-plan-decf`（钉 `546bda5`）。
+仓库现已 **public**：`https://github.com/wsy02322/AI`。分支 `cursor/image-studio-plan-decf`。
 
 ## 隔离
 
@@ -26,11 +26,11 @@ mkdir -p /opt/image-studio /var/lib/image-studio
 # 优先 git：
 git clone --depth 1 -b cursor/image-studio-plan-decf \
   https://github.com/wsy02322/AI.git /opt/image-studio/src
-# 若 git 仍失败，用公开 tarball：
-# curl -sSL https://github.com/wsy02322/AI/archive/546bda5.tar.gz \
+# 若 git 仍失败，用公开 tarball（分支最新）：
+# curl -sSL https://github.com/wsy02322/AI/archive/refs/heads/cursor/image-studio-plan-decf.tar.gz \
 #   | tar -xzf - -C /tmp
-# mkdir -p /opt/image-studio/src
-# mv /tmp/AI-546bda5 /opt/image-studio/src
+# rm -rf /opt/image-studio/src
+# mv /tmp/AI-cursor-image-studio-plan-decf /opt/image-studio/src
 test -f /opt/image-studio/src/image-studio/Dockerfile
 ```
 
