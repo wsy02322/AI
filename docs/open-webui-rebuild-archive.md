@@ -228,7 +228,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 ## 7. Later / Don't（尚未落地，重建时不要「顺便做」）
 
-**Later（须另确认）**：见 SPEC。重建时不要顺便做。含 Wave 1 视频、Wave 2 slides、对比 S3 真分栏、Notebook N2+、独立画图 Studio（含蒙版）、Tika T0、语音 S2S / 持续屏流。
+**Later（须另确认）**：见 SPEC。重建时不要顺便做。含 Wave 1 视频、Wave 2 slides、对比 S3 真分栏、Notebook N2+、独立画图 Studio（`open-webui-image-studio-plan.md`，未确认不执行）、Tika T0、语音 S2S / 持续屏流。
 
 **Don't**：ComfyUI（除非 Studio 方案选它）、第二套 Pipe、重开 Web Search 三件套、466 全 public。
 
