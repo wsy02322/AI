@@ -2,7 +2,7 @@
 
 > **用途**：站点没了、容器重建、或新 Agent 接手时，先读这一份，再动实例。  
 > **GitHub**：几乎仅用于灾后重建（本文件 + SPEC + 脚本）。不是演示库；重建成功不靠截屏。  
-> **探针**：2026-09-01T11:16Z，`https://micropigeon.com`，OWUI **0.11.0**。  
+> **探针**：2026-09-04 升级前复核，`https://micropigeon.com`，OWUI **仍 0.11.0**。官方 **0.11.3** 已确认，见 `docs/open-webui-upgrade-0113-plan.md`（digest 换完改本行）。  
 > **策略**：规格 + 脚本验收 + DB 备份。不锁死某一版 Function 全文；不靠全量配置快照。  
 > **密钥不入库**。OpenRouter / TTS / RAG 的 key 由运维注入；本文件只记「已配置」与形状。
 
@@ -17,7 +17,7 @@
 3. `docs/SPEC.md`（UX / ST / P0 / Later / Don't）  
 4. `docs/VERSIONS.md`（指纹）  
 5. `docs/open-webui-secret-key-persist-plan.md` §2（容器重建 SOP）  
-6. 按任务再读：图像 continuity、Live、Notebook、文件录入  
+6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**（`docs/open-webui-upgrade-0113-plan.md`）  
 
 独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**与本 OWUI 重建无关**。
 
@@ -44,7 +44,7 @@
 | 站点 | `https://micropigeon.com`（`WEBUI_URL` 同此）；Caddy → `127.0.0.1:8080` |
 | VPS | Hetzner `78.47.152.85` |
 | 容器名 | `open-webui` |
-| 镜像 | **钉死 digest** `e97bf9531916`（OWUI 0.11.0）。**不要**漂 `:main`。无 OpenAI/Google Realtime 钥匙时 **不换** Realtime 镜像 |
+| 镜像 | **当前**钉死 digest `e97bf9531916`（OWUI 0.11.0）。**已确认**换官方 `v0.11.3` 再钉新 digest（`docs/open-webui-upgrade-0113-plan.md`）。**不要**漂 `:main` / `:latest`。无 OpenAI/Google Realtime 钥匙时 **不换** Realtime 镜像 |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`）。新镜像上补丁可能失效，须再验 |
 | env 文件 | `/root/open-webui.env` |
 | `WEBUI_SECRET_KEY` | **必须 `""`**。禁止写入新的随机非空值（与 `encrypted:` Pipe key 冲突 → catalog 空） |
@@ -244,6 +244,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑方案 A / Guard |
 | `model/update` 500 | 缺 `access_grants` | 更新必须带 grants |
 | valves 更新后全站断 | 全量覆盖 valves | **只 merge** |
+| picker 多出新家族 | catalog 刷新把 Nemotron / Grok batch 等标成 active | `apply_model_catalog_visibility.py`；新家族不进 `PUBLIC_MODEL_IDS` |
 | picker 空 / `Model not found` | env 非空 `WEBUI_SECRET_KEY` 与 `encrypted:` Pipe key 冲突，或空 `models/sync` | env 改回 `""`；merge 明文 key；**禁止空 sync** |
 | 容器重建后全员掉线 | JWT 不持久化（L0） | **可接受** — 用户重登；agent 跑 verify |
 
@@ -265,3 +266,4 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后（p
 | `docs/open-webui-notebook-youtube-plan.md` | P0-D |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认） |
 | `docs/open-webui-openrouter-image-continuity-plan.md` | 图像错误模式 |
+| `docs/open-webui-upgrade-0113-plan.md` | **已确认**官方 0.11.3（VPS 换镜像 + 仓库脚本重放） |

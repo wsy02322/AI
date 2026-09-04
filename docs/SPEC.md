@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）、`docs/open-webui-openrouter-image-continuity-plan.md`（图像错误模式）、`docs/open-webui-secret-key-persist-plan.md`（L0）
+> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-upgrade-0113-plan.md`（已确认：官方 0.11.3 钉 digest）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）、`docs/open-webui-openrouter-image-continuity-plan.md`（图像错误模式）、`docs/open-webui-secret-key-persist-plan.md`（L0）
 
 ---
 
