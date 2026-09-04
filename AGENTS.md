@@ -16,7 +16,7 @@
 
 **P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **21 个 public**（留下的家族最新 id，含两条 Gemini）。
 
-未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换 Realtime 镜像**。官方补丁 **0.11.0 → 0.11.3** 已确认，见 **`docs/open-webui-upgrade-0113-plan.md`**（钉 tag/digest，不是 `:latest`）。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
+未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换 Realtime 镜像**。官方 **0.11.3** 已落地（钉 digest，不是 `:latest`），见 **`docs/open-webui-upgrade-0113-plan.md`**。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
 
 ## 改实例前
 
@@ -74,8 +74,8 @@
 
 | 项 | 当前值 / 约束 |
 |----|----------------|
-| 容器 | `open-webui`，`127.0.0.1:8080`，镜像 **仍** `e97bf9531916`（0.11.0） |
-| 官方补丁升级 | **已确认** → `ghcr.io/open-webui/open-webui:v0.11.3` 钉 digest。VPS 只做备份+换镜像：`docs/open-webui-upgrade-0113-plan.md` §1。digest 换完再改本表 |
+| 容器 | `open-webui`，`127.0.0.1:8080`，官方 **v0.11.3** |
+| 镜像钉子 | image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`。**不要**漂 `:latest` / `:main`。无 Realtime 钥匙时 **不换** Realtime 镜像。过程见 `docs/open-webui-upgrade-0113-plan.md` |
 | Entrypoint | `/custom/entrypoint.sh`（BetterUI patch + 官方 `start.sh`） |
 | env 文件 | `/root/open-webui.env` — `WEBUI_SECRET_KEY=""`（**L0：故意不持久化**） |
 | `openai.api_configs` | 5 条，**全部 `enable: false`** |

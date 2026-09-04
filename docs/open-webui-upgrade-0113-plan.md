@@ -1,9 +1,10 @@
-# OWUI 0.11.0 → 0.11.3 升级（已确认）
+# OWUI 0.11.0 → 0.11.3 升级（已落地）
 
-> **状态**：已确认执行。目标 = 官方 **v0.11.3 钉死 digest**，不是 `:main`，不是 Realtime 镜像。  
+> **状态**：**已落地**。生产 = 官方 **v0.11.3** 钉死 digest，不是 `:main`，不是 Realtime 镜像。  
 > **日期**：2026-09-04  
-> **现网起点**：`GET /api/version` = **0.11.0**；镜像 digest `e97bf9531916`。  
-> **升级前基线（2026-09-04）**：`verify_stack.py` **27 ok / 0 err**；Pipe sha `f797e92d6d3f`；picker **21** = public。  
+> **现网**：`GET /api/version` = **0.11.3**。image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`。  
+> **升级前基线**：`verify_stack.py` **27 ok / 0 err**（当时 0.11.0；Pipe `f797e92d6d3f`；picker 21）。  
+> **升级后验收**：`verify_stack.py` **27 ok / 0 err**（0.11.3；同一 Pipe sha；picker 21）。  
 > **不搭车**：Tika / 扩 Direct MIME、Notebook N2+、画图 Studio、Realtime / L2、K1/K2、空 `models/sync`、新的非空 `WEBUI_SECRET_KEY`。
 
 BetterUI / `custom.css` 若在新前端失效：**先保聊天可用**（stock 外观），CSS 另修。不要为补丁卡住回滚。
@@ -90,7 +91,7 @@ BetterUI / `custom.css` 若在新前端失效：**先保聊天可用**（stock �
 ## 3. 本仓库 agent（VPS 起来之后）
 
 1. `GET /api/version` 确认 0.11.3。  
-2. catalog 空或 decrypt 失败 → `apply_ops_l0.py`（merge-only）。  
+2. catalog 空或 decrypt 失败 → `apply_ops_l0.py`（merge-only）。脚本若因列表 <400 退出码 1：先看 picker 是否已是 21 契约；是则继续，**不要**再 refresh 灌新家族。  
 3. 否则跳过 L0 key 写入，仍跑：  
    `apply_plan_a_hide_integrations.py`  
    `apply_ui_guidance_banners.py`  
@@ -114,5 +115,5 @@ VPS：image 改回 `e97bf9531916`（或备份记下的旧 RepoDigest），同一
 | 时 | 谁 | 结果 |
 |----|----|------|
 | 2026-09-04 | 仓库 agent | 计划落地；picker 23→21；`verify_stack` 全绿。**等 VPS §1** |
-| （待填） | VPS | pull `v0.11.3`、recreate、回传 digest / `api/version` |
-| （待填） | 仓库 agent | §3 重放脚本 + verify；钉子改成新 digest |
+| 2026-09-04 | VPS | 备份 `webui-before-owui-0113-20260904-031549.db` + custom tarball。recreate 到 `v0.11.3`。RepoDigest `sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`；image id `129f4038ec70`。entrypoint 仍 custom；BetterUI `strip-bound-reasoning` 已打上。`/api/version` = 0.11.3。`WEBUI_SECRET_KEY` env 仍空（新 `.webui_secret_key` → 用户重登） |
+| 2026-09-04 | 仓库 agent | catalog 空（新 JWT vs `encrypted:` Pipe key）→ `apply_ops_l0` merge 明文；refresh 后列表=21（脚本仍报 <400，**不是**失败）。plan A / banners / wave0 / catalog vis / grants；Pipe 补丁 no-op。`verify_stack` **27 ok**。compare 5 ok；fable 7 ok。抽取引擎仍空 |
