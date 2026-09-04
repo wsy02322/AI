@@ -3,7 +3,7 @@
 > **状态**：提案。**未确认不改实例 / 不装第二前端 / 不灌聊天 tools / 不启用 `ENABLE_IMAGE_GENERATION`。**  
 > **日期**：2026-09-04  
 > **现网**：OWUI **0.11.3**；作图仍是 **路线 S**（切图像模型即出图）。Pipe sha `f797e92d6d3f`。  
-> **新意向（2026-09-04）**：为最高出图/编辑性能，**接受 OWUI 完全取消作图**，图像任何程度独立。  
+> **已声明**：为最高出图/编辑，**接受 OWUI 完全取消作图**；除 OpenRouter 外有 **Gemini 直连**、**xAI/Grok 直连**。OpenAI Images、fal/Replicate **尚未声明**。  
 > **宪法**：顶级与略降级一并提案；确认再选。讨论 ≠ 执行。
 
 关联：`docs/SPEC.md` UX-6 / ST-9、`docs/open-webui-openrouter-image-continuity-plan.md`（聊天路径错误模式，**不是**本 Studio）、`docs/open-webui-rebuild-archive.md`。
@@ -188,19 +188,20 @@ OpenRouter `GET /api/v1/images/models` + 各 id `/endpoints`。若已有直连�
 
 你已接受「OWUI 可彻底不作图」→ 默认按 **IS-A+** 问下面的题。若钥匙一条都没有，A+ 自动落成 A，产品面仍独立。
 
-### 7.2 钥匙（决定能不能顶满选区 / 4K / 魔棒）
+### 7.2 钥匙（2026-09-04 对照官方文档）
 
-现网聊天/图像走 **OpenRouter**。Realtime 也没有 OpenAI/Google 钥匙。请逐项说 **有 / 能开 / 没有**：
+| 钥匙 | 你这边 | 直连实际解锁（不是官网 App 广告） |
+|------|--------|----------------------------------|
+| **OpenRouter** | 已有（现网） | 长尾 + 后备：Seedream / Qwen / MAI / Flux（若 catalog 有） |
+| **Google Gemini** | **已声明有** | Banana Pro/2：**最多 14 参考**、1K/2K/4K、官方多轮。局部编辑是 **语义 inpaint**（「只改 X」），**不是** PNG 像素 mask |
+| **xAI** | **已声明有** | `grok-imagine-image-2.0`：`/images/edits` + 最多 **5** 参考。文档是 **整图 + 指令**。`grok.com` 的魔棒/分割 **没有**写进这份 edits API |
+| **OpenAI Images** | **未声明** | 这是 **真笔刷 mask**（`/v1/images/edits` + 同尺寸 PNG alpha）和 GPT Image 2 官方 SSE 的主路径。没有它，选区只能软 |
+| **fal / Replicate** | **未声明** | Flux Kontext 等强 img2img/inpaint，不必 GPU。比「再加一把 OpenAI」更接近「无拘无束局部控制」的托管层 |
+| **ComfyUI** | 默认不上 | 节点级锁定；要 GPU |
 
-| 钥匙 | 解锁 |
-|------|------|
-| **OpenAI**（Images，不是 Realtime） | 真 mask、官方 edits、SSE。没有 = 选区只能软 |
-| **Google AI Studio / Gemini API** | Banana 14 参考、4K、官方多轮、Search grounding（仅 Studio） |
-| **xAI** | 官网 Imagine 分割/魔棒（若 API 开放） |
-| **fal.ai 或 Replicate** | Flux Kontext / Reve 等强 inpaint，不必自建 GPU |
-| 继续只用 **OpenRouter** | 质量通常够；锁定/延迟/功能面封顶 |
-
-没有的不装假直连。
+**结论**：有 Gemini + xAI 直连，已经值得做 **IS-A+**（独立 Studio，按模型打不同上游）。  
+**还顶不满 ChatGPT Images 选区**，除非补 **OpenAI Images 钥匙**（或 fal Kontext 当第二蒙版引擎）。  
+没有的不装假直连；官网 App 有、API 文档没有的控件，UI 要么不做，要么标明「软」。
 
 ### 7.3 从 OWUI 剥多干净
 
@@ -239,9 +240,14 @@ OpenRouter `GET /api/v1/images/models` + 各 id `/endpoints`。若已有直连�
 
 ## 8. 请直接回（最短）
 
-1. 档位：`A+` / `A` / `B` / `先 IS0`  
-2. 钥匙：OpenAI / Google / xAI / fal 各「有或能开 / 没有」  
-3. OWUI：`立刻关图像模型` / `Studio 能用再关`  
-4. 视频、谁能用、Comfy 还是 fal  
+已知：Gemini + xAI + OpenRouter；接受 OWUI 可彻底不作图。还缺：
 
-确认前：**不改** Pipe、不改 picker、不装前端、不向 VPS 要新容器。建议仍是 **先 IS0（只读）**，同时你去开缺的官方钥匙。
+1. **OpenAI Images 钥匙**：能开 / 没有 / 不打算开  
+2. **fal 或 Replicate**：能开 / 不要  
+3. OWUI：**Studio 能用再关图像模型**（推荐） / **现在就关**  
+4. 视频进第一年？**默认 Later**  
+5. 谁能用：仅你 / 现网登录用户  
+6. 域名 + 登录：`studio.` vs 路径；复用 OWUI 账号 vs 独立  
+7. Comfy：**不上**（推荐） / 要  
+
+确认前：**不改** Pipe、不改 picker、不装前端、不向 VPS 要新容器。钥匙未交到 Studio 环境变量前，IS0 只能打 OpenRouter 公开 catalog，打不了你的直连额度。
