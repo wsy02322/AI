@@ -1,10 +1,10 @@
 # 独立图像 Studio（对标官网最高订阅档）
 
-> **状态**：提案。**未确认不改实例 / 不装第二前端 / 不灌聊天 tools / 不启用 `ENABLE_IMAGE_GENERATION`。**  
+> **状态**：**IS-A+ 产品决策已锁**（见 §7）。**未说「开工」前不改实例、不装前端、不向 VPS 要容器。**  
 > **日期**：2026-09-04  
-> **现网**：OWUI **0.11.3**；作图仍是 **路线 S**（切图像模型即出图）。Pipe sha `f797e92d6d3f`。  
-> **已声明**：为最高出图/编辑，**接受 OWUI 完全取消作图**；除 OpenRouter 外有 **Gemini 直连**、**xAI/Grok 直连**。OpenAI Images、fal/Replicate **尚未声明**。  
-> **宪法**：顶级与略降级一并提案；确认再选。讨论 ≠ 执行。
+> **现网**：OWUI **0.11.3**；作图仍是路线 S。Pipe sha `f797e92d6d3f`。  
+> **档位**：独立站点 `image.micropigeon.com`；OpenAI + Gemini + xAI **直连** + OpenRouter 长尾。ComfyUI 不上。视频 Later。  
+> **宪法**：讨论 ≠ 执行。钥匙不入库、不进聊天。
 
 关联：`docs/SPEC.md` UX-6 / ST-9、`docs/open-webui-openrouter-image-continuity-plan.md`（聊天路径错误模式，**不是**本 Studio）、`docs/open-webui-rebuild-archive.md`。
 
@@ -14,7 +14,7 @@
 
 | 易混项 | 本方案 |
 |--------|--------|
-| 聊天里切 Banana / GPT Image（路线 S） | 若选 **IS-A+ / 剥离聊天作图**：OWUI picker **关掉全部纯图像模型**；Banner / 四格 Images 改指向 Studio。旧聊天里的图还在。 |
+| 聊天里切 Banana / GPT Image（路线 S） | **先双轨**：聊天还能切图像；Studio 另站。关 picker 须另确认。看图理解一直留。 |
 | 开全局 `ENABLE_IMAGE_GENERATION` / Sol Pro `image_generation` | **Don't**。同会话作图已爆 404 |
 | 把 continuity plan 的 Pipe A/C 当「官网 Studio」 | 只补聊天多轮漂移，**没有**画布 / 蒙版 / 版本栈 |
 | Notebook N2+ Studio | YouTube 知识产物，不是画图 |
@@ -80,18 +80,19 @@ OWUI 取消作图 **只去掉壳**，不自动变快。要顶满四轴，必须 
 
 独立站点，**完全不经过** OWUI 聊天 / Pipe / Guard。
 
-1. **入口**：`studio.` 或 `/studio`。OWUI 九个纯图像模型关闭；四格「Images」改链到 Studio。  
-2. **画布 + 版本 + 笔刷蒙版 + 多参考 + 比例/质量/透明底 + 历史库**（同原 IS-A 产品面）。  
-3. **路由（按模型选最快/最完整的上游，不是只认 OpenRouter）**：  
-   - **OpenAI 直连**（若有钥匙）：GPT Image 2 / 1.5 → 官方 Images + **mask/edits** + SSE。这是选区锁定的主路径。  
-   - **Google 直连**（若有钥匙）：Nano Banana Pro / 2 → 最多 14 参考、1K/2K/4K、官方多轮；Search grounding **只在 Studio**，不进 OWUI。  
-   - **xAI 直连**（若 Imagine API / 钥匙存在）：官网魔棒/分割；没有钥匙则 Grok Imagine 仍走 OpenRouter（软编辑）。  
-   - **OpenRouter Images**：Seedream、Qwen、MAI、以及未直连的后备。  
-   - **fal / Replicate（可选）**：Flux Kontext 等 **强 img2img / inpaint**（Reve 也在 fal）。不自建 GPU 时，这是最接近「无拘无束局部编辑」的托管层。  
-   - **ComfyUI（可选，最重）**：ControlNet / 节点级锁定。要 GPU 或云 Comfy。只当上面官方+fal 仍不够像素控制时再上。  
+1. **入口**：`https://image.micropigeon.com`。OWUI 图像模型 **先保留**；Studio 能用且你点头后再关（也可能一直双轨）。  
+2. **画布 + 版本 + 笔刷蒙版 + 多参考 + 比例/质量/透明底 + 历史库**。  
+3. **路由**：  
+   - **OpenAI 直连**（已有钥匙）：GPT Image 2 → 官方 Images + **PNG mask** + SSE。选区主路径。  
+   - **Google 直连**（已有）：Banana Pro / 2 → 最多 14 参考、4K、语义「只改 X」。  
+   - **xAI 直连**（已有）：`grok-imagine-image-2.0` edits，最多 5 参考。官网魔棒若 API 没有就不做假按钮。  
+   - **OpenRouter**：Seedream / Qwen / MAI 等长尾。  
+   - **fal / Replicate**：v1 **不开**（见 §7 白话）。以后选区仍不够再另确认。  
+   - **ComfyUI**：**不上**。  
 4. **参数**：每个上游一张能力表（IS0 扩到直连 endpoint）。UI 只露出该模型真支持的控件。  
-5. **鉴权 / 存储**：独立 session 或复用 OWUI cookie；图存在 **Studio 自己的 volume**（和 `webui.db` 分开备份）。不把巨型 data URI 写回聊天。  
-6. **OWUI**：继续聊天 / Sonar / 对比 / Live。Banner 写清「作图去 Studio」。`ENABLE_IMAGE_GENERATION` 保持 false。
+5. **鉴权（已定，求简单）**：不建第二套用户表。`image.` 自己的登录页，用 **和 OWUI 同一套账号密码** 调现网 `POST /api/v1/auths/signin`；成功后发 Studio 自己的 httpOnly cookie（只挂在 `image.micropigeon.com`）。OWUI 重建掉 JWT 时，Studio 会话各自过期、再登一次即可（L0 同类）。不把 OWUI cookie 硬挂到父域（脆）。  
+6. **存储**：Studio **独立 volume**，升配时和 `webui.db` **分开备**。  
+7. **OWUI**：聊天 / Sonar / 对比 / Live / **看图理解** 不动。`ENABLE_IMAGE_GENERATION` 保持 false。图像模型先不关。
 
 **代价**：第二前端 + 可能多把官方钥匙 + Caddy + 独立备份。钥匙不够就那一家退化成 OpenRouter，**不能假装直连**。  
 **不做的代价**：继续被 Pipe/聊天裁功能；选区永远软。
@@ -129,7 +130,7 @@ OWUI 取消作图 **只去掉壳**，不自动变快。要顶满四轴，必须 
 | IS-1 画布多轮 | 必须 | 必须 | 必须 |
 | IS-2 版本 / 稳定 URL | 必须 | 必须 | 必须 |
 | IS-3 能力表驱动控件 | 必须（多上游） | 必须（仅 OR） | 尽量 |
-| IS-4 OWUI | **关掉** 9 个图像模型；public=12；Banner 指 Studio；`verify_stack` 改契约后仍绿 | 默认同左（可暂留路线 S） | 路线 S 零回归 |
+| IS-4 OWUI | 聊天看图留下；图像模型 **先留**；`verify_stack` 现契约仍绿。关模型另确认 | 可双轨 | 路线 S 零回归 |
 | IS-5 选区 | GPT Image **直连** mask 有「区外少漂」探针；无钥匙则标明软蒙版 | OpenRouter 能吃 mask 才承诺 | 不做 |
 | IS-6 透明底 / 多参考 / 流式 | 有则开 | 有则开 | 不做 |
 | IS-7 聊天 tools | Studio 外永不灌 | 同左 | 同左 |
@@ -151,7 +152,7 @@ OpenRouter `GET /api/v1/images/models` + 各 id `/endpoints`。若已有直连�
 | A2 | Studio 页：模型、提示、画布、版本、下载 |
 | A3 | 笔刷蒙版 + 能力表灰显 |
 | A4 | 多参考、透明底、流式、比例重出 |
-| A5 | （仅确认剥离后）OWUI 关 9 个图像模型、改 Banner / `stack_contract` / `verify_stack` |
+| A5 | （另确认）才关 OWUI 图像模型 / 改 Banner 与 `stack_contract` |
 
 ### IS-B
 
@@ -175,79 +176,52 @@ OpenRouter `GET /api/v1/images/models` + 各 id `/endpoints`。若已有直连�
 
 ---
 
-## 7. 还要沟通什么（无拘无束档清单）
+## 7. 已确认（2026-09-04）
 
-下面每条都会改架构或钱。没答的当「未确认」，不施工。
+| 项 | 决定 |
+|----|------|
+| 档位 | **IS-A+**：独立 Studio，直连优先 |
+| 域名 | `image.micropigeon.com` |
+| 谁能用 | 现网 **所有已有 OWUI 账号**（同一套用户，不新建用户库） |
+| 登录 | Studio 登录页 → OWUI `signin` 验密码 → `image.` 自己的 cookie。细节见 §3.5 |
+| 钥匙 | OpenRouter + **OpenAI Images** + **Gemini** + **xAI**。钥匙只进 Studio 环境变量，不进 git、不进 OWUI `api_configs`、不 merge Pipe |
+| fal / Replicate | **v1 不开**（白话见下）。选区不够再另确认 |
+| ComfyUI | **不上** |
+| OWUI 图像模型 | **先保留**（双轨）。Studio 稳定后你再决定关还是留 |
+| 聊天看图 | **留下**（Grok / Gemini 文本模型照常理解图） |
+| 视频 | **图像搞好之前不做** |
+| likeness 库 | **v1 不做**（白话见下） |
+| 一次出几张 | 默认 **1 张**（贵）。以后再加「出 4 张草稿」 |
+| 图库 | Studio 独立 volume，和 `webui.db` 分开备份 |
 
-### 7.1 档位
+### fal / Replicate 是什么（白话）
 
-- [ ] **IS-A+**（独立 Studio + 能直连就直连 + OWUI 可关作图）  
-- [ ] **IS-A**（独立 Studio，只用现有 OpenRouter）  
-- [ ] **IS-B**（OWUI 内薄 Studio）  
-- [ ] 先 **IS0** 只读探针  
+不是新模型家族，是 **别人家的出图服务器**。你按张付钱，对方有 GPU，所以你 **不用自己买显卡**。
 
-你已接受「OWUI 可彻底不作图」→ 默认按 **IS-A+** 问下面的题。若钥匙一条都没有，A+ 自动落成 A，产品面仍独立。
+上面常挂 Flux Kontext 一类：擅长「看着这张图，只改一块」。有点像租来的局部修改器。
 
-### 7.2 钥匙（2026-09-04 对照官方文档）
+你现在已经有 **OpenAI 真蒙版 + Gemini 语义改 + Grok 直连编辑**。v1 够打官网选区主路径。再开 fal = 多一把钥匙、多一家账单、多一套故障。所以 **先不开**。以后若笔刷仍不够狠，再开也不迟。
 
-| 钥匙 | 你这边 | 直连实际解锁（不是官网 App 广告） |
-|------|--------|----------------------------------|
-| **OpenRouter** | 已有（现网） | 长尾 + 后备：Seedream / Qwen / MAI / Flux（若 catalog 有） |
-| **Google Gemini** | **已声明有** | Banana Pro/2：**最多 14 参考**、1K/2K/4K、官方多轮。局部编辑是 **语义 inpaint**（「只改 X」），**不是** PNG 像素 mask |
-| **xAI** | **已声明有** | `grok-imagine-image-2.0`：`/images/edits` + 最多 **5** 参考。文档是 **整图 + 指令**。`grok.com` 的魔棒/分割 **没有**写进这份 edits API |
-| **OpenAI Images** | **未声明** | 这是 **真笔刷 mask**（`/v1/images/edits` + 同尺寸 PNG alpha）和 GPT Image 2 官方 SSE 的主路径。没有它，选区只能软 |
-| **fal / Replicate** | **未声明** | Flux Kontext 等强 img2img/inpaint，不必 GPU。比「再加一把 OpenAI」更接近「无拘无束局部控制」的托管层 |
-| **ComfyUI** | 默认不上 | 节点级锁定；要 GPU |
+### likeness 库是什么（白话）
 
-**结论**：有 Gemini + xAI 直连，已经值得做 **IS-A+**（独立 Studio，按模型打不同上游）。  
-**还顶不满 ChatGPT Images 选区**，除非补 **OpenAI Images 钥匙**（或 fal Kontext 当第二蒙版引擎）。  
-没有的不装假直连；官网 App 有、API 文档没有的控件，UI 要么不做，要么标明「软」。
+ChatGPT Images 可以 **把你的脸上传一次**，以后出图都长得像你，不用每次从相册找。
 
-### 7.3 从 OWUI 剥多干净
+代价：服务器上长期存一张你的脸；还要管「这张脸能用在哪些图」。隐私和误用都重。
 
-- [ ] **关 picker 里全部纯图像模型**（21→12），Banner / 四格改「去 Studio」  
-- [ ] 先双轨：聊天暂时还能切图像，Studio 上线后再关  
-- [ ] 旧聊天里的图：只读保留（默认） / 迁到 Studio 库  
-
-聊天里 **看图 / 理解图**（Grok、Gemini 文本模型）默认 **留下**，只剥「生成」。若也要剥视觉理解，另说。
-
-### 7.4 产品范围（避免做成第二个聊天）
-
-- **视频**（Grok Imagine 视频、Seedance 等）：进 Studio 第一年 / Later / 永不？默认 **Later**（Wave 1 仍是另线）。  
-- **likeness / 人物一致库**：要 / 不要（隐私+存原图）。  
-- **一次出 n 张草稿**：要（贵、快选） / 只要 1 张。  
-- **谁能用**：仅你 / 现网所有登录用户。  
-- **域名**：`studio.micropigeon.com` / `micropigeon.com/studio`。  
-- **登录**：复用 OWUI 账号 / Studio 独立账号。
-
-### 7.5 重控制层（默认可先不上）
-
-- [ ] **不上 ComfyUI**（默认）。官方 mask + fal Kontext 先打满。  
-- [ ] **要 ComfyUI**：接受 GPU 或云 Comfy、节点 UI、另一套备份。  
-- [ ] **要 fal/Replicate、不要 Comfy**：托管 inpaint，无 GPU。
-
-### 7.6 运维
-
-- 图库存哪：Studio 独立 volume（推荐） / 仍写 `webui.db` files。独立库要 **另备份**，升配时别只备 OWUI。  
-- 月费心理上限（直连 4K + `n` + fal 会明显贵于现在「聊天里偶发出一张」）。  
-- VPS：Caddy 反代一条新服务；**不要**进 OWUI 容器。
-
-### 7.7 明确不做（除非你改口）
-
-绕过上游安全网、把 Studio 密钥写进 OWUI `api_configs`、为 Studio 换 Realtime 镜像、把 Flux/新家族塞回 OWUI picker、空 `models/sync`。
+v1 **不做这个库**。需要像某个人时，**这一次上传参考图** 就行（和现在聊天贴图一样，用完不必进「脸档案」）。
 
 ---
 
-## 8. 请直接回（最短）
+## 8. 开工还差什么
 
-已知：Gemini + xAI + OpenRouter；接受 OWUI 可彻底不作图。还缺：
+产品决策齐了。还差一句 **「按 §7 开工」**。开工顺序：
 
-1. **OpenAI Images 钥匙**：能开 / 没有 / 不打算开  
-2. **fal 或 Replicate**：能开 / 不要  
-3. OWUI：**Studio 能用再关图像模型**（推荐） / **现在就关**  
-4. 视频进第一年？**默认 Later**  
-5. 谁能用：仅你 / 现网登录用户  
-6. 域名 + 登录：`studio.` vs 路径；复用 OWUI 账号 vs 独立  
-7. Comfy：**不上**（推荐） / 要  
+1. **IS0** 只读探针（OpenRouter catalog + 各直连一条最小请求）。钥匙用环境变量，**不要贴到聊天**。  
+2. A1 薄后端（路由 + 落盘）。  
+3. A2 画布页。  
+4. A3 OpenAI 笔刷蒙版。  
+5. A4 多参考 / 4K / 流式。  
+6. VPS：Caddy → `image.micropigeon.com`，独立容器，**不进** `open-webui`。  
+7. OWUI 关图像模型：**另确认**，现在不动。
 
-确认前：**不改** Pipe、不改 picker、不装前端、不向 VPS 要新容器。钥匙未交到 Studio 环境变量前，IS0 只能打 OpenRouter 公开 catalog，打不了你的直连额度。
+未说开工前：不改 Pipe、不改 picker、不装前端。
