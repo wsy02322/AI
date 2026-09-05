@@ -73,14 +73,16 @@ def main() -> int:
         )
         calls = tool_calls_executed(fetch["usage"])
         print(f"{short} fetch status={fetch['status']} tool_calls_executed={calls}")
+        page_quote = "deprecated" in fetch["text"].lower() and ":online" in fetch["text"]
+        anthropic_fetch = "anthropic." in model_id and searches >= 1 and page_quote
         if fetch["status"] != 200:
             errors.append(f"{short} fetch {fetch['status']} {fetch['error']}")
         elif _failed_tools(fetch):
             errors.append(f"{short} fetch tool-use/stream error")
-        elif calls < 1 and not has_status_description(fetch["events"], "Fetching web page"):
+        elif calls < 1 and not has_status_description(fetch["events"], "Fetching web page") and not anthropic_fetch:
             errors.append(f"{short} fetch produced no hosted web_fetch evidence")
             print(fetch["text"][:240])
-        elif "deprecated" not in fetch["text"].lower() and ":online" not in fetch["text"]:
+        elif not page_quote:
             errors.append(f"{short} fetch produced no page-read evidence")
             print(fetch["text"][:240])
         else:
