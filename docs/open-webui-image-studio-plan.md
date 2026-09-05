@@ -4,6 +4,7 @@
 > **日期**：2026-09-04  
 > **现网**：OWUI **0.11.3**；作图仍是路线 S。Pipe sha `f797e92d6d3f`。  
 > **档位**：独立站点 `image.micropigeon.com`；OpenAI + Gemini + xAI **直连** + OpenRouter 长尾。ComfyUI 不上。视频 Later。  
+> **下一波（待确认）**：`docs/open-webui-image-studio-next-plan.md`。未确认不部署、不打直连验收、不关 OWUI 图像模型。  
 > **宪法**：讨论 ≠ 执行。钥匙不入库、不进聊天。
 
 关联：`docs/SPEC.md` UX-6 / ST-9、`docs/open-webui-openrouter-image-continuity-plan.md`（聊天路径错误模式，**不是**本 Studio）、`docs/open-webui-rebuild-archive.md`。
@@ -224,7 +225,7 @@ v1 **不做这个库**。需要像某个人时，**这一次上传参考图** �
 | A2 画布页 | 已写：`templates/` + `static/` |
 | A3 OpenAI 笔刷蒙版 | 已写：UI 白笔 = 编辑区 → OpenAI 透明像素。非 GPT Image 2 不自动切模型 |
 | UX-A | **已确认**：全英文；一个主按钮；Select area 是工具；Generate new 二次确认；**Download**（当前图 + 每版本）；Open 按钮 + 拖到画布 + 粘贴 |
-| A4 多参考 / 4K 流式 | **未做**（下一波） |
+| A4 多参考 / 4K 流式 | **未做**。收口提案见 `docs/open-webui-image-studio-next-plan.md`（待确认） |
 | VPS 容器 + Caddy `image.` | 已上 `https://image.micropigeon.com`。前端 UX-A 需 VPS pull 重建 |
 | 关 OWUI 图像模型 | **另确认**，现在不动 |
 
