@@ -1,37 +1,37 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Image Studio</title>
-  <link rel="stylesheet" href="/static/studio.css" />
+  <link rel="stylesheet" href="/static/studio.css?v=3" />
 </head>
 <body>
   <header class="top">
     <div>
       <p class="eyebrow">Image Studio</p>
-      <h1>画布</h1>
+      <h1>Canvas</h1>
     </div>
     <div class="top-right">
       <span>{{ user.name or user.email }}</span>
       <form method="post" action="/api/logout">
-        <button type="submit" class="ghost">退出</button>
+        <button type="submit" class="ghost">Sign out</button>
       </form>
     </div>
   </header>
   <div class="layout">
     <aside class="rail">
-      <button id="new-work" type="button">新建作品</button>
+      <button id="new-work" type="button" class="ghost">New</button>
       <ul id="works"></ul>
     </aside>
     <main class="stage">
       <section class="controls">
-        <label>模型
+        <label>Model
           <select id="model"></select>
         </label>
-        <label>比例
+        <label>Aspect
           <select id="aspect">
-            <option value="">默认</option>
+            <option value="">Default</option>
             <option value="1:1">1:1</option>
             <option value="16:9">16:9</option>
             <option value="9:16">9:16</option>
@@ -41,31 +41,31 @@
             <option value="2:3">2:3</option>
           </select>
         </label>
-        <label>分辨率
+        <label>Resolution
           <select id="size">
-            <option value="">默认</option>
+            <option value="">Default</option>
             <option value="1K">1K</option>
             <option value="2K">2K</option>
             <option value="4K">4K</option>
           </select>
         </label>
-        <label>质量
+        <label>Quality
           <select id="quality">
-            <option value="">默认</option>
+            <option value="">Default</option>
           </select>
         </label>
         <p id="model-hint" class="hint"></p>
       </section>
-      <textarea id="prompt" rows="4" placeholder="描述要生成或改动的内容"></textarea>
+      <textarea id="prompt" rows="4" placeholder="Describe what to generate or change"></textarea>
       <div class="actions">
-        <button id="generate" type="button">生成</button>
-        <button id="edit" type="button" class="ghost">按提示编辑</button>
-        <button id="edit-mask" type="button" class="ghost">用选区编辑</button>
-        <label class="inline">笔刷
+        <button id="primary" type="button">Generate</button>
+        <button id="generate-new" type="button" class="ghost" hidden>Generate new</button>
+        <button id="select-area" type="button" class="ghost" hidden>Select area</button>
+        <label id="brush-wrap" class="inline" hidden>Brush
           <input id="brush" type="range" min="8" max="80" value="28" />
         </label>
-        <button id="clear-mask" type="button" class="ghost">清除选区</button>
-        <label class="inline">打开图片
+        <button id="clear-mask" type="button" class="ghost" hidden>Clear</button>
+        <label class="inline">Open
           <input id="upload" type="file" accept="image/png,image/jpeg,image/webp" />
         </label>
       </div>
@@ -76,10 +76,10 @@
       </div>
     </main>
     <aside class="versions">
-      <h2>版本</h2>
+      <h2>Versions</h2>
       <ol id="version-list"></ol>
     </aside>
   </div>
-  <script src="/static/studio.js"></script>
+  <script src="/static/studio.js?v=3"></script>
 </body>
 </html>

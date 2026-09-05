@@ -111,10 +111,34 @@ def main() -> int:
         data={"model_id": "google:gemini-3-pro-image", "prompt": "only change sky", "work_id": work_id},
         files={"mask": ("mask.png", png_bytes((255, 255, 255, 180)), "image/png")},
     )
-    if semantic.status_code == 400:
+    if semantic.status_code == 400 and "no pixel mask" in semantic.text:
         oks.append("gemini rejects pixel mask")
     else:
         errors.append(f"gemini mask should 400, got {semantic.status_code} {semantic.text[:200]}")
+
+    bad = client.post("/api/login", json={"username": user, "password": "definitely-wrong"})
+    if bad.status_code == 401 and "Incorrect username or password" in bad.text:
+        oks.append("wrong password english")
+    else:
+        errors.append(f"wrong password {bad.status_code} {bad.text[:160]}")
+
+    anon = TestClient(app)
+    denied = anon.get("/api/models")
+    if denied.status_code == 401 and "Not signed in" in denied.text:
+        oks.append("unauth english")
+    else:
+        errors.append(f"unauth {denied.status_code} {denied.text[:160]}")
+
+    html = (ROOT / "templates" / "studio.html").read_text()
+    login = (ROOT / "templates" / "login.html").read_text()
+    if "Generate new" in html and 'lang="en"' in html and "Select area" in html:
+        oks.append("studio html english")
+    else:
+        errors.append("studio html missing english chrome")
+    if "Sign in" in login and "生成" not in html + login:
+        oks.append("no chinese chrome")
+    else:
+        errors.append("chinese chrome still present")
 
     _report(oks, errors)
     return 1 if errors else 0

@@ -20,6 +20,9 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(openai_size("1:1"), "1024x1024")
         self.assertEqual(openai_size("16:9"), "1536x1024")
         self.assertEqual(get_model("openai:gpt-image-2")["edit"], "mask")
+        html = (ROOT / "templates" / "studio.html").read_text()
+        self.assertIn("Generate new", html)
+        self.assertNotIn("生成", html)
         self.assertEqual(get_model("google:gemini-3-pro-image")["edit"], "semantic")
         with self.assertRaises(KeyError):
             get_model("nope")

@@ -21,6 +21,7 @@ button, input, select, textarea {
 }
 button { cursor: pointer; background: var(--accent); color: #16130b; border-color: transparent; font-weight: 600; }
 button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+button.active { box-shadow: inset 0 0 0 2px var(--accent); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 .eyebrow { letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.72rem; color: var(--muted); margin: 0; }
 .hint, .sub, .status { color: var(--muted); font-size: 0.92rem; }
@@ -49,7 +50,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 textarea { width: 100%; resize: vertical; }
 .canvas-wrap { position: relative; width: min(100%, 1024px); background: #0b0d12; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .canvas-wrap canvas { max-width: 100%; display: block; }
-#mask-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+#mask-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: default; }
+#mask-canvas.painting { cursor: crosshair; }
 #model-hint { margin: 0; flex: 1 1 220px; }
 
 @media (max-width: 960px) {

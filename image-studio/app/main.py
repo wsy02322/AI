@@ -69,7 +69,7 @@ async def api_login(request: Request):
         username = str(form.get("username") or "").strip()
         password = str(form.get("password") or "")
     if not username or not password:
-        raise HTTPException(status_code=400, detail="请输入账号和密码")
+        raise HTTPException(status_code=400, detail="Enter username and password")
     try:
         user = await auth.owui_signin(username, password)
     except auth.AuthError as exc:
@@ -115,7 +115,7 @@ async def api_works(request: Request):
 
 
 @app.post("/api/works")
-async def api_create_work(request: Request, title: str = Form("未命名")):
+async def api_create_work(request: Request, title: str = Form("Untitled")):
     user = auth.current_user(request)
     work = store.create_work(auth.user_key(user), title)
     return {"ok": True, "work": work}
@@ -126,7 +126,7 @@ async def api_get_work(request: Request, work_id: str):
     user = auth.current_user(request)
     work = store.get_work(auth.user_key(user), work_id)
     if not work:
-        raise HTTPException(status_code=404, detail="作品不存在")
+        raise HTTPException(status_code=404, detail="Work not found")
     return {"ok": True, "work": work}
 
 
@@ -135,7 +135,7 @@ async def api_rename_work(request: Request, work_id: str, title: str = Form(...)
     user = auth.current_user(request)
     work = store.rename_work(auth.user_key(user), work_id, title)
     if not work:
-        raise HTTPException(status_code=404, detail="作品不存在")
+        raise HTTPException(status_code=404, detail="Work not found")
     return {"ok": True, "work": work}
 
 
@@ -143,7 +143,7 @@ async def api_rename_work(request: Request, work_id: str, title: str = Form(...)
 async def api_delete_work(request: Request, work_id: str):
     user = auth.current_user(request)
     if not store.delete_work(auth.user_key(user), work_id):
-        raise HTTPException(status_code=404, detail="作品不存在")
+        raise HTTPException(status_code=404, detail="Work not found")
     return {"ok": True}
 
 
@@ -152,7 +152,7 @@ async def api_file(request: Request, work_id: str, filename: str):
     user = auth.current_user(request)
     path = store.file_path(auth.user_key(user), work_id, filename)
     if not path:
-        raise HTTPException(status_code=404, detail="文件不存在")
+        raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(path, media_type="image/png")
 
 
@@ -181,10 +181,10 @@ async def api_upload(
     key = auth.user_key(user)
     work = store.get_work(key, work_id)
     if not work:
-        raise HTTPException(status_code=404, detail="作品不存在")
+        raise HTTPException(status_code=404, detail="Work not found")
     image_bytes = await _read_png(image)
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="请上传一张图片")
+        raise HTTPException(status_code=400, detail="Please upload an image")
     work = store.add_version(
         key,
         work_id,
@@ -212,14 +212,14 @@ async def api_generate(
     try:
         model = catalog.get_model(model_id)
     except KeyError as exc:
-        raise HTTPException(status_code=400, detail="未知模型") from exc
+        raise HTTPException(status_code=400, detail="Unknown model") from exc
     work = None
     if work_id:
         work = store.get_work(key, work_id)
         if not work:
-            raise HTTPException(status_code=404, detail="作品不存在")
+            raise HTTPException(status_code=404, detail="Work not found")
     else:
-        work = store.create_work(key, title or prompt[:40] or "未命名")
+        work = store.create_work(key, title or prompt[:40] or "Untitled")
     try:
         png = providers.generate(
             model_id=model_id,
@@ -258,18 +258,18 @@ async def api_edit(
     try:
         model = catalog.get_model(model_id)
     except KeyError as exc:
-        raise HTTPException(status_code=400, detail="未知模型") from exc
+        raise HTTPException(status_code=400, detail="Unknown model") from exc
     work = store.get_work(key, work_id)
     if not work:
-        raise HTTPException(status_code=404, detail="作品不存在")
+        raise HTTPException(status_code=404, detail="Work not found")
     image_bytes = await _read_png(image)
     if not image_bytes:
         image_bytes = store.current_image(key, work_id)
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="没有可编辑的底图")
+        raise HTTPException(status_code=400, detail="No image to edit")
     mask_bytes = await _read_png(mask)
     if mask_bytes and model.get("edit") != "mask":
-        raise HTTPException(status_code=400, detail="这个模型没有像素蒙版，请用语义编辑")
+        raise HTTPException(status_code=400, detail="This model has no pixel mask. Use Edit, or switch to GPT Image 2 for selection edit.")
     try:
         png = providers.edit(
             model_id=model_id,

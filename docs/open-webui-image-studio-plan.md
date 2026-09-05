@@ -222,9 +222,10 @@ v1 **不做这个库**。需要像某个人时，**这一次上传参考图** �
 | IS0 直连最小出图 | **VPS 注入四把钥匙后**再打。本仓库 agent **没有**这些 key，不要往聊天贴 |
 | A1 薄后端 | 已写：`app/main.py` 路由 OpenAI/Gemini/xAI/OpenRouter + 独立 volume 落盘 |
 | A2 画布页 | 已写：`templates/` + `static/` |
-| A3 OpenAI 笔刷蒙版 | 已写：UI 白笔 = 编辑区 → OpenAI 透明像素。其它模型灰显选区 |
+| A3 OpenAI 笔刷蒙版 | 已写：UI 白笔 = 编辑区 → OpenAI 透明像素。非 GPT Image 2 不自动切模型 |
+| UX-A | **已确认**：全英文；一个主按钮（空画布 Generate / 有图 Edit）；Select area 是工具；有图时 Generate new 二次确认 |
 | A4 多参考 / 4K 流式 | **未做**（下一波） |
-| VPS 容器 + Caddy `image.` | **VPS 已对齐、尚未动手**。仓库现 **public**，可用 git 或 `546bda5` tarball。仍缺：Spaceship `image` A 记录、VPS `/opt/image-studio/.env`（本 agent 无四把钥匙） |
+| VPS 容器 + Caddy `image.` | 已上 `https://image.micropigeon.com`。前端 UX-A 需 VPS pull 重建 |
 | 关 OWUI 图像模型 | **另确认**，现在不动 |
 
 未注入钥匙前：`verify_studio.py` 必须对 generate/edit 得到 **503 missing key**，且错误里没有 key。

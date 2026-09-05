@@ -33,7 +33,7 @@ async def owui_signin(ident: str, password: str) -> dict[str, Any]:
             json={"email": ident, "password": password},
         )
     if resp.status_code != 200:
-        raise AuthError("账号或密码不对")
+        raise AuthError("Incorrect username or password")
     data = resp.json()
     return {
         "id": str(data.get("id") or ""),
@@ -57,7 +57,7 @@ def optional_user(request: Request) -> dict[str, Any] | None:
 def current_user(request: Request) -> dict[str, Any]:
     user = optional_user(request)
     if not user:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Not signed in")
     return user
 
 
