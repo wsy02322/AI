@@ -1,10 +1,9 @@
 # 指定文本模型联网搜索（Agentic Search）
 
-> **状态**：**待确认，未实施**。本文件和 readiness 探针是前提工作；生产仍只用两档 Sonar 搜索。  
+> **状态**：**已确认，实施中（W2 canary 已过真实工具事件）**。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；OWUI Web Search 关闭；`openrouter_web_tools` 停用。  
-> **推荐档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。  
-> **确认门**：未收到明确确认前，不激活/新建 Filter，不改 Pipe valves、模型 metadata、Banner、SPEC 或实例。
+> **确认档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。
 
 关联：`docs/SPEC.md` UX-1/UX-3、ST-1/ST-2；`docs/open-webui-rebuild-archive.md` §3.4/§8；图像错误模式见 `docs/open-webui-openrouter-image-continuity-plan.md`。
 
@@ -262,4 +261,4 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 
 > **确认 WS-A**：先恢复 21 active 绿基线；创建薄 `Web Search` Filter；首波挂 Grok 4.6、两条 Sol、Opus 5、Fable 5.1、两条 Gemini；Search + Fetch 默认开；Sonar/图像/视频排除；保留 Sonar Deep Research；不部署 GPT Researcher/Open Deep Research；通过 canary 和零回归后才 default-on 并更新 Banner/契约。
 
-若不确认，生产保持当前 Sonar-only，不发生任何变化。
+用户已确认整包。回滚入口：`python3 scripts/rollback_text_web_search.py`。

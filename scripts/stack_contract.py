@@ -122,8 +122,8 @@ PIPE_PATCH_MARKERS = [
     "FABLE_UNSIGNED_SUMMARY_V1",
 ]
 
-# Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
-BANNER_IDS = ["usage-guide-v3"]
+# Live UX (2026-09-05): one banner, no empty-chat chips, reply Follow-up off.
+BANNER_IDS = ["usage-guide-v4"]
 SUGGESTIONS_COUNT = 0
 TASK_FOLLOW_UP_ENABLE = False
 
