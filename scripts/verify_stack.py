@@ -33,6 +33,9 @@ from stack_contract import (
     SUGGESTIONS_COUNT,
     TASK_FOLLOW_UP_ENABLE,
     TASK_MODEL,
+    TEXT_WEB_SEARCH_FILTER,
+    TEXT_WEB_SEARCH_FILTER_MARKER,
+    TEXT_WEB_SEARCH_MODEL_IDS,
 )
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
@@ -201,6 +204,21 @@ def verify(h: dict[str, str]) -> int:
             r.err(f"{fid} still active")
         else:
             r.ok(f"{fid} inactive")
+    thin = by_id.get(TEXT_WEB_SEARCH_FILTER)
+    thin_detail = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/functions/id/{TEXT_WEB_SEARCH_FILTER}",
+        headers=h,
+        timeout=60,
+    )
+    thin_body = thin_detail.json() if thin_detail.status_code == 200 else {}
+    if not thin or not thin.get("is_active"):
+        r.err("thin web search filter inactive")
+    elif thin.get("is_global"):
+        r.err("thin web search filter is global")
+    elif TEXT_WEB_SEARCH_FILTER_MARKER not in (thin_body.get("content") or ""):
+        r.err("thin web search filter missing marker")
+    else:
+        r.ok("thin web search filter active, not global")
 
     public_found: set[str] = set()
     listed = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
@@ -236,9 +254,19 @@ def verify(h: dict[str, str]) -> int:
             r.err(f"inactive public {mid}")
         meta = model.get("meta") or {}
         filters = meta.get("filterIds") or []
+        defaults = meta.get("defaultFilterIds") or []
         bad = [fid for fid in filters if fid in DETACH_FILTERS]
         if bad:
             r.err(f"{mid} still has {bad}")
+        has_thin = TEXT_WEB_SEARCH_FILTER in filters
+        has_thin_default = TEXT_WEB_SEARCH_FILTER in defaults
+        if mid in TEXT_WEB_SEARCH_MODEL_IDS:
+            if not has_thin:
+                r.err(f"{mid} missing thin web search attachment")
+            if not has_thin_default:
+                r.err(f"{mid} missing thin web search default-on")
+        elif has_thin or has_thin_default:
+            r.err(f"{mid} unexpectedly has thin web search")
         caps = meta.get("capabilities") or {}
         if mid in SONAR_MODEL_IDS or mid in IMAGE_MODEL_IDS:
             if caps.get("code_interpreter"):
@@ -276,7 +304,13 @@ def verify(h: dict[str, str]) -> int:
         if detail.status_code != 200:
             r.err(f"extra-public get fail {mid} {detail.status_code}")
             continue
-        if is_public(detail.json().get("access_grants") or []):
+        extra_model = detail.json()
+        extra_meta = extra_model.get("meta") or {}
+        extra_filters = extra_meta.get("filterIds") or []
+        extra_defaults = extra_meta.get("defaultFilterIds") or []
+        if TEXT_WEB_SEARCH_FILTER in extra_filters or TEXT_WEB_SEARCH_FILTER in extra_defaults:
+            r.err(f"{mid} unexpectedly has thin web search")
+        if is_public(extra_model.get("access_grants") or []):
             extra_public.append(mid)
     if extra_public:
         r.err(f"extra public {extra_public}")

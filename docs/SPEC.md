@@ -32,10 +32,10 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 
 | ID | 必须 |
 |----|------|
-| UX-1 | **四格捷径**：Chat = Sol Pro / Opus；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
-| UX-2 | 英文指引：**一条** Banner `usage-guide-v3`（Sonar/图像分流 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
-| UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
-| UX-4 | **21 个 public**（对比用）；不缩到 6、不扩新家族。**原则**：目前留下的家族只跟 catalog **最新 id**，且 **全部 public**。含 `claude-fable-5.1`（替换 `claude-fable-5`）、`gemini-3.1-pro-preview`、`gemini-3.8-flash`（替换已下线的 `gemini-3.7-flash`）。`granite-4.2-8b`、`mercury-2.5-preview` 及新出现的家族（Ling / Muse / Hailuo / GLM Flash 等）**不** active。契约外模型不得带 `*` read |
+| UX-1 | **四格捷径**：Chat = Sol Pro / Opus（指定聊天模型也可自动联网）；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
+| UX-2 | 英文指引：**一条** Banner `usage-guide-v4`（指定聊天模型可自动搜索 + Sonar 仍是 Quick/Deep + 图像只走图像模型 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
+| UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI native Web Search；指定 7 个文本模型可有薄 **Web Search**；保留 Direct Uploads；图像模型可有 native image filter |
+| UX-4 | **21 个 public**（对比用）；不缩到 6、不扩新家族。**原则**：目前留下的家族只跟 catalog **最新 id**，且 **全部 public**。含 `claude-fable-5.1`（替换 `claude-fable-5`）、`gemini-3.1-pro-preview`、`gemini-3.8-flash`（替换已下线的 `gemini-3.7-flash`）、`qwen3.8-max-0902`（替换 `qwen3.8-max`）。`granite-4.2-8b`、`mercury-2.5-preview` 及新出现的家族（Ling / Muse / Hailuo / GLM Flash / GPT-6 Astra 等）**不** active。契约外模型不得带 `*` read |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
 | UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false。同会话作图会把图像模型藏进一个开关、再灌 tools（已爆 404）；对比能力比「少点一次切换」更接近宪法 1。视频同一模式：能力在模型上，不在聊天 tool 条上 |
 | UX-7 | 回复下方 **Follow-up 建议芯片关闭**（易误触）。空对话 `prompt_suggestions` 保持 **空**。不关 Autocomplete / Title |
@@ -45,7 +45,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ID | 必须 |
 |----|------|
 | ST-1 | Sonar / 纯图像模型：请求不得带 OpenRouter 不支持的 tools（含 `get_current_timestamp`） |
-| ST-2 | 不依赖 Web Tools 做搜索；`openrouter_web_tools` / `openrouter_image_gen` **停用** |
+| ST-2 | 不启用 broad `openrouter_web_tools` / `openrouter_image_gen`；OWUI native Web Search **关**。指定文本模型搜索走 ST-14，不是这两条 |
 | ST-3 | `gpt-image-*` / `seedream-5*` 走 Images API |
 | ST-4 | Pipe valves **只 merge**，禁止空覆盖 `API_KEY` |
 | ST-5 | `AUTO_INSTALL_*` / `AUTO_ATTACH_*` web_tools & image_gen = false |
@@ -56,6 +56,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-10 | 对比多轮：跨模型 `encrypted reasoning` 不得让一栏永久 404。Pipe 在 400/404 且错误含 `produced under a different model` / `encrypted reasoning` / `compaction content` 时，剥回放密文并 **内部重试**。`PERSIST_REASONING_TOKENS` 保持 `conversation`（单模型零损失）。**不**把全局 `disabled` 当终态。 |
 | ST-11 | 同模型 Anthropic / Fable 续聊：summary-only thinking 不得回放成假 thinking 导致 `cannot be modified` 400。Pipe 请求 `include: ["reasoning.encrypted_content"]`；emit/persist 原样带密文或签名；无密文则剥 unsigned reasoning；400 文案含 ``thinking` / `redacted_thinking` `` + `cannot be modified` 时内部剥回放并重试。`PERSIST_REASONING_TOKENS` 仍为 conversation。旧线程不保证复活。 |
 | ST-12 | Task `ENABLE_FOLLOW_UP_GENERATION` = false（PersistentConfig `task.follow_up.enable`）。Wave 0 **merge** 钉死；**不**改 Autocomplete / Title。Admin 若重新打开，重跑 `apply_wave0.py` 关回。 |
+| ST-14 | 指定文本模型（Grok 4.6、两条 Sol、Opus 5、Fable 5.1、Gemini 3.1 Pro Preview、Gemini 3.8 Flash）挂非 global 薄 Filter `openrouter_text_web_search`（显示名 Web Search）：写入 OpenRouter `server_tools` Search + Fetch，新对话 default-on，用户可关。Sonar / 纯图像 / 视频不得挂。循环停止 `step_count_is=8` 或 `$0.05`。**不要**把本条和 ST-11/ST-12 写成同一个号 |
 | ST-Live-1 | Live / 屏享 / 摄像走 **OWUI Call overlay**；禁止第二套未文档化前端 |
 | ST-Live-2 | 屏享会话必须用 **vision-capable** 模型（Grok 4.6 或 Gemini vision）；禁止对 Sonar / 纯图像开 Live tool 幻觉 |
 | ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 OWUI 默认 voice `alloy` + `response_format=mp3`）；STT = `openai/whisper-large-v3-turbo`。**不要**再用 `openai/tts-1` / `tts-1-hd`（OpenRouter `/audio/speech` 无此模型 → Read Aloud 400）。真正 S2S 仍走 L2（须确认） |

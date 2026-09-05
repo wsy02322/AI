@@ -2,9 +2,9 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已确认**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关。不要把两条都写成 ST-11。
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search。不要把这三条写成同一个号。
 
 ## 宪法（所有动作）
 
@@ -46,7 +46,7 @@
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 21 public（留下家族最新 id）；其余 Pipe catalog 禁用 |
-| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
+| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v4` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 21 public `access_grants`，并剥掉契约外 `*` read（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/apply_notebook_n1.py` | N1：RAG embedding → OpenRouter、YouTube loader 语言、Knowledge 集合 |
@@ -54,6 +54,12 @@
 | `scripts/verify_notebook_youtube.py` | N1 验收：RAG 槽、集合、字幕+shown、Banner |
 | `scripts/apply_ops_l0.py` | **L0 执行**：Pipe key / api_configs / catalog / public grants（merge-only） |
 | `scripts/verify_ops_l0.py` | **L0 验收**：ST-OPS 探针 |
+| `scripts/probe_text_web_search_readiness.py` | WS-A 确认前只读：server tools / Guard 顺序 / 候选文本模型 |
+| `scripts/apply_text_web_search.py` | ST-14：安装/挂载薄 Web Search Filter（`--mode install|canary|attach|final`） |
+| `scripts/rollback_text_web_search.py` | ST-14：从模型卸下薄 Filter 并停用，不删 Function |
+| `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
+| `scripts/run_text_web_search_canary.py` | ST-14 W2：Gemini Flash 真实工具事件 + 图像零回归 |
+| `scripts/run_text_web_search_smoke.py` | ST-14 W3：7 个 allowlist 模型 Search + Fetch |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |
@@ -64,11 +70,12 @@
 2. **Merge** valves：见 SPEC ST-4～ST-6（`apply_plan_a_hide_integrations.py` 会 merge）  
 3. 确认 3 个 Guard 仍 global active：`image_tool_guard`、`image_context_guard`、`search_native_tool_guard`  
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
-5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v3` + 空 chips；**不要**写回已废弃的双条 v2 Banner）  
+5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v4` + 空 chips；**不要**写回 v3 / 双条 v2）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-8. `python3 scripts/verify_stack.py` 全绿  
-9. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
+8. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 7 模型 default-on 则只校验）  
+9. `python3 scripts/verify_stack.py` 全绿  
+10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 
@@ -104,7 +111,8 @@
 - 未确认就把 Studio 绑进 OWUI 镜像 / `/custom/entrypoint.sh`，或把 Studio 钥匙 merge 进 Pipe / `openai.api_configs`  
 - 未确认关 OWUI 图像模型 / 改 `stack_contract`（Studio 先双轨）
 - 把新家族塞进 picker / public；留下的家族升到 catalog 最新 id，且全部 public
-- 把 Follow-up 关（ST-12）和 Fable 续聊（ST-11）写成同一个 ST 号
+- 把 Follow-up 关（ST-12）、Fable 续聊（ST-11）和文本联网（ST-14）写成同一个 ST 号
+- 激活 broad `openrouter_web_tools` / OWUI native Web Search 来冒充 ST-14
 - 把截屏 / 录屏当验收，或把演示媒体塞进 GitHub
 - 新增第二份 Agent 入口（不要再写 `AGENT-ONBOARDING.md`；本文件即入口）
 

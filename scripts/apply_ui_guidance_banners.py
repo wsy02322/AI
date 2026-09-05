@@ -26,34 +26,35 @@ PIPE = "open_webui_openrouter_integration"
 
 BANNERS = [
     {
-        "id": "usage-guide-v3",
+        "id": "usage-guide-v4",
         "type": "info",
         "title": "",
         "content": (
-            "<b>Web search only on Perplexity Sonar. Images only on an image model.</b> "
+            "<b>Selected chat models can search the web automatically. "
+            "Sonar remains Quick Search / Deep Research. Images only on an image model.</b> "
             "<b>Reasoning depth</b>: Input box → <b>Valves</b>. "
             "<b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1787100005,
+        "timestamp": 1788610000,
     },
 ]
 
 DESCRIPTIONS = {
     f"{PIPE}.x-ai.grok-4.6": (
-        "DEFAULT CHAT. Use Compare to add a second model. Raise Reasoning depth for hard problems."
+        "DEFAULT CHAT. Can search the web. Use Compare to add a second model. Raise Reasoning depth for hard problems."
     ),
     f"{PIPE}.perplexity.sonar-pro-search": (
-        "PERPLEXITY is the only model with live web search. QUICK SEARCH with citations. For chat, writing, or reasoning use GPT-5.6 Sol Pro or Claude Opus 5."
+        "PERPLEXITY QUICK SEARCH with citations. Dedicated search model. Selected chat models can also search; use this for Perplexity-native results."
     ),
     f"{PIPE}.perplexity.sonar-deep-research": (
-        "PERPLEXITY is the only model with live web search. DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models."
+        "PERPLEXITY DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models. Chat-model search is not this report mode."
     ),
     f"{PIPE}.openai.gpt-5.6-sol-pro": (
-        "DEFAULT CHAT and hard reasoning. For difficult tasks: Valves → Reasoning depth → high or xhigh. Not live web search."
+        "DEFAULT CHAT and hard reasoning. Can search the web. For difficult tasks: Valves → Reasoning depth → high or xhigh."
     ),
     f"{PIPE}.anthropic.claude-opus-5": (
-        "Strong reasoning and long writing. Not live web; use Sonar Pro Search for current news. Raise Reasoning depth for hard problems."
+        "Strong reasoning and long writing. Can search the web. Raise Reasoning depth for hard problems."
     ),
     f"{PIPE}.google.gemini-3-pro-image": (
         "PRIMARY IMAGE MODEL. Switch here before asking for pictures. Multi-turn edits may drift slightly."
@@ -186,11 +187,11 @@ def verify(h: dict[str, str]) -> int:
     ).json().get("ui.prompt_suggestions") or []
     ids = [b.get("id") for b in banners]
     print("verify banners", ids)
-    if len(banners) != 1 or "usage-guide-v3" not in ids:
-        print("ERROR want single usage-guide-v3 banner")
+    if len(banners) != 1 or "usage-guide-v4" not in ids:
+        print("ERROR want single usage-guide-v4 banner")
         errors += 1
-    if any(bid in ids for bid in ("usage-pick-model-v2", "usage-reasoning-depth-v2")):
-        print("ERROR legacy dual banners still present")
+    if any(bid in ids for bid in ("usage-guide-v3", "usage-pick-model-v2", "usage-reasoning-depth-v2")):
+        print("ERROR legacy banners still present")
         errors += 1
     old = [b for b in banners if "resoning" in str(b.get("content") or "").lower()]
     if old:
@@ -209,10 +210,16 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     else:
         print("ok suggestions empty")
-    guide = next((b for b in banners if b.get("id") == "usage-guide-v3"), {})
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v4"), {})
     guide_html = str(guide.get("content") or "")
-    if "Web search only on Perplexity Sonar" not in guide_html:
-        print("ERROR guide banner missing Sonar/image lead")
+    if "Selected chat models can search the web automatically" not in guide_html:
+        print("ERROR guide banner missing selected-chat search lead")
+        errors += 1
+    if "Sonar remains Quick Search / Deep Research" not in guide_html:
+        print("ERROR guide banner missing Sonar Quick/Deep split")
+        errors += 1
+    if "Images only on an image model" not in guide_html:
+        print("ERROR guide banner missing image-model lead")
         errors += 1
     if "Reasoning depth" not in guide_html:
         print("ERROR guide banner missing Reasoning depth")
@@ -226,13 +233,12 @@ def verify(h: dict[str, str]) -> int:
     if any(
         p in guide_html
         for p in (
-            "Quick search",
-            "Deep report",
+            "Web search only on Perplexity Sonar",
             "Do not use Sonar for everyday chat",
             "use <b>high</b> or <b>xhigh</b>",
         )
     ):
-        print("ERROR guide banner still has long usage copy")
+        print("ERROR guide banner still has old or long usage copy")
         errors += 1
     if "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
         print("ERROR guide banner has non-minimal HTML (expect bold only)")
@@ -242,7 +248,7 @@ def verify(h: dict[str, str]) -> int:
     if hit:
         print("ERROR guide banner still has", hit)
         errors += 1
-    elif guide_html and "Web search only on Perplexity Sonar" in guide_html:
+    elif guide_html and "Selected chat models can search the web automatically" in guide_html:
         print("ok guide banner merged English")
     listed = {
         m["id"]: m
@@ -275,11 +281,17 @@ def verify(h: dict[str, str]) -> int:
         desc = (
             (listed.get(model_id, {}).get("info") or {}).get("meta") or {}
         ).get("description") or ""
-        if "only model with live web search" not in desc:
-            print("ERROR Perplexity description missing unique live web search claim", model_id)
+        if "only model with live web search" in desc:
+            print("ERROR Perplexity description still claims exclusive live web search", model_id)
+            errors += 1
+        elif model_id.endswith("sonar-pro-search") and "QUICK SEARCH" not in desc:
+            print("ERROR Perplexity Quick Search description missing", model_id)
+            errors += 1
+        elif model_id.endswith("sonar-deep-research") and "DEEP REPORT" not in desc:
+            print("ERROR Perplexity Deep Research description missing", model_id)
             errors += 1
         else:
-            print("ok Perplexity unique live web search", model_id)
+            print("ok Perplexity dedicated search description", model_id)
     return errors
 
 
