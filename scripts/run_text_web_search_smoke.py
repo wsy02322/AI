@@ -35,7 +35,11 @@ def main() -> int:
             [
                 {
                     "role": "user",
-                    "content": "Use web search once. What is today's UTC date? Reply with the date and one source URL.",
+                    "content": (
+                        "You must call web_search. Do not answer from memory. "
+                        "What official product news did OpenAI announce this week? "
+                        "Cite at least one live source URL from the search results."
+                    ),
                 }
             ],
             enable_search=True,
@@ -59,6 +63,7 @@ def main() -> int:
                 {
                     "role": "user",
                     "content": (
+                        "You must call web_fetch on this exact URL. Do not guess the page. "
                         "Read https://openrouter.ai/docs/guides/features/server-tools/web-search "
                         "and quote the sentence that says the :online variant is deprecated."
                     ),
