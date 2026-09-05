@@ -7,6 +7,8 @@
 
 锁定正文（句首图标，不分行）：
 
-`🔍 Grok, Sol, Claude, and Gemini can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.`
+`🌐 Grok, Sol, Claude, and Gemini can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.`
+
+无粗体。搜索句图标为因特网地球 🌐。
 
 Reasoning 用 🧠。回滚：把脚本改回 `usage-guide-v4` 再 apply。

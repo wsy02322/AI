@@ -110,7 +110,7 @@
 
 | id | 内容（HTML） |
 |----|----------------|
-| `usage-guide-v5` | `🔍 <b>Grok, Sol, Claude, and Gemini can search the web and read pages.</b> 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 <b>Reasoning depth</b>: Input box → <b>Valves</b>. 📝 <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar.` ；同一段、无 `<br>`；`dismissible: false` |
+| `usage-guide-v5` | `🌐 Grok, Sol, Claude, and Gemini can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.` ；同一段、无粗体、无 `<br>`；`dismissible: false` |
 
 现网 `ui.prompt_suggestions` = **`[]`**。OWUI Suggested 点击即发送，空 chips 不是缺功能。Follow-up 是另一开关（ST-12）。
 

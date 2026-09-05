@@ -30,11 +30,11 @@ BANNERS = [
         "type": "info",
         "title": "",
         "content": (
-            "🔍 <b>Grok, Sol, Claude, and Gemini can search the web and read pages.</b> "
+            "🌐 Grok, Sol, Claude, and Gemini can search the web and read pages. "
             "🔗 GitHub: use a github.com URL, not api.github.com. "
             "🖼️ Images only on an image model. "
-            "🧠 <b>Reasoning depth</b>: Input box → <b>Valves</b>. "
-            "📝 <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
+            "🧠 Reasoning depth: Input box → Valves. "
+            "📝 Settings → General → System Prompt may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
         "timestamp": 1788610001,
@@ -214,7 +214,7 @@ def verify(h: dict[str, str]) -> int:
     guide = next((b for b in banners if b.get("id") == "usage-guide-v5"), {})
     guide_html = str(guide.get("content") or "")
     for needle, label in (
-        ("🔍", "search icon"),
+        ("🌐", "globe icon"),
         ("Grok, Sol, Claude, and Gemini can search the web and read pages", "search lead"),
         ("🔗", "github icon"),
         ("GitHub: use a github.com URL, not api.github.com", "github hint"),
@@ -232,6 +232,9 @@ def verify(h: dict[str, str]) -> int:
     if "<br" in guide_html.lower():
         print("ERROR guide banner is split across lines")
         errors += 1
+    if "<b>" in guide_html.lower() or "</b>" in guide_html.lower():
+        print("ERROR guide banner still has bold tags")
+        errors += 1
     if any(
         p in guide_html
         for p in (
@@ -240,12 +243,13 @@ def verify(h: dict[str, str]) -> int:
             "Sonar remains Quick Search / Deep Research",
             "Selected chat models can search the web automatically",
             "use <b>high</b> or <b>xhigh</b>",
+            "🔍",
         )
     ):
         print("ERROR guide banner still has old or long usage copy")
         errors += 1
     if "style=" in guide_html.lower() or "<div" in guide_html.lower() or "<span" in guide_html.lower():
-        print("ERROR guide banner has non-minimal HTML (expect bold only)")
+        print("ERROR guide banner has non-minimal HTML")
         errors += 1
     banned = ("Voice / screen share", "Notebook / YouTube", "GPT-5.6 Sol Pro or Claude Opus")
     hit = [p for p in banned if p in guide_html]
