@@ -1,10 +1,12 @@
-# ST-14 EVAL-B 结果（2026-09-05）
+# ST-14 EVAL-B 结果（2026-09-05，`eval-b-v2` 重算）
 
-> **只读**。实例指纹与开跑前一致（Filter SHA `c6aed4ea80d6`）。  
-> JSON：`/opt/cursor/artifacts/text_web_search_eval_b.json`  
-> 70 次新调用 + 复用 v1 7 道算术题；EVAL-B 账单约 **$3.66**。
+> **只读**。本页按精确 oracle（`github-release-v2`）重算原 70 次调用，**没有**重跑模型。  
+> 原 JSON：`/opt/cursor/artifacts/text_web_search_eval_b.json`  
+> 重算：`/opt/cursor/artifacts/text_web_search_eval_b_rescored.json`  
+> 70 次新调用 + 复用 v1 7 道算术题；EVAL-B 账单约 **$3.66**（次数与成本未变）。
 
-机械建议：`filter_guidance`。未确认前不改 Filter / Pipe。
+机械建议：`diagnose_fetch`。未确认前不改 Filter / Pipe。  
+文档只写「本波比对过的字段」：薄 Filter SHA / 挂载 / broad Filter。扩展指纹（Pipe content SHA、Banner、OWUI version、picker 摘要）见诊断波快照。
 
 ---
 
@@ -14,35 +16,62 @@
 |----|------|------|
 | 隐含时效自动搜 | **42 / 42**，每模型 6/6 | **绿** |
 | 无需搜索误搜 | **0 / 21**（14 新 + 7 道 v1 算术） | **绿** |
-| 动态 Fetch 答案 | **11 / 14** | **黄**（绿要 ≥13/14） |
+| 动态 Fetch 精确答案 | **10 / 14** | **红**（绿要 ≥13/14；黄要 ≥11/14） |
 | 动态 Fetch 完整 URL | **14 / 14** | 绿 |
-| Fetch HTTP 错 | **0** | 绿 |
-| 实例指纹 | 未变 | 通过 |
+| 外层 chat 传输 | **14 / 14** 200 | 绿（**不是** Fetch 工具成功） |
+| Fetch 硬证据 | **0 / 14** | 观察 |
+| Fetch 软证据 | **10 / 14** | 观察 |
+| 正文声称 Fetch 失败 | **4 / 14**（全是 Anthropic） | 观察 |
+| 实例 Filter/挂载 | 开跑前 SHA `c6aed4ea80d6` | 只覆盖薄 Filter + 7 挂载 + disabled Filters |
 
 v1 冲突题用新规则重评：**7 / 7** 仍过（官方 + 非官方域名、两个 URL、明确分歧）。
+
+撤回 v1 口径的 **11/14 黄门** 和机械建议 `filter_guidance`。Opus#0 写了近似时间 `2026-08-31T14:55:00Z`，精确 RFC3339 `2026-08-31T14:55:53Z` 不通过。
 
 ---
 
 ## 2. 现在可以确定的
 
-1. **弱提示也会搜。** 「OpenAI 这周发布了什么」「Claude Opus 现在价格」「OpenRouter 怎么给聊天加网页搜索」没有要求来源或 URL，7 个模型 42 次全搜了。v1 的「不需要 Controller 管自动触发」这次站得住。
+1. **弱提示也会搜。** 「OpenAI 这周发布了什么」「Claude Opus 现在价格」「OpenRouter 怎么给聊天加网页搜索」没有要求来源或 URL，7 个模型 42 次全搜了。自动触发不是本波缺口。
 2. **误搜不是问题。** 算术、改写、求导 21 次零误搜。
-3. **缺口在 Fetch，而且集中在 Anthropic。** Fable 两次都说 GitHub API 不可达，没给出 `tag_name`/`published_at`；Opus 一次同样失败，另一次答对但无 Fetch 硬证据。Grok / Sol / Gemini 14 次里 10 次 soft Fetch + 精确时间戳，答案全对。
-4. **`web_fetch_requests` / `action=web_fetch` 仍然几乎看不到。** 本波硬证据 0/14。不能只靠这个字段验收。
+3. **缺口在 Fetch，而且集中在 Anthropic。** 4 次失败都声称 GitHub API 不可达；Opus 两次改走 Search，Fable 两次既不 Fetch 也不 Search。Grok / Sol / Gemini 10 次 soft Fetch + 精确时间戳，答案全对。
+4. **`web_fetch_requests` / `action=web_fetch` 仍然几乎看不到。** 本波硬证据 0/14。不能只靠这个字段验收，也不能把外层 chat 200 当成 Fetch 成功。
 5. **成本只作观察：** p50 `$0.046`，p90 `$0.114`，max `$0.177`。不和 `$0.05` 工具门比，也不据此调阈值。
+6. **还不能据此上薄 Filter 指引。** 失败形态是「声称 API 不可达」，不是「不知道该 Fetch」。指引是否有效要看 12 次 A/B。
 
 ---
 
-## 3. 下一步两档（须确认）
+## 3. Anthropic Fetch A/B（12 次 live）
 
-### 顶级 — Fetch 失败重试 Controller
+对象：Opus 5、Fable 5.1。每模型 × 3 URL × 提示 A（基线）/ B（请求级 system，**未**写入 Filter）。  
+JSON：`/opt/cursor/artifacts/text_web_search_eval_b_fetch_diag.json`  
+账单约 **$0.62**。扩展指纹验证：**未变**（OWUI `0.11.3`，Pipe `f797e92d6d3f`，Filter `c6aed4ea80d6`，Banner `usage-guide-v4`，picker 21）。
 
-用户给了 URL、0 次 Fetch 或答案对不上 oracle 时，最多内部重试一次，强制 `web_fetch` 并只保留真实 URL。能补 Anthropic 的「声称 API 不可达」。要改 Pipe，回归面大。
+| URL | A | B |
+|-----|---|---|
+| OpenRouter HTML | 2/2 | 2/2 |
+| GitHub release HTML | 2/2 | 2/2 |
+| GitHub API JSON | **0/2** | **0/2** |
 
-### 简单稳 — 薄 Filter 加 Fetch 指引（建议先选）
+B 没有优于 A（两边都是 4/6）。HTML 8/8 可读；API 4/4 正文声称失败，其中 Opus A 还改走 Search。硬证据仍是 0。B 没有读出 JSON。
 
-不改 Pipe、不重试。Filter 加短指引：用户给出 URL 时必须 `web_fetch`，按页回答，保留完整 `https://`。只动薄 Filter，可回滚。
+### W6 决策（本波）
 
-不做的代价：Opus/Fable 遇到部分 URL（尤其 GitHub API）会继续拒读。做简单档的代价：一段指引，可能略增 Fetch 次数。
+| 规则 | 结果 |
+|------|------|
+| B 明显优于 A，至少 5/6 精确通过 | **否**（B 仍是 4/6，API 全灭） |
+| HTML 能读、GitHub API 不能 | **是** |
+| GitHub HTML 可读 | **是**（API JSON 特殊受限） |
+| A/B 都普遍失败 | 否，只失败在 API |
+| B 增加无意义 Fetch/误搜 | 否 |
+| 只有 Fable 失败 | 否，Opus 同样读不了 API |
 
-**不**抬 `$0.05`、**不**扩模型、**不上** Deep Research、**不**重开 broad Web Tools。
+**结论：不上薄 Filter 指引。** 缺口是 GitHub API 路由/访问限制，不是「模型不知道该 Fetch」。普通 HTML（含 GitHub 发布页）现网已经能读。
+
+顶级档仍是 Pipe Controller（失败则改走 HTML / 受控重试），须另 plan、另确认。本波不做。
+
+---
+
+## 4. 冻结
+
+**不**抬 `$0.05`、**不**扩模型、**不上** Deep Research、**不**重开 broad Web Tools、**不**改 Filter / Pipe / Banner。

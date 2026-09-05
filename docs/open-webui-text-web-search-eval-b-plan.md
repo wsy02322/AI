@@ -1,6 +1,6 @@
 # ST-14 EVAL-B：修正评测口径并定向补测
 
-> **状态**：**修正波进行中**（`eval-b-v2` / `oracle_schema=github-release-v2`）。v1 口径的 11/14 黄门已撤回。未确认前不改 Filter / Pipe。  
+> **状态**：**修正波已完成**（`eval-b-v2` / `oracle_schema=github-release-v2` + Anthropic Fetch A/B）。精确答案 **10/14 红门**；指引未解锁 GitHub API。未确认前不改 Filter / Pipe。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；薄 Filter `openrouter_text_web_search` default-on。
 
