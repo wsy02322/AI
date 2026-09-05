@@ -1,6 +1,6 @@
 # ST-14 Search 质量评测基线（只读）
 
-> **状态**：**已确认执行**（2026-09-05）。用户确认：先做只读评测基线，再决定是否上 Controller。  
+> **状态**：**基线已跑完**（2026-09-05）。结果见 `docs/open-webui-text-web-search-eval-results.md`。未确认前不改 Filter / Pipe。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；薄 Filter `openrouter_text_web_search` 已 default-on。  
 > **本波禁止**：改 Filter 源码 / valves、改 Pipe、改挂载 / default-on、改 Banner、扩模型、部署 Deep Research。
