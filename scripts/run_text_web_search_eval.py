@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import TEXT_WEB_SEARCH_MODEL_IDS
+from stack_contract import PIPE, TEXT_WEB_SEARCH_MODEL_IDS
 from text_web_search_eval import score_case, summarize
 from text_web_search_eval_cases import CASES
 from text_web_search_ops import chat_with_optional_search, headers, signin
@@ -21,14 +21,22 @@ DEFAULT_OUT = Path("/opt/cursor/artifacts/text_web_search_eval.json")
 
 
 def _short(model_id: str) -> str:
-    return model_id.rsplit(".", 1)[-1]
+    prefix = f"{PIPE}."
+    rest = model_id[len(prefix) :] if model_id.startswith(prefix) else model_id
+    return rest.split(".", 1)[-1]
+
+
+def _model_aliases(model_id: str) -> set[str]:
+    prefix = f"{PIPE}."
+    rest = model_id[len(prefix) :] if model_id.startswith(prefix) else model_id
+    return {model_id.lower(), rest.lower(), _short(model_id).lower()}
 
 
 def _select_models(raw: str | None) -> list[str]:
     if not raw:
         return list(TEXT_WEB_SEARCH_MODEL_IDS)
     wanted = {part.strip().lower() for part in raw.split(",") if part.strip()}
-    picked = [model_id for model_id in TEXT_WEB_SEARCH_MODEL_IDS if _short(model_id).lower() in wanted or model_id in wanted]
+    picked = [model_id for model_id in TEXT_WEB_SEARCH_MODEL_IDS if _model_aliases(model_id) & wanted]
     if not picked:
         raise SystemExit(f"no models matched --models {raw}")
     return picked

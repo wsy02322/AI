@@ -8,7 +8,8 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import PIPE
+from stack_contract import PIPE, TEXT_WEB_SEARCH_CANARY_MODEL_ID
+from run_text_web_search_eval import _select_models, _short
 from text_web_search_eval import recommend_next_step, score_case, summarize
 from text_web_search_eval_cases import CASES, case_by_id
 from text_web_search_ops import collect_source_urls, has_search_evidence, usage_cost_usd
@@ -32,6 +33,13 @@ class EvalScoringTests(unittest.TestCase):
             [case["id"] for case in CASES],
             ["freshness", "official", "url_fetch", "conflict", "zh_synth", "idle"],
         )
+
+    def test_model_selector_keeps_version_dots(self) -> None:
+        self.assertEqual(_short(TEXT_WEB_SEARCH_CANARY_MODEL_ID), "gemini-3.8-flash")
+        self.assertEqual(_select_models("gemini-3.8-flash,claude-fable-5.1"), [
+            f"{PIPE}.anthropic.claude-fable-5.1",
+            TEXT_WEB_SEARCH_CANARY_MODEL_ID,
+        ])
 
     def test_collect_source_urls_and_cost(self) -> None:
         events = [_source_event("https://www.anthropic.com/pricing"), _action_event("web_search", "Searching")]
