@@ -28,10 +28,11 @@ DISAGREE_RE = re.compile(
     re.IGNORECASE,
 )
 FETCH_FAILURE_RE = re.compile(
-    r"unable to (?:fetch|access)|wasn't able to fetch|was not able to fetch|"
+    r"unable to (?:fetch|access|retrieve)|wasn't able to (?:fetch|retrieve)|"
+    r"was not able to (?:fetch|retrieve)|"
     r"could not (?:access|fetch|retrieve)|could not be (?:accessed|reached|fetched)|"
     r"couldn't (?:access|fetch)|cannot (?:access|fetch|retrieve)|"
-    r"request failed|failed to (?:fetch|access|retrieve)|"
+    r"request failed|failed to (?:fetch|access|retrieve)|fetch(?:ing)? failed|"
     r"无法访问|无法获取|无法抓取|抓取失败|请求失败",
     re.IGNORECASE,
 )

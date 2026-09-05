@@ -258,6 +258,14 @@ class EvalBTests(unittest.TestCase):
         self.assertFalse(row["fetch_called_hard"])
         self.assertFalse(row["answer_ok"])
         self.assertFalse(row["passed"])
+        retrieve = score_case(
+            case,
+            _result(text=f"I wasn't able to retrieve {FETCH_URL} — the fetch failed."),
+            model_id=f"{PIPE}.anthropic.claude-opus-5",
+            oracle=oracle,
+        )
+        self.assertTrue(retrieve["fetch_reported_failure"])
+        self.assertTrue(retrieve["chat_transport_ok"])
 
     def test_oracle_helpers(self) -> None:
         oracle = {
