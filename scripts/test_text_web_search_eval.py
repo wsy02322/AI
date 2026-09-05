@@ -14,15 +14,29 @@ from unittest.mock import patch
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import PIPE, TEXT_WEB_SEARCH_CANARY_MODEL_ID
 from run_text_web_search_eval import (
+    SUITE_VERSION,
     _select_models,
     _short,
+    append_jsonl,
     atomic_write,
+    build_manifest,
     expand_jobs,
     final_exit,
     job_key,
+    jobs_complete,
+    load_jsonl_rows,
+    manifest_mismatch,
+    recount_hard_errors,
 )
 from text_web_search_eval import recommend_from_gates, score_case, score_stored_row, summarize_eval_b
-from text_web_search_eval_cases import CANARY_CASE_IDS, EVAL_B_CASES, V1_CASES, case_by_id, cases_for_suite
+from text_web_search_eval_cases import (
+    CANARY_CASE_IDS,
+    EVAL_B_CASES,
+    FETCH_DIAG_CASES,
+    V1_CASES,
+    case_by_id,
+    cases_for_suite,
+)
 from text_web_search_eval_oracle import FETCH_URL, OracleError, oracle_answer_ok, oracle_fields_in_text
 from text_web_search_ops import fetch_called_hard, search_called
 
@@ -46,6 +60,8 @@ class EvalBTests(unittest.TestCase):
         self.assertEqual(sum(int(case["repeats"]) for case in EVAL_B_CASES), 10)
         self.assertEqual(cases_for_suite("eval-b")[0]["id"], "implicit_openai_week")
         self.assertTrue(set(CANARY_CASE_IDS) <= {case["id"] for case in EVAL_B_CASES})
+        self.assertEqual(len(FETCH_DIAG_CASES), 6)
+        self.assertEqual(SUITE_VERSION["eval-b"], "eval-b-v2")
 
     def test_implicit_prompts_avoid_instruction_words(self) -> None:
         forbidden = ("请搜索", "引用来源", "给 URL", "查官网", "source URL", "official website")
@@ -183,7 +199,7 @@ class EvalBTests(unittest.TestCase):
         }
         row = score_case(
             case,
-            _result(text=f"tag_name v0.6.43 published_at 2026-09-01 {FETCH_URL}"),
+            _result(text=f"tag_name v0.6.43 published_at 2026-09-01T12:00:00Z {FETCH_URL}"),
             model_id=f"{PIPE}.anthropic.claude-opus-5",
             oracle=oracle,
         )
@@ -192,10 +208,66 @@ class EvalBTests(unittest.TestCase):
         self.assertTrue(row["telemetry_unobservable"])
         self.assertTrue(row["passed"])
 
+    def test_oracle_requires_exact_rfc3339_and_tag_token(self) -> None:
+        oracle = {
+            "url": FETCH_URL,
+            "tag_name": "v0.11.3",
+            "published_at": "2026-08-31T14:55:53Z",
+            "published_day": "2026-08-31",
+        }
+        self.assertTrue(
+            oracle_answer_ok(
+                'tag_name="v0.11.3" published_at="2026-08-31T14:55:53Z"',
+                oracle,
+            )
+        )
+        self.assertFalse(oracle_answer_ok("tag v0.11.3 on 2026-08-31", oracle))
+        self.assertFalse(oracle_answer_ok('published_at="2026-08-31T14:55:00Z" tag v0.11.3', oracle))
+        self.assertFalse(oracle_fields_in_text("latest is v0.11.30", oracle)["tag_ok"])
+        self.assertTrue(oracle_fields_in_text("latest is v0.11.3,", oracle)["tag_ok"])
+        self.assertTrue(oracle_fields_in_text(f"see {FETCH_URL}", oracle)["url_ok"])
+
+        case = case_by_id("fetch_github_latest")
+        approx = score_case(
+            case,
+            _result(text=f"tag_name v0.11.3 published_at 2026-08-31T14:55:00Z {FETCH_URL}"),
+            model_id=f"{PIPE}.anthropic.claude-opus-5",
+            oracle=oracle,
+        )
+        self.assertFalse(approx["answer_ok"])
+        self.assertFalse(approx["passed"])
+        self.assertFalse(approx["fetch_reported_failure"])
+
+    def test_fetch_reported_failure_is_not_transport(self) -> None:
+        case = case_by_id("fetch_github_latest")
+        oracle = {
+            "url": FETCH_URL,
+            "tag_name": "v0.11.3",
+            "published_at": "2026-08-31T14:55:53Z",
+            "published_day": "2026-08-31",
+        }
+        row = score_case(
+            case,
+            _result(text=f"I was unable to fetch {FETCH_URL} — the request failed."),
+            model_id=f"{PIPE}.anthropic.claude-opus-5",
+            oracle=oracle,
+        )
+        self.assertTrue(row["ok_http"])
+        self.assertTrue(row["chat_transport_ok"])
+        self.assertTrue(row["fetch_reported_failure"])
+        self.assertFalse(row["fetch_called_hard"])
+        self.assertFalse(row["answer_ok"])
+        self.assertFalse(row["passed"])
+
     def test_oracle_helpers(self) -> None:
-        oracle = {"url": FETCH_URL, "tag_name": "v1.2.3", "published_at": "2026-02-03T00:00:00Z", "published_day": "2026-02-03"}
-        self.assertTrue(oracle_answer_ok("release 1.2.3 on 2026-02-03", oracle))
-        self.assertFalse(oracle_answer_ok("release 1.2.3 yesterday", oracle))
+        oracle = {
+            "url": FETCH_URL,
+            "tag_name": "v1.2.3",
+            "published_at": "2026-02-03T00:00:00Z",
+            "published_day": "2026-02-03",
+        }
+        self.assertTrue(oracle_answer_ok("release v1.2.3 on 2026-02-03T00:00:00Z", oracle))
+        self.assertFalse(oracle_answer_ok("release 1.2.3 on 2026-02-03", oracle))
         self.assertTrue(oracle_fields_in_text(f"see {FETCH_URL}", oracle)["url_ok"])
 
     def test_request_cost_is_not_a_tool_cap_verdict(self) -> None:
@@ -213,7 +285,8 @@ class EvalBTests(unittest.TestCase):
 
     def test_gates_and_recommendation(self) -> None:
         self.assertEqual(recommend_from_gates({"implicit_freshness": "green", "dynamic_fetch": "green", "no_search_control": "green"})["choice"], "hold")
-        self.assertEqual(recommend_from_gates({"implicit_freshness": "green", "dynamic_fetch": "red", "no_search_control": "green"})["choice"], "filter_guidance")
+        self.assertEqual(recommend_from_gates({"implicit_freshness": "green", "dynamic_fetch": "red", "no_search_control": "green"})["choice"], "diagnose_fetch")
+        self.assertEqual(recommend_from_gates({"implicit_freshness": "green", "dynamic_fetch": "yellow", "no_search_control": "green"})["choice"], "diagnose_fetch")
         self.assertEqual(recommend_from_gates({"implicit_freshness": "yellow", "dynamic_fetch": "green", "no_search_control": "green"})["choice"], "provider_guidance")
         self.assertEqual(recommend_from_gates({"implicit_freshness": "red", "dynamic_fetch": "green", "no_search_control": "green"})["choice"], "controller_or_guidance")
 
@@ -247,10 +320,19 @@ class EvalBTests(unittest.TestCase):
         self.assertEqual(summary["gates"]["implicit_freshness"], "green")
         self.assertEqual(summary["gates"]["no_search_control"], "green")
         self.assertEqual(summary["gates"]["dynamic_fetch"], "green")
+        self.assertEqual(summary["chat_transport_ok"], 14)
+        self.assertNotIn("fetch_http_ok", summary)
+        self.assertEqual(summary["fetch_hard_evidence"], 0)
+
+        fetches_red = [{**row, "answer_ok": False} for row in fetches[:4]] + fetches[4:]
+        red = summarize_eval_b(implicit_rows + controls + fetches_red)
+        self.assertEqual(red["oracle_answer_ok"], 10)
+        self.assertEqual(red["gates"]["dynamic_fetch"], "red")
+        self.assertEqual(red["recommendation"]["choice"], "diagnose_fetch")
 
     def test_model_selector_and_jobs(self) -> None:
         self.assertEqual(_short(TEXT_WEB_SEARCH_CANARY_MODEL_ID), "gemini-3.8-flash")
-        self.assertEqual(_select_models("gemini-3.8-flash")[0], TEXT_WEB_SEARCH_CANARY_MODEL_ID)
+        self.assertEqual(_select_models("gemini-3.8-flash", suite="eval-b")[0], TEXT_WEB_SEARCH_CANARY_MODEL_ID)
         jobs = expand_jobs(
             [TEXT_WEB_SEARCH_CANARY_MODEL_ID],
             [case_by_id("implicit_openai_week"), case_by_id("control_rewrite")],
@@ -273,6 +355,37 @@ class EvalBTests(unittest.TestCase):
         self.assertEqual(final_exit(hard_errors=0, complete=False, strict=False, gates={"x": "green"}), 2)
         self.assertEqual(final_exit(hard_errors=0, complete=True, strict=True, gates={"x": "yellow"}), 1)
         self.assertEqual(final_exit(hard_errors=0, complete=True, strict=False, gates={"x": "yellow"}), 0)
+
+    def test_resume_recounts_hard_errors_and_rejects_bad_manifest(self) -> None:
+        rows = [
+            {"model_id": "m0", "case_id": "a", "repeat_id": 0, "ok_http": False, "chat_transport_ok": False},
+            {"model_id": "m0", "case_id": "b", "repeat_id": 0, "ok_http": True, "chat_transport_ok": True},
+        ]
+        self.assertEqual(recount_hard_errors(rows), 1)
+        self.assertTrue(jobs_complete(rows, ["m0|a|0", "m0|b|0"]))
+        self.assertFalse(jobs_complete(rows, ["m0|a|0", "m0|b|0", "m0|c|0"]))
+        expected = build_manifest(
+            suite="eval-b",
+            seed=14,
+            models=["m0"],
+            cases=[{"id": "a"}, {"id": "b"}],
+            jobs=[("m0", {"id": "a"}, 0), ("m0", {"id": "b"}, 0)],
+            filter_sha="abc123abc123",
+        )
+        self.assertIsNone(manifest_mismatch(expected, expected))
+        bad = dict(expected)
+        bad["suite_version"] = "eval-b"
+        self.assertEqual(manifest_mismatch(bad, expected), "manifest suite_version mismatch")
+        self.assertEqual(manifest_mismatch(None, expected), "missing campaign manifest")
+
+    def test_jsonl_ignores_trailing_incomplete_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rows.jsonl"
+            append_jsonl(path, {"id": 1})
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write('{"id": 2, "broken"')
+            rows = load_jsonl_rows(path)
+            self.assertEqual(rows, [{"id": 1}])
 
     def test_oracle_error_stops_before_model(self) -> None:
         with patch("text_web_search_eval_oracle.requests.get") as mocked:

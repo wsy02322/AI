@@ -4,7 +4,20 @@ from __future__ import annotations
 
 from typing import Any
 
+from stack_contract import PIPE
 from text_web_search_eval_oracle import FETCH_URL
+
+FETCH_DIAG_SYSTEM_B = (
+    "When the user provides a URL, call web_fetch on that exact URL.\n"
+    "Answer only from the fetched page. Preserve the full input URL.\n"
+    "If fetching fails, state the failure; do not guess."
+)
+FETCH_DIAG_MODEL_IDS = [
+    f"{PIPE}.anthropic.claude-opus-5",
+    f"{PIPE}.anthropic.claude-fable-5.1",
+]
+OPENROUTER_WEB_SEARCH_URL = "https://openrouter.ai/docs/guides/features/server-tools/web-search"
+GITHUB_RELEASE_HTML_URL = "https://github.com/open-webui/open-webui/releases/latest"
 
 V1_CASES: list[dict[str, Any]] = [
     {
@@ -138,6 +151,51 @@ EVAL_B_CASES: list[dict[str, Any]] = [
     },
 ]
 
+def _fetch_diag_prompt(url: str, kind: str) -> str:
+    if kind == "html":
+        return (
+            f"Read {url} and quote the sentence that says the :online variant is deprecated. "
+            "Keep the full input URL in your answer."
+        )
+    if kind == "github_html":
+        return (
+            f"Read {url} and report the latest release tag_name and published_at "
+            "exactly if they appear. Keep the full input URL in your answer."
+        )
+    return (
+        f"Read {url} and report the JSON fields tag_name and published_at "
+        "exactly as they appear. Keep the full input URL in your answer."
+    )
+
+
+def _build_fetch_diag_cases() -> list[dict[str, Any]]:
+    specs = (
+        ("html_openrouter", OPENROUTER_WEB_SEARCH_URL, "html", False, [":online", "deprecated"]),
+        ("html_github_release", GITHUB_RELEASE_HTML_URL, "github_html", True, []),
+        ("api_github_latest", FETCH_URL, "github_api", True, []),
+    )
+    cases: list[dict[str, Any]] = []
+    for case_id, url, kind, needs_oracle, needles in specs:
+        for variant in ("A", "B"):
+            cases.append(
+                {
+                    "id": f"diag_{case_id}_{variant}",
+                    "suite": "fetch-diag",
+                    "family": "fetch_diag",
+                    "repeats": 1,
+                    "needs_oracle": needs_oracle,
+                    "prompt_variant": variant,
+                    "system": FETCH_DIAG_SYSTEM_B if variant == "B" else "",
+                    "url": url,
+                    "kind": kind,
+                    "required_needles": needles,
+                    "prompt": _fetch_diag_prompt(url, kind),
+                }
+            )
+    return cases
+
+
+FETCH_DIAG_CASES = _build_fetch_diag_cases()
 CASES = V1_CASES
 CANARY_CASE_IDS = ("implicit_openai_week", "control_rewrite", "fetch_github_latest")
 
@@ -147,11 +205,13 @@ def cases_for_suite(suite: str) -> list[dict[str, Any]]:
         return list(V1_CASES)
     if suite == "eval-b":
         return list(EVAL_B_CASES)
+    if suite == "fetch-diag":
+        return list(FETCH_DIAG_CASES)
     raise KeyError(suite)
 
 
 def case_by_id(case_id: str) -> dict[str, Any]:
-    for case in [*V1_CASES, *EVAL_B_CASES]:
+    for case in [*V1_CASES, *EVAL_B_CASES, *FETCH_DIAG_CASES]:
         if case["id"] == case_id:
             return case
     raise KeyError(case_id)

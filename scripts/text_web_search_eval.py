@@ -27,6 +27,14 @@ DISAGREE_RE = re.compile(
     r"disagree|conflict|contradict|不一致|冲突|相反|并不相同|说法不同|互相矛盾",
     re.IGNORECASE,
 )
+FETCH_FAILURE_RE = re.compile(
+    r"unable to (?:fetch|access)|wasn't able to fetch|was not able to fetch|"
+    r"could not (?:access|fetch|retrieve)|could not be (?:accessed|reached|fetched)|"
+    r"couldn't (?:access|fetch)|cannot (?:access|fetch|retrieve)|"
+    r"request failed|failed to (?:fetch|access|retrieve)|"
+    r"无法访问|无法获取|无法抓取|抓取失败|请求失败",
+    re.IGNORECASE,
+)
 
 
 def extract_text_urls(text: str) -> list[str]:
@@ -85,6 +93,8 @@ def observe_result(result: dict[str, Any]) -> dict[str, Any]:
         "prompt_tokens": usage.get("prompt_tokens") or usage.get("input_tokens"),
         "completion_tokens": usage.get("completion_tokens") or usage.get("output_tokens"),
         "actions": event_actions(events),
+        "fetch_reported_failure": bool(FETCH_FAILURE_RE.search(text)),
+        "chat_transport_ok": status == 200 and not failed_tools(result),
         "text": text,
         "text_excerpt": text[:800],
     }
@@ -154,6 +164,21 @@ def score_case(
         url_ok = fields["url_ok"] or FETCH_URL in text
         fetch_ok = obs["fetch_called_hard"]
         telemetry_unobservable = bool(answer_ok and not obs["fetch_called_hard"] and not obs["fetch_called_soft"])
+    elif family == "fetch_diag":
+        fields = oracle_fields_in_text(text, oracle) if oracle else {"tag_ok": False, "date_ok": False, "url_ok": False}
+        target_url = str(case.get("url") or "")
+        url_ok = bool(target_url) and target_url in text
+        kind = case.get("kind") or "github_api"
+        if kind == "html":
+            needles = case.get("required_needles") or []
+            needles_ok = all(needle.lower() in text.lower() for needle in needles)
+            answer_ok = needles_ok
+        elif kind == "github_html":
+            answer_ok = bool(fields.get("tag_ok"))
+        else:
+            answer_ok = oracle_answer_ok(text, oracle)
+        fetch_ok = obs["fetch_called_hard"]
+        telemetry_unobservable = bool(answer_ok and not obs["fetch_called_hard"] and not obs["fetch_called_soft"])
     elif family == "v1_url_fetch":
         needles = case.get("required_needles") or []
         needles_ok = all(needle.lower() in text.lower() for needle in needles)
@@ -175,14 +200,14 @@ def score_case(
         obs["ok_http"]
         and search_ok
         and (fetch_ok if family == "v1_url_fetch" else True)
-        and (answer_ok and url_ok if family == "dynamic_fetch" else True)
+        and (answer_ok and url_ok if family in {"dynamic_fetch", "fetch_diag"} else True)
         and (citation_ok if family == "explicit_search" else True)
         and domain_ok
         and needles_ok
         and conflict_ok
         and chinese_ok
     )
-    if family == "dynamic_fetch":
+    if family in {"dynamic_fetch", "fetch_diag"}:
         passed = obs["ok_http"] and answer_ok and url_ok
 
     return {
@@ -192,6 +217,9 @@ def score_case(
         "suite": case.get("suite") or "",
         "model_id": model_id,
         "repeat_id": repeat_id,
+        "prompt_variant": case.get("prompt_variant") or "",
+        "kind": case.get("kind") or "",
+        "target_url": case.get("url") or "",
         "search_ok": search_ok,
         "fetch_ok": fetch_ok,
         "citation_ok": citation_ok,
@@ -201,6 +229,11 @@ def score_case(
         "chinese_ok": chinese_ok,
         "answer_ok": answer_ok,
         "url_ok": url_ok,
+        "oracle_answer_ok": answer_ok,
+        "response_url_ok": url_ok,
+        "fetch_hard_evidence": obs["fetch_called_hard"],
+        "fetch_soft_evidence": obs["fetch_called_soft"],
+        "switched_to_search": bool(obs["search_called"] and not obs["fetch_called_hard"] and family in {"dynamic_fetch", "fetch_diag"}),
         "telemetry_unobservable": telemetry_unobservable,
         "passed": passed,
         "cost_usd": obs["request_total_cost_usd"],
@@ -236,6 +269,7 @@ def score_stored_row(case: dict[str, Any], row: dict[str, Any]) -> dict[str, Any
         result,
         model_id=str(row.get("model_id") or ""),
         repeat_id=int(row.get("repeat_id") or 0),
+        oracle=row.get("oracle") if isinstance(row.get("oracle"), dict) else None,
     )
 
 
@@ -283,12 +317,12 @@ def _band_control(false_positives: int, total: int, per_model: dict[str, int]) -
     return "red" if max(per_model.values(), default=0) >= 2 or false_positives > 1 else "yellow"
 
 
-def _band_fetch(answer_ok: int, url_ok: int, http_ok: int, total: int) -> str:
+def _band_fetch(answer_ok: int, url_ok: int, transport_ok: int, total: int) -> str:
     if total <= 0:
         return "n/a"
-    if http_ok == total and answer_ok >= 13 and url_ok >= 13 and total == 14:
+    if transport_ok == total and answer_ok >= 13 and url_ok >= 13 and total == 14:
         return "green"
-    if http_ok == total and answer_ok >= 11 and url_ok >= 11:
+    if transport_ok == total and answer_ok >= 11 and url_ok >= 11:
         return "yellow"
     return "red"
 
@@ -311,8 +345,8 @@ def recommend_from_gates(gates: dict[str, str]) -> dict[str, Any]:
         }
     if implicit == "green" and fetch != "green":
         return {
-            "choice": "filter_guidance",
-            "label": "触发够用，补薄 Filter 的 Fetch/完整 URL 指引",
+            "choice": "diagnose_fetch",
+            "label": "触发够用，Fetch 未绿：先诊断再决定是否加指引",
             "reasons": [f"fetch={fetch}"],
         }
     if implicit == "yellow":
@@ -347,13 +381,13 @@ def summarize_eval_b(rows: list[dict[str, Any]], *, extra_controls: list[dict[st
     }
     implicit_ok = sum(1 for row in implicit if row.get("search_ok"))
     control_fp = sum(1 for row in controls if not row.get("search_ok"))
-    fetch_answer = sum(1 for row in fetches if row.get("answer_ok"))
-    fetch_url = sum(1 for row in fetches if row.get("url_ok"))
-    fetch_http = sum(1 for row in fetches if row.get("ok_http"))
+    fetch_answer = sum(1 for row in fetches if row.get("answer_ok") or row.get("oracle_answer_ok"))
+    fetch_url = sum(1 for row in fetches if row.get("url_ok") or row.get("response_url_ok"))
+    chat_ok = sum(1 for row in fetches if row.get("chat_transport_ok") or row.get("ok_http"))
     gates = {
         "implicit_freshness": _band_implicit(implicit_ok, len(implicit), implicit_model),
         "no_search_control": _band_control(control_fp, len(controls), control_fp_by),
-        "dynamic_fetch": _band_fetch(fetch_answer, fetch_url, fetch_http, len(fetches)),
+        "dynamic_fetch": _band_fetch(fetch_answer, fetch_url, chat_ok, len(fetches)),
     }
     return {
         "total": len(rows),
@@ -362,9 +396,12 @@ def summarize_eval_b(rows: list[dict[str, Any]], *, extra_controls: list[dict[st
         "implicit_total": len(implicit),
         "control_false_positives": control_fp,
         "control_total": len(controls),
-        "fetch_answer_ok": fetch_answer,
-        "fetch_url_ok": fetch_url,
-        "fetch_http_ok": fetch_http,
+        "oracle_answer_ok": fetch_answer,
+        "response_url_ok": fetch_url,
+        "chat_transport_ok": chat_ok,
+        "fetch_hard_evidence": sum(1 for row in fetches if row.get("fetch_called_hard") or row.get("fetch_hard_evidence")),
+        "fetch_soft_evidence": sum(1 for row in fetches if row.get("fetch_called_soft") or row.get("fetch_soft_evidence")),
+        "fetch_reported_failure": sum(1 for row in fetches if row.get("fetch_reported_failure")),
         "fetch_total": len(fetches),
         "fetch_telemetry_unknown": sum(1 for row in fetches if row.get("telemetry_unobservable")),
         "implicit_by_model": {key: {"ok": ok, "total": total} for key, (ok, total) in implicit_model.items()},
@@ -374,7 +411,41 @@ def summarize_eval_b(rows: list[dict[str, Any]], *, extra_controls: list[dict[st
     }
 
 
+def summarize_fetch_diag(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    by_variant: dict[str, list[dict[str, Any]]] = {"A": [], "B": []}
+    by_kind: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        variant = row.get("prompt_variant") or ""
+        if variant in by_variant:
+            by_variant[variant].append(row)
+        by_kind.setdefault(row.get("kind") or "unknown", []).append(row)
+
+    def _pack(items: list[dict[str, Any]]) -> dict[str, Any]:
+        return {
+            "total": len(items),
+            "exact_ok": sum(1 for row in items if row.get("passed")),
+            "oracle_answer_ok": sum(1 for row in items if row.get("answer_ok") or row.get("oracle_answer_ok")),
+            "response_url_ok": sum(1 for row in items if row.get("url_ok") or row.get("response_url_ok")),
+            "fetch_hard_evidence": sum(1 for row in items if row.get("fetch_called_hard") or row.get("fetch_hard_evidence")),
+            "fetch_soft_evidence": sum(1 for row in items if row.get("fetch_called_soft") or row.get("fetch_soft_evidence")),
+            "fetch_reported_failure": sum(1 for row in items if row.get("fetch_reported_failure")),
+            "switched_to_search": sum(1 for row in items if row.get("switched_to_search")),
+            "chat_transport_ok": sum(1 for row in items if row.get("chat_transport_ok") or row.get("ok_http")),
+        }
+
+    return {
+        "total": len(rows),
+        "passed": sum(1 for row in rows if row.get("passed")),
+        "by_variant": {key: _pack(items) for key, items in by_variant.items()},
+        "by_kind": {key: _pack(items) for key, items in by_kind.items()},
+        "cost": _cost_stats(rows),
+        "recommendation": {"choice": "pending_diag", "label": "按 W6 表写决策，不自动改 Filter"},
+    }
+
+
 def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    if any(row.get("suite") == "fetch-diag" or row.get("family") == "fetch_diag" for row in rows):
+        return summarize_fetch_diag(rows)
     if any(row.get("suite") == "eval-b" or row.get("family") in {"implicit_freshness", "dynamic_fetch"} for row in rows):
         return summarize_eval_b(rows)
     explicit = [row for row in rows if row.get("family") == "explicit_search" or row.get("case_id") in {"freshness", "official", "zh_synth"}]

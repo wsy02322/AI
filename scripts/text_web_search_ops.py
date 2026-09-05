@@ -13,7 +13,12 @@ from typing import Any
 import requests
 
 from stack_contract import (
+    ACTIVE_MODEL_IDS,
+    BANNER_IDS,
     DISABLED_FILTERS,
+    PIPE,
+    PIPE_PATCH_MARKERS,
+    PUBLIC_MODEL_IDS,
     TEXT_WEB_SEARCH_FILTER,
     TEXT_WEB_SEARCH_FILTER_MARKER,
     TEXT_WEB_SEARCH_MODEL_IDS,
@@ -485,4 +490,54 @@ def snapshot_search_state(h: dict[str, str]) -> dict[str, Any]:
         "priority": (valves.json() or {}).get("priority"),
         "attachments": attachments,
         "disabled_filters": disabled,
+    }
+
+
+def _sha12(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+
+
+def snapshot_eval_instance(h: dict[str, str]) -> dict[str, Any]:
+    """Read-only eval fingerprint. Pipe content + markers only; never valves or API_KEY."""
+    base = snapshot_search_state(h)
+    version = requests.get(f"{OPENWEBUI_URL}/api/version", headers=h, timeout=15).json()
+    pipe_status, pipe = get_function(h, PIPE)
+    if pipe_status != 200 or not pipe:
+        raise RuntimeError("pipe missing")
+    pipe_content = pipe.get("content") or ""
+    export = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/export", headers=h, timeout=60).json()
+    banners = export.get("ui.banners") or []
+    banner_items = []
+    for banner in banners:
+        body = json.dumps(
+            {
+                "id": banner.get("id"),
+                "content": banner.get("content") or banner.get("text") or "",
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        banner_items.append({"id": banner.get("id"), "content_sha12": _sha12(body)})
+    listed = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
+    picker_ids = sorted(str(item.get("id") or "") for item in listed if item.get("id"))
+    return {
+        **base,
+        "owui_version": version.get("version"),
+        "pipe": {
+            "id": PIPE,
+            "content_sha12": _sha12(pipe_content),
+            "markers": {marker: marker in pipe_content for marker in PIPE_PATCH_MARKERS},
+        },
+        "banners": {
+            "ids": [item.get("id") for item in banners],
+            "count": len(banners),
+            "expected_ids": list(BANNER_IDS),
+            "items": banner_items,
+        },
+        "public_picker": {
+            "picker_count": len(picker_ids),
+            "picker_ids_sha12": _sha12("\n".join(picker_ids)),
+            "public_count_expected": len(PUBLIC_MODEL_IDS),
+            "picker_matches_active": picker_ids == sorted(ACTIVE_MODEL_IDS),
+        },
     }
