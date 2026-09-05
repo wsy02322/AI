@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Studio</title>
+  <link rel="stylesheet" href="/static/studio.css?v=4" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="eyebrow">Image Studio</p>
+      <h1>Canvas</h1>
+    </div>
+    <div class="top-right">
+      <span>{{ user.name or user.email }}</span>
+      <form method="post" action="/api/logout">
+        <button type="submit" class="ghost">Sign out</button>
+      </form>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="rail">
+      <button id="new-work" type="button" class="ghost">New</button>
+      <ul id="works"></ul>
+    </aside>
+    <main class="stage">
+      <section class="controls">
+        <label>Model
+          <select id="model"></select>
+        </label>
+        <label>Aspect
+          <select id="aspect">
+            <option value="">Default</option>
+            <option value="1:1">1:1</option>
+            <option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+            <option value="4:3">4:3</option>
+            <option value="3:4">3:4</option>
+            <option value="3:2">3:2</option>
+            <option value="2:3">2:3</option>
+          </select>
+        </label>
+        <label>Resolution
+          <select id="size">
+            <option value="">Default</option>
+            <option value="1K">1K</option>
+            <option value="2K">2K</option>
+            <option value="4K">4K</option>
+          </select>
+        </label>
+        <label>Quality
+          <select id="quality">
+            <option value="">Default</option>
+          </select>
+        </label>
+        <p id="model-hint" class="hint"></p>
+      </section>
+      <textarea id="prompt" rows="4" placeholder="Describe what to generate or change"></textarea>
+      <div class="actions">
+        <button id="primary" type="button">Generate</button>
+        <button id="generate-new" type="button" class="ghost" hidden>Generate new</button>
+        <button id="select-area" type="button" class="ghost" hidden>Select area</button>
+        <label id="brush-wrap" class="inline" hidden>Brush
+          <input id="brush" type="range" min="8" max="80" value="28" />
+        </label>
+        <button id="clear-mask" type="button" class="ghost" hidden>Clear</button>
+        <button id="open-file" type="button" class="ghost">Open</button>
+        <button id="download" type="button" class="ghost" hidden>Download</button>
+        <input id="upload" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+      </div>
+      <p id="status" class="status"></p>
+      <div id="canvas-wrap" class="canvas-wrap">
+        <p id="drop-hint" class="hint">Drop an image here, paste, or Open</p>
+        <canvas id="image-canvas" width="1024" height="1024"></canvas>
+        <canvas id="mask-canvas" width="1024" height="1024"></canvas>
+      </div>
+    </main>
+    <aside class="versions">
+      <h2>Versions</h2>
+      <ol id="version-list"></ol>
+    </aside>
+  </div>
+  <script src="/static/studio.js?v=4"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # SPEC — Open WebUI 体验与稳定性契约
 
 > **真相源（产品）**。实现可换；验收以 `scripts/verify_stack.py` 为准。  
-> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-upgrade-0113-plan.md`（已确认：官方 0.11.3 钉 digest）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）、`docs/open-webui-openrouter-image-continuity-plan.md`（图像错误模式）、`docs/open-webui-secret-key-persist-plan.md`（L0）
+> **关联**：`docs/open-webui-rebuild-archive.md`（灾后入口 / 现网钉子）、`docs/open-webui-upgrade-0113-plan.md`（已落地：官方 0.11.3）、`docs/open-webui-image-studio-plan.md`（独立画图 Studio，**IS-A+ 施工中**；代码 `image-studio/`）、`docs/open-webui-notebook-youtube-plan.md`（P0-D）、`docs/open-webui-live-voice-screen-plan.md`（P0-B / P0-C）、`docs/open-webui-file-ingest-plan.md`（文件录入，T0 未确认）、`docs/open-webui-openrouter-image-continuity-plan.md`（图像错误模式）、`docs/open-webui-secret-key-persist-plan.md`（L0）
 
 ---
 
@@ -19,7 +19,7 @@
 
 | ID | 主线 | 现状 | 独立 plan |
 |----|------|------|-----------|
-| **P0-A** | **图像生成** | Now：路线 S 已落地 | `open-webui-openrouter-image-continuity-plan.md`（连续性仍增强） |
+| **P0-A** | **图像生成** | Now：聊天路线 S；**独立 Studio IS-A+ 施工中**（`image-studio/`） | `open-webui-image-studio-plan.md` + 聊天连续性 `open-webui-openrouter-image-continuity-plan.md` |
 | **P0-B** | **语音聊天** | L1 串联已落地但**未达顶级**；S2S / barge-in 待确认方案 | `open-webui-live-voice-screen-plan.md` |
 | **P0-C** | **屏幕共享** | L1 入口已落地但**未达持续屏流顶级** | `open-webui-live-voice-screen-plan.md` |
 | **P0-D** | **Notebook / YouTube** | N1 已落地（RAG OpenRouter + Knowledge + 视觉时间线）；字幕/ASR 受数据中心 YouTube 风控限制 | `open-webui-notebook-youtube-plan.md` |
@@ -105,8 +105,8 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 - **已落地**：聊天四格 + 路线 S；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
 - **P0 进行中**：图像增强；**语音聊天（S2S / barge-in 未完成，无 Realtime 钥匙故未换镜像）**；**屏幕共享（持续屏流未完成）**；**Notebook/YouTube N1 已落地（视觉时间线可用；口播抓取受 YouTube 风控）**
 - **复杂度确认门**：语音与屏享都不得自行降级；若顶级统一方案过重，先列「顶级」与「略降级但简单稳定」两档，由用户确认。rbb Realtime 只补语音、不补持续屏享，不能作为两项均达标的终态
-- **Later（须单独确认）**：Wave 1 **视频生成**（至少 1 个旗舰 public 且实测出片；聊天模型不得因 video tool 404）；Wave 2 slides（独立入口，聊天主路径无新 tool）；对比 **S3 真并行分栏**（ST-10 重试已落地，S3 未做）；Notebook N3/N4 Studio；**文件上传对标官网最高档**（见 `open-webui-file-ingest-plan.md`，T0 未确认）；**独立顶级画图 Studio**（含蒙版 inpainting 等；不塞进聊天主路径，须单独 plan）
-- **Don't**：ComfyUI（除非画图 Studio 方案明确选它）、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S（GA-A：Pipe `/responses` 拒 `modalities.audio`）、未确认装 Tika / 扩 Direct MIME / 未确认改 Notebook 入口或装第二前端 
+- **Later（须单独确认）**：Wave 1 **视频生成**（至少 1 个旗舰 public 且实测出片；聊天模型不得因 video tool 404）；Wave 2 slides（独立入口，聊天主路径无新 tool）；对比 **S3 真并行分栏**（ST-10 重试已落地，S3 未做）；Notebook N3/N4 Studio；**文件上传对标官网最高档**（见 `open-webui-file-ingest-plan.md`，T0 未确认）；关 OWUI 图像模型 / Studio A4（多参考、流式）  
+- **Don't**：ComfyUI、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S（GA-A：Pipe `/responses` 拒 `modalities.audio`）、未确认装 Tika / 扩 Direct MIME / 未确认改 Notebook 入口；**不要**把 Image Studio 绑进 OWUI 镜像或把 Studio 钥匙写入 Pipe / `api_configs` 
 
 ---
 

@@ -1,1 +1,6 @@
 scripts/__pycache__/
+image-studio/.env
+image-studio/data/
+image-studio/.venv/
+image-studio/**/__pycache__/
+*.pyc
