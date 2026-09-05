@@ -205,11 +205,17 @@ def verify(h: dict[str, str]) -> int:
         else:
             r.ok(f"{fid} inactive")
     thin = by_id.get(TEXT_WEB_SEARCH_FILTER)
+    thin_detail = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/functions/id/{TEXT_WEB_SEARCH_FILTER}",
+        headers=h,
+        timeout=60,
+    )
+    thin_body = thin_detail.json() if thin_detail.status_code == 200 else {}
     if not thin or not thin.get("is_active"):
         r.err("thin web search filter inactive")
     elif thin.get("is_global"):
         r.err("thin web search filter is global")
-    elif TEXT_WEB_SEARCH_FILTER_MARKER not in (thin.get("content") or ""):
+    elif TEXT_WEB_SEARCH_FILTER_MARKER not in (thin_body.get("content") or ""):
         r.err("thin web search filter missing marker")
     else:
         r.ok("thin web search filter active, not global")
