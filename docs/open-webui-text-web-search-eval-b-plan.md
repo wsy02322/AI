@@ -1,6 +1,6 @@
 # ST-14 EVAL-B：修正评测口径并定向补测
 
-> **状态**：**已确认执行**（2026-09-05）。只改评测脚本与文档，不改 Filter / Pipe / 挂载 / Banner。  
+> **状态**：**已跑完**（2026-09-05）。结果见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认前不改 Filter / Pipe。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；薄 Filter `openrouter_text_web_search` default-on。
 
