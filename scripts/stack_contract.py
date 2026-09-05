@@ -123,7 +123,7 @@ PIPE_PATCH_MARKERS = [
 ]
 
 # Live UX (2026-09-05): one banner, no empty-chat chips, reply Follow-up off.
-BANNER_IDS = ["usage-guide-v4"]
+BANNER_IDS = ["usage-guide-v5"]
 SUGGESTIONS_COUNT = 0
 TASK_FOLLOW_UP_ENABLE = False
 
