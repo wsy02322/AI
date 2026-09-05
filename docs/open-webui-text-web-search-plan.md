@@ -30,7 +30,7 @@ WS-A 可接近 ChatGPT 的即时 Search：模型自主查找、追问、抓整�
 
 ## 1. 非变更前提核查（2026-09-05）
 
-已执行 `VERIFY_SMOKE=0 python3 scripts/verify_stack.py` 与管理 API 检查，未发模型推理请求、未提交任何配置更新。第一次检查调用了 runtime `/api/models`；该入口可能触发 manifold `pipes()`，所以后续 readiness 探针已改为只读存储层 `/api/v1/models`，不再把“HTTP GET”错误等同于“绝无间接行为”。
+已执行 `VERIFY_SMOKE=0 python3 scripts/verify_stack.py` 与管理 API 检查，未发模型推理请求、未提交任何配置更新。第一次检查调用了 runtime model catalog；该入口可能触发 manifold `pipes()`，所以后续 readiness 探针不再枚举任何 model catalog，只按 id 读取本计划涉及的具体模型记录。不能把“HTTP GET”错误等同于“绝无间接行为”。
 
 | 检查 | 结果 | 含义 |
 |------|------|------|
@@ -52,7 +52,7 @@ WS-A 可接近 ChatGPT 的即时 Search：模型自主查找、追问、抓整�
 python3 scripts/probe_text_web_search_readiness.py
 ```
 
-它用 POST 登录；之后只读 Function/模型存储层，不调用 runtime `/api/models`，不读取 Pipe valves（避免让 `API_KEY` 进入探针内存），不激活 Function、不改 valves/模型、不发推理请求。它会报告源码接口 markers、Guard 顺序、候选模型和 stored active 漂移；markers 只证明接口候选存在，不能替代 canary 的真实工具事件/引用验收。若 catalog 漂移，退出码为 2（rollout blocker），不是“ready”成功信号。
+它用 POST 登录；之后只按 id 读取 Function/模型记录，不枚举 runtime 或存储 catalog，不读取 Pipe valves（避免让 `API_KEY` 进入探针内存），不激活 Function、不改 valves/模型、不发推理请求。它会报告源码接口 markers、Guard 顺序和候选模型；markers 只证明接口候选存在，不能替代 canary 的真实工具事件/引用验收。catalog 是否恰好 21 仍由确认后的 W0 `verify_stack.py` 阻断检查，readiness 不假装能无副作用地证明这点。
 
 ---
 
@@ -127,17 +127,26 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 |----|--------|------|
 | Filter | 指定 7 模型 attached + default-on；用户可关 | 最接近 ChatGPT 自动搜索；普通问题模型可选择 0 次 |
 | Search engine | `auto` | 优先厂商原生；不支持才回落 Exa |
-| Search results | 每次 5；`max_uses=3`；总计最多 15 | 最多 3 个搜索角度，控制上下文 |
+| Search results | 每次 5；`max_uses=3`；总计最多 15 | Anthropic 可硬限 3 次；其他 native provider 可能忽略 `max_uses` |
 | Search context | `medium` | 质量/成本中点 |
 | Web Fetch | **默认开** | 能读整页，不把摘要注入冒充浏览 |
 | Fetch engine | `auto` | 能原生则原生，否则 OpenRouter 选择 |
 | Fetch uses | 最多 5 | 防无限追链接 |
 | Fetch content | 每页最多约 12k tokens | 足够文档/PDF主体，避免撑爆上下文 |
-| Cost stop | server tools 每请求 `$0.05` | 防失控；不替代模型 token 成本 |
+| Loop stop | `step_count_is=8` 或 server-tools 成本达 `$0.05` | 两条件 OR；任一触发即停止工具循环 |
 | OWUI native | off | 防双搜、双计费、引用来源混杂 |
 | Datetime/Advisor/Subagent | 不提供 | 本波只做搜索 |
 
-本方案不同时发送 `max_tool_calls`：OpenRouter 的 `stop_server_tools_when` 会覆盖它。薄 Filter 只提供 Search + Fetch，因此 `web_search.max_uses=3` 与 `web_fetch.max_uses=5` 构成最多 8 次的工具级硬上限，另用 `$0.05` cost stop 收口。
+本方案不同时发送 `max_tool_calls`：OpenRouter 的 `stop_server_tools_when` 会覆盖它。`web_search.max_uses=3` 保留为工具级辅助限制，但 native Search 只有 Anthropic 保证接受，OpenAI/Google/xAI 可能忽略。跨 provider 的硬上限由 Filter 写入：
+
+```json
+[
+  {"type": "step_count_is", "step_count": 8},
+  {"type": "max_cost", "max_cost_in_dollars": 0.05}
+]
+```
+
+两个条件按 OR 生效；触发后由 OpenRouter 关闭工具并完成最终自然语言回答。
 
 ---
 

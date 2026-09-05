@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Non-mutating readiness probe for the proposed text-model web search plan.
 
-The authentication endpoint is POST; all subsequent calls use administrative
-read endpoints that do not invoke the runtime `/api/models` manifold catalog.
-The script does not activate functions, update models, change valves, or send
-model inference requests.
+The authentication endpoint is POST; all subsequent calls read specific
+functions, configuration, or model records. The script deliberately does not
+enumerate the manifold catalog. It does not activate functions, update models,
+change valves, or send model inference requests.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typing import Any
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import ACTIVE_MODEL_IDS, GUARDS, IMAGE_MODEL_IDS, PIPE, SONAR_MODEL_IDS
+from stack_contract import GUARDS, IMAGE_MODEL_IDS, PIPE, SONAR_MODEL_IDS
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
@@ -130,21 +130,7 @@ def verify_baseline(h: dict[str, str], report: Report) -> None:
     else:
         report.ok("OWUI native web search off")
 
-    stored = get_json(h, "/api/v1/models").get("data") or []
-    active_ids = {
-        model.get("id")
-        for model in stored
-        if str(model.get("id") or "").startswith(f"{PIPE}.") and model.get("is_active") is not False
-    }
-    if active_ids == set(ACTIVE_MODEL_IDS):
-        report.ok(f"stored active model rows match contract ({len(ACTIVE_MODEL_IDS)})")
-    else:
-        extra = sorted(active_ids - set(ACTIVE_MODEL_IDS))
-        missing = sorted(set(ACTIVE_MODEL_IDS) - active_ids)
-        report.block(
-            f"stored active model drift: got {len(active_ids)}, want {len(ACTIVE_MODEL_IDS)}; "
-            f"extra={extra or []}; missing={missing or []}"
-        )
+    report.warn("runtime catalog intentionally not enumerated; W0 must establish the 21-model baseline")
 
 
 def verify_pipe_and_filters(h: dict[str, str], report: Report) -> None:
@@ -225,6 +211,8 @@ def verify_models(h: dict[str, str], report: Report) -> None:
     for model_id in PROPOSED_TEXT_SEARCH_MODEL_IDS:
         model = get_json(h, "/api/v1/models/model", params={"id": model_id})
         filters = (model.get("meta") or {}).get("filterIds") or []
+        if model.get("is_active") is False:
+            report.block(f"proposed text model is inactive: {model_id}")
         if UPSTREAM_WEB_TOOLS_FILTER in filters:
             report.error(f"proposed text model already has broad Web Tools: {model_id}")
         else:
