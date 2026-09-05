@@ -1,11 +1,12 @@
 # ST-14 EVAL-B 结果（2026-09-05，`eval-b-v2` 重算）
 
+> **状态：质量已收口**（2026-09-05 用户确认）。保持现网薄 Filter；不上 Controller；不加 Filter 指引；不抬 `$0.05`。  
 > **只读**。本页按精确 oracle（`github-release-v2`）重算原 70 次调用，**没有**重跑模型。  
 > 原 JSON：`/opt/cursor/artifacts/text_web_search_eval_b.json`  
 > 重算：`/opt/cursor/artifacts/text_web_search_eval_b_rescored.json`  
 > 70 次新调用 + 复用 v1 7 道算术题；EVAL-B 账单约 **$3.66**（次数与成本未变）。
 
-机械建议：`diagnose_fetch`。未确认前不改 Filter / Pipe。  
+机械建议曾是 `diagnose_fetch`；A/B 之后决定收口。未再改 Filter / Pipe / Banner。  
 文档只写「本波比对过的字段」：薄 Filter SHA / 挂载 / broad Filter。扩展指纹（Pipe content SHA、Banner、OWUI version、picker 摘要）见诊断波快照。
 
 ---
@@ -68,10 +69,12 @@ B 没有优于 A（两边都是 4/6）。HTML 8/8 可读；API 4/4 正文声称�
 
 **结论：不上薄 Filter 指引。** 缺口是 GitHub API 路由/访问限制，不是「模型不知道该 Fetch」。普通 HTML（含 GitHub 发布页）现网已经能读。
 
-顶级档仍是 Pipe Controller（失败则改走 HTML / 受控重试），须另 plan、另确认。本波不做。
+顶级档仍是 Pipe Controller（失败则改走 HTML / 受控重试），已列入 SPEC Later，须另 plan、另确认。
+
+用户已确认 **收口 Search**：现网薄 Filter 保持；已知限制写进 SPEC ST-14。
 
 ---
 
 ## 4. 冻结
 
-**不**抬 `$0.05`、**不**扩模型、**不上** Deep Research、**不**重开 broad Web Tools、**不**改 Filter / Pipe / Banner。
+**不**抬 `$0.05`、**不**扩模型、**不上** Deep Research、**不**重开 broad Web Tools、**不**改 Filter / Pipe / Banner、**未确认不上** Search Controller。

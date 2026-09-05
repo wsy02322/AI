@@ -63,7 +63,7 @@
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.x-ai.grok-4.6`（不默认双栏 compare） |
 | 置顶四格 | Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
-| 搜索 | 指定 7 个文本模型挂薄 `Web Search`（ST-14）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用** |
+| 搜索 | 指定 7 个文本模型挂薄 `Web Search`（ST-14，**质量已收口**）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
 | Notebook | **N1**：Knowledge「YouTube Notebook」+ OpenRouter embedding。N2+ Studio **未做** |
 | Follow-up 芯片 | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）。Autocomplete / Title **仍开** |

@@ -3,7 +3,7 @@
 > **只读**。未改 Filter / Pipe / 挂载 / Banner。  
 > 原始逐题 JSON：`/opt/cursor/artifacts/text_web_search_eval.json`  
 > 跑次：2026-09-05 16:08–16:24 UTC；42 次 completions；账单合计约 **$3.02**。  
-> **口径**：`v1/provisional`。EVAL-B 见 `docs/open-webui-text-web-search-eval-b-plan.md`。
+> **口径**：`v1/provisional`（历史）。终态与收口见 `docs/open-webui-text-web-search-eval-b-results.md`。
 
 已撤回：把整次请求 `usage.cost` 与 `$0.05` 工具停止条件比较后的 `tune_thresholds`；以及「不为自动触发上 Controller」的确定结论。那两句超出了本题库能证明的范围。
 

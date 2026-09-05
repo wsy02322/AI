@@ -1,6 +1,6 @@
 # ST-14 EVAL-B：修正评测口径并定向补测
 
-> **状态**：**修正波已完成**（`eval-b-v2` / `oracle_schema=github-release-v2` + Anthropic Fetch A/B）。精确答案 **10/14 红门**；指引未解锁 GitHub API。未确认前不改 Filter / Pipe。  
+> **状态**：**质量已收口**（2026-09-05）。`eval-b-v2` 精确答案 10/14 红门；A/B 未解锁 GitHub API；用户确认不上 Controller / 指引。见 `docs/open-webui-text-web-search-eval-b-results.md`。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；薄 Filter `openrouter_text_web_search` default-on。
 

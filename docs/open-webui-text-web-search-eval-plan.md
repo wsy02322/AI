@@ -1,6 +1,6 @@
 # ST-14 Search 质量评测基线（只读）
 
-> **状态**：v1 基线已跑完，**口径暂定**。修正补测见 `docs/open-webui-text-web-search-eval-b-plan.md`。未确认前不改 Filter / Pipe。  
+> **状态**：v1 **历史口径**。终态是 EVAL-B v2，**质量已收口**（2026-09-05）。见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller / Filter 指引。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；薄 Filter `openrouter_text_web_search` 已 default-on。  
 > **本波禁止**：改 Filter 源码 / valves、改 Pipe、改挂载 / default-on、改 Banner、扩模型、部署 Deep Research。
