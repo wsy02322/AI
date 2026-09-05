@@ -1,6 +1,5 @@
 const state = {
   models: [],
-  maskModelId: "openai:gpt-image-2",
   works: [],
   work: null,
   painting: false,
@@ -64,19 +63,10 @@ function onModelChange() {
   quality.innerHTML = `<option value="">默认</option>` +
     qualities.map((q) => `<option value="${q}">${q}</option>`).join("");
   quality.disabled = qualities.length === 0;
-  const editHint = model.edit === "mask"
-    ? "涂白的是要改的区域。「用选区编辑」走 GPT Image 2。"
-    : "「按提示编辑」按当前模型语义改图。「用选区编辑」会自动切到 GPT Image 2。";
+  const editHint = model.edit === "mask" ? "可用笔刷选区（OpenAI 透明=编辑区）" : "语义编辑：按提示改当前图，没有像素蒙版";
   const keyHint = model.available ? "直连已就绪" : "这台机器还没注入对应钥匙，生成会返回 503";
-  $("model-hint").textContent = `${editHint} ${keyHint} 参考上限 ${model.refs_max}。`;
-  $("edit-mask").disabled = false;
-}
-
-function selectMaskModel() {
-  const id = state.maskModelId;
-  if (!id || $("model").value === id) return;
-  $("model").value = id;
-  onModelChange();
+  $("model-hint").textContent = `${editHint}。${keyHint}。参考上限 ${model.refs_max}。`;
+  $("edit-mask").disabled = model.edit !== "mask";
 }
 
 function renderWorks() {
@@ -215,8 +205,6 @@ async function edit(useMask) {
   form.set("quality", $("quality").value);
   if (useMask) {
     if (!maskHasPaint()) return setStatus("先在图上涂要改的区域", true);
-    selectMaskModel();
-    form.set("model_id", $("model").value);
     form.set("mask", await exportMask(), "mask.png");
   }
   setStatus(useMask ? "按选区编辑中…" : "语义编辑中…");
@@ -232,7 +220,6 @@ async function edit(useMask) {
 async function boot() {
   const data = await api("/api/models");
   state.models = data.models || [];
-  state.maskModelId = data.mask_model_id || "openai:gpt-image-2";
   renderModels();
   await refreshWorks();
   $("model").addEventListener("change", onModelChange);

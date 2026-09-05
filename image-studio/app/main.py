@@ -105,11 +105,7 @@ async def studio_page(request: Request):
 @app.get("/api/models")
 async def api_models(request: Request):
     auth.current_user(request)
-    return {
-        "ok": True,
-        "models": catalog.list_models(),
-        "mask_model_id": catalog.MASK_MODEL_ID,
-    }
+    return {"ok": True, "models": catalog.list_models()}
 
 
 @app.get("/api/works")

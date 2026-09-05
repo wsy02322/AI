@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-MASK_MODEL_ID = "openai:gpt-image-2"
-
 # Direct APIs first. OpenRouter is fallback / long-tail only.
 MODELS: list[dict[str, Any]] = [
     {

@@ -20,8 +20,6 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(openai_size("1:1"), "1024x1024")
         self.assertEqual(openai_size("16:9"), "1536x1024")
         self.assertEqual(get_model("openai:gpt-image-2")["edit"], "mask")
-        from app.catalog import MASK_MODEL_ID
-        self.assertEqual(MASK_MODEL_ID, "openai:gpt-image-2")
         self.assertEqual(get_model("google:gemini-3-pro-image")["edit"], "semantic")
         with self.assertRaises(KeyError):
             get_model("nope")

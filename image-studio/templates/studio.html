@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Image Studio</title>
-  <link rel="stylesheet" href="/static/studio.css?v=2" />
+  <link rel="stylesheet" href="/static/studio.css" />
 </head>
 <body>
   <header class="top">
@@ -60,7 +60,7 @@
       <div class="actions">
         <button id="generate" type="button">生成</button>
         <button id="edit" type="button" class="ghost">按提示编辑</button>
-        <button id="edit-mask" type="button">用选区编辑</button>
+        <button id="edit-mask" type="button" class="ghost">用选区编辑</button>
         <label class="inline">笔刷
           <input id="brush" type="range" min="8" max="80" value="28" />
         </label>
@@ -80,6 +80,6 @@
       <ol id="version-list"></ol>
     </aside>
   </div>
-  <script src="/static/studio.js?v=2"></script>
+  <script src="/static/studio.js"></script>
 </body>
 </html>
