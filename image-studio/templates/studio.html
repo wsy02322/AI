@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Image Studio</title>
-  <link rel="stylesheet" href="/static/studio.css?v=3" />
+  <link rel="stylesheet" href="/static/studio.css?v=4" />
 </head>
 <body>
   <header class="top">
@@ -65,12 +65,13 @@
           <input id="brush" type="range" min="8" max="80" value="28" />
         </label>
         <button id="clear-mask" type="button" class="ghost" hidden>Clear</button>
-        <label class="inline">Open
-          <input id="upload" type="file" accept="image/png,image/jpeg,image/webp" />
-        </label>
+        <button id="open-file" type="button" class="ghost">Open</button>
+        <button id="download" type="button" class="ghost" hidden>Download</button>
+        <input id="upload" type="file" accept="image/png,image/jpeg,image/webp" hidden />
       </div>
       <p id="status" class="status"></p>
-      <div class="canvas-wrap">
+      <div id="canvas-wrap" class="canvas-wrap">
+        <p id="drop-hint" class="hint">Drop an image here, paste, or Open</p>
         <canvas id="image-canvas" width="1024" height="1024"></canvas>
         <canvas id="mask-canvas" width="1024" height="1024"></canvas>
       </div>
@@ -80,6 +81,6 @@
       <ol id="version-list"></ol>
     </aside>
   </div>
-  <script src="/static/studio.js?v=3"></script>
+  <script src="/static/studio.js?v=4"></script>
 </body>
 </html>

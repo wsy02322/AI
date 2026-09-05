@@ -42,6 +42,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .rail ul, .versions ol { list-style: none; padding: 0; margin: 1rem 0 0; }
 .rail li, .versions li { padding: 0.45rem 0.3rem; border-bottom: 1px solid var(--line); cursor: pointer; }
 .rail li.active, .versions li.active { color: var(--accent); }
+.versions li { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; }
+.versions li .ver-label { flex: 1; min-width: 0; }
+.versions li .tiny { padding: 0.2rem 0.45rem; font-size: 0.75rem; font-weight: 500; }
 .stage { padding: 1rem 1.25rem 2rem; display: grid; gap: 0.8rem; align-content: start; }
 .controls { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: end; }
 .controls label { display: grid; gap: 0.3rem; color: var(--muted); font-size: 0.9rem; }
@@ -49,9 +52,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .inline { display: flex; gap: 0.4rem; align-items: center; color: var(--muted); }
 textarea { width: 100%; resize: vertical; }
 .canvas-wrap { position: relative; width: min(100%, 1024px); background: #0b0d12; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.canvas-wrap.drop-target { outline: 2px dashed var(--accent); outline-offset: -6px; }
 .canvas-wrap canvas { max-width: 100%; display: block; }
-#mask-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: default; }
-#mask-canvas.painting { cursor: crosshair; }
+#drop-hint { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; margin: 0; }
+.canvas-wrap.has-image #drop-hint { display: none; }
+#mask-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: default; pointer-events: none; }
+#mask-canvas.painting { cursor: crosshair; pointer-events: auto; }
 #model-hint { margin: 0; flex: 1 1 220px; }
 
 @media (max-width: 960px) {

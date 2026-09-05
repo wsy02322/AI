@@ -22,7 +22,10 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(get_model("openai:gpt-image-2")["edit"], "mask")
         html = (ROOT / "templates" / "studio.html").read_text()
         self.assertIn("Generate new", html)
+        self.assertIn("Download", html)
         self.assertNotIn("生成", html)
+        from app.store import download_filename
+        self.assertTrue(download_filename({"title": "A cat!"}, "abc123.png").endswith("-abc123.png"))
         self.assertEqual(get_model("google:gemini-3-pro-image")["edit"], "semantic")
         with self.assertRaises(KeyError):
             get_model("nope")

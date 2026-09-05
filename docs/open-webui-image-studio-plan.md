@@ -223,7 +223,7 @@ v1 **不做这个库**。需要像某个人时，**这一次上传参考图** �
 | A1 薄后端 | 已写：`app/main.py` 路由 OpenAI/Gemini/xAI/OpenRouter + 独立 volume 落盘 |
 | A2 画布页 | 已写：`templates/` + `static/` |
 | A3 OpenAI 笔刷蒙版 | 已写：UI 白笔 = 编辑区 → OpenAI 透明像素。非 GPT Image 2 不自动切模型 |
-| UX-A | **已确认**：全英文；一个主按钮（空画布 Generate / 有图 Edit）；Select area 是工具；有图时 Generate new 二次确认 |
+| UX-A | **已确认**：全英文；一个主按钮；Select area 是工具；Generate new 二次确认；**Download**（当前图 + 每版本）；Open 按钮 + 拖到画布 + 粘贴 |
 | A4 多参考 / 4K 流式 | **未做**（下一波） |
 | VPS 容器 + Caddy `image.` | 已上 `https://image.micropigeon.com`。前端 UX-A 需 VPS pull 重建 |
 | 关 OWUI 图像模型 | **另确认**，现在不动 |

@@ -51,6 +51,8 @@ function syncActions() {
   $("clear-mask").hidden = !selecting;
   $("select-area").classList.toggle("active", selecting);
   $("primary").textContent = !has ? "Generate" : (selecting ? "Edit selection" : "Edit");
+  $("download").hidden = !has;
+  $("canvas-wrap").classList.toggle("has-image", has);
   maskCanvas.classList.toggle("painting", selecting);
 }
 
@@ -102,7 +104,10 @@ function renderVersions() {
   $("version-list").innerHTML = versions
     .slice()
     .reverse()
-    .map((v) => `<li data-id="${v.id}" class="${state.work.current === v.id ? "active" : ""}">${v.kind} · ${v.prompt.slice(0, 36)}</li>`)
+    .map((v) => `<li data-id="${v.id}" class="${state.work.current === v.id ? "active" : ""}">
+        <span class="ver-label">${v.kind} · ${v.prompt.slice(0, 36)}</span>
+        <button type="button" class="ghost tiny" data-download="${v.file}">Download</button>
+      </li>`)
     .join("");
 }
 
@@ -174,6 +179,56 @@ function maskHasPaint() {
 
 async function exportMask() {
   return await new Promise((resolve) => maskCanvas.toBlob(resolve, "image/png"));
+}
+
+function downloadName(filename) {
+  const title = ((state.work && state.work.title) || "image")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^[-._]+|[-._]+$/g, "") || "image";
+  const stem = String(filename || "v").replace(/\.png$/i, "").slice(0, 24) || "v";
+  return `${title.slice(0, 48)}-${stem}.png`;
+}
+
+async function downloadPng(filename) {
+  if (!state.work || !filename) return setStatus("Nothing to download.", true);
+  try {
+    const res = await fetch(`${fileUrl(filename)}?download=1`, { credentials: "same-origin" });
+    if (!res.ok) throw new Error("Download failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = downloadName(filename);
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus("Downloaded");
+  } catch (err) {
+    setStatus(String(err.message || err), true);
+  }
+}
+
+function isImageFile(file) {
+  if (!file) return false;
+  if ((file.type || "").startsWith("image/")) return true;
+  return /\.(png|jpe?g|webp)$/i.test(file.name || "");
+}
+
+async function ingestFile(file) {
+  if (!isImageFile(file)) return setStatus("Choose a PNG, JPEG, or WebP image.", true);
+  setStatus("Opening…");
+  try {
+    if (!state.work) await createWork();
+    const form = new FormData();
+    form.set("image", file, file.name || "paste.png");
+    form.set("prompt", file.name || "paste");
+    const data = await api(`/api/works/${state.work.id}/upload`, { method: "POST", body: form });
+    state.work = data.work;
+    state.selecting = false;
+    await refreshWorks(state.work.id);
+    setStatus("Opened");
+  } catch (err) {
+    setStatus(String(err.message || err), true);
+  }
 }
 
 async function refreshWorks(selectId) {
@@ -275,22 +330,35 @@ async function boot() {
   $("generate-new").addEventListener("click", () => generate({ confirmIfCanvas: true }));
   $("select-area").addEventListener("click", toggleSelect);
   $("clear-mask").addEventListener("click", clearMask);
+  $("open-file").addEventListener("click", () => $("upload").click());
+  $("download").addEventListener("click", () => downloadPng(currentFile()));
   $("upload").addEventListener("change", async (event) => {
     const file = event.target.files && event.target.files[0];
     event.target.value = "";
-    if (!file) return;
-    try {
-      if (!state.work) await createWork();
-      const form = new FormData();
-      form.set("image", file, file.name);
-      form.set("prompt", file.name);
-      const data = await api(`/api/works/${state.work.id}/upload`, { method: "POST", body: form });
-      state.work = data.work;
-      state.selecting = false;
-      await refreshWorks(state.work.id);
-      setStatus("Opened");
-    } catch (err) {
-      setStatus(String(err.message || err), true);
+    if (file) await ingestFile(file);
+  });
+  const wrap = $("canvas-wrap");
+  wrap.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    wrap.classList.add("drop-target");
+  });
+  wrap.addEventListener("dragleave", () => wrap.classList.remove("drop-target"));
+  wrap.addEventListener("drop", async (event) => {
+    event.preventDefault();
+    wrap.classList.remove("drop-target");
+    const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+    if (file) await ingestFile(file);
+  });
+  window.addEventListener("paste", async (event) => {
+    const items = event.clipboardData && event.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === "file" && (item.type || "").startsWith("image/")) {
+        event.preventDefault();
+        const file = item.getAsFile();
+        if (file) await ingestFile(file);
+        return;
+      }
     }
   });
   $("works").addEventListener("click", async (event) => {
@@ -300,7 +368,15 @@ async function boot() {
     await refreshWorks(id);
   });
   $("version-list").addEventListener("click", async (event) => {
-    const id = event.target.getAttribute("data-id");
+    const dl = event.target.closest("[data-download]");
+    if (dl) {
+      event.preventDefault();
+      event.stopPropagation();
+      await downloadPng(dl.getAttribute("data-download"));
+      return;
+    }
+    const row = event.target.closest("li[data-id]");
+    const id = row && row.getAttribute("data-id");
     if (!id || !state.work) return;
     state.work.current = id;
     renderVersions();

@@ -150,10 +150,17 @@ async def api_delete_work(request: Request, work_id: str):
 @app.get("/api/works/{work_id}/files/{filename}")
 async def api_file(request: Request, work_id: str, filename: str):
     user = auth.current_user(request)
-    path = store.file_path(auth.user_key(user), work_id, filename)
+    key = auth.user_key(user)
+    path = store.file_path(key, work_id, filename)
     if not path:
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(path, media_type="image/png")
+    headers = {}
+    if request.query_params.get("download"):
+        work = store.get_work(key, work_id) or {}
+        headers["Content-Disposition"] = (
+            f'attachment; filename="{store.download_filename(work, filename)}"'
+        )
+    return FileResponse(path, media_type="image/png", headers=headers)
 
 
 async def _read_png(upload: UploadFile | None) -> bytes | None:

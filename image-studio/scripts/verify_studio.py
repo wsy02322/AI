@@ -80,6 +80,13 @@ def main() -> int:
     )
     if upload.status_code == 200 and (upload.json().get("work") or {}).get("current"):
         oks.append("upload version")
+        fname = ((upload.json().get("work") or {}).get("versions") or [{}])[-1].get("file")
+        saved = client.get(f"/api/works/{work_id}/files/{fname}?download=1")
+        disp = saved.headers.get("content-disposition") or ""
+        if saved.status_code == 200 and "attachment" in disp and saved.content[:8] == png_bytes()[:8]:
+            oks.append("download attachment")
+        else:
+            errors.append(f"download {saved.status_code} {disp}")
     else:
         errors.append(f"upload {upload.status_code} {upload.text[:200]}")
 
@@ -131,7 +138,7 @@ def main() -> int:
 
     html = (ROOT / "templates" / "studio.html").read_text()
     login = (ROOT / "templates" / "login.html").read_text()
-    if "Generate new" in html and 'lang="en"' in html and "Select area" in html:
+    if "Generate new" in html and 'lang="en"' in html and "Select area" in html and "Download" in html and 'id="open-file"' in html:
         oks.append("studio html english")
     else:
         errors.append("studio html missing english chrome")

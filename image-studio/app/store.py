@@ -108,6 +108,12 @@ def file_path(email: str, work_id: str, filename: str) -> Path | None:
     return path if path.is_file() else None
 
 
+def download_filename(work: dict[str, Any], filename: str) -> str:
+    title = SAFE.sub("-", (work.get("title") or "image")).strip("-._") or "image"
+    stem = Path(filename).stem[:24] or "v"
+    return f"{title[:48]}-{stem}.png"
+
+
 def add_version(
     email: str,
     work_id: str,
