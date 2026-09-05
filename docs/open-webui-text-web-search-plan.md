@@ -1,6 +1,6 @@
 # 指定文本模型联网搜索（Agentic Search）
 
-> **状态**：**已确认，实施中（W2 canary 已过真实工具事件）**。  
+> **状态**：**已确认并落地**（W0–W4，2026-09-05）。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；OWUI Web Search 关闭；`openrouter_web_tools` 停用。  
 > **确认档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。
