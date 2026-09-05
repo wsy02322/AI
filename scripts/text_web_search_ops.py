@@ -66,8 +66,8 @@ def get_function(h: dict[str, str], function_id: str) -> tuple[int, dict[str, An
         headers=h,
         timeout=60,
     )
-    if response.status_code == 404:
-        return 404, None
+    if response.status_code in (401, 404):
+        return response.status_code, None
     if response.status_code != 200:
         raise RuntimeError(f"get function {function_id}: {response.status_code} {response.text[:300]}")
     return 200, response.json()

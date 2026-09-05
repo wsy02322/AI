@@ -13,7 +13,7 @@ from text_web_search_ops import detach_all, get_function, headers, set_active, s
 def main() -> int:
     h = headers(signin())
     status, existing = get_function(h, "openrouter_text_web_search")
-    if status == 404 or not existing:
+    if status in (401, 404) or not existing:
         print("thin filter not installed; nothing to roll back")
         return 0
     detach_all(h)
