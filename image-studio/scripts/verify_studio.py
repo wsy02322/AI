@@ -62,6 +62,10 @@ def main() -> int:
         oks.append(f"catalog {len(ids)}")
     else:
         errors.append(f"catalog {ids}")
+    if models.get("mask_model_id") == "openai:gpt-image-2":
+        oks.append("mask_model_id")
+    else:
+        errors.append(f"mask_model_id {models.get('mask_model_id')}")
 
     created = client.post("/api/works", data={"title": "verify"})
     work = created.json().get("work") or {}
