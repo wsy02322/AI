@@ -50,6 +50,8 @@ DENY_MARKERS = (
 
 
 class Filter:
+    toggle = True
+
     class Valves(BaseModel):
         priority: int = Field(default=0, description="Run before image/Sonar tool guards.")
         WEB_SEARCH_ENGINE: str = Field(default="auto")

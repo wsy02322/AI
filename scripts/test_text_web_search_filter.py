@@ -34,6 +34,10 @@ def _run(
 
 
 class TextWebSearchFilterTests(unittest.TestCase):
+    def test_class_level_toggle_is_true(self) -> None:
+        self.assertTrue(Filter.toggle)
+        self.assertTrue(Filter().toggle)
+
     def test_allowlist_writes_only_search_and_fetch(self) -> None:
         for model_id in TEXT_WEB_SEARCH_MODEL_IDS:
             body, metadata = _run(model_id)

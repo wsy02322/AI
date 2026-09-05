@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from pathlib import Path
@@ -221,3 +222,131 @@ def attach_models(h: dict[str, str], model_ids: list[str], *, default_on: bool) 
 
 def detach_all(h: dict[str, str]) -> None:
     attach_models(h, [], default_on=False)
+
+
+def collect_stream(h: dict[str, str], payload: dict[str, Any], *, timeout: int = 240) -> dict[str, Any]:
+    response = requests.post(
+        f"{OPENWEBUI_URL}/api/chat/completions",
+        headers=h,
+        json=payload,
+        timeout=timeout,
+        stream=True,
+    )
+    raw = response.text if response.status_code != 200 else ""
+    events: list[dict[str, Any]] = []
+    text_parts: list[str] = []
+    if response.status_code == 200:
+        for line in response.iter_lines(decode_unicode=True):
+            if not line or not line.startswith("data:"):
+                continue
+            data = line[5:].strip()
+            if data == "[DONE]":
+                break
+            try:
+                chunk = json.loads(data)
+            except json.JSONDecodeError:
+                continue
+            events.append(chunk)
+            choices = chunk.get("choices") or []
+            if choices:
+                delta = (choices[0].get("delta") or {}).get("content")
+                message = (choices[0].get("message") or {}).get("content")
+                if isinstance(delta, str):
+                    text_parts.append(delta)
+                elif isinstance(message, str):
+                    text_parts.append(message)
+    blob = json.dumps(events, ensure_ascii=False)
+    usage = next((e.get("usage") for e in reversed(events) if isinstance(e, dict) and e.get("usage")), {})
+    return {
+        "status": response.status_code,
+        "error": raw[:600],
+        "events": events,
+        "text": "".join(text_parts),
+        "blob": blob,
+        "usage": usage or {},
+    }
+
+
+def chat_with_optional_search(
+    h: dict[str, str],
+    model_id: str,
+    messages: list[dict[str, str]],
+    *,
+    enable_search: bool,
+    timeout: int = 240,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "model": model_id,
+        "messages": messages,
+        "stream": True,
+        "features": {"web_search": False},
+    }
+    if enable_search:
+        payload["filter_ids"] = [TEXT_WEB_SEARCH_FILTER]
+    return collect_stream(h, payload, timeout=timeout)
+
+
+def server_tool_details(usage: dict[str, Any] | None) -> dict[str, Any]:
+    usage = usage or {}
+    details = usage.get("server_tool_use_details") or usage.get("server_tool_use") or {}
+    return details if isinstance(details, dict) else {}
+
+
+def web_search_requests(usage: dict[str, Any] | None) -> int:
+    details = server_tool_details(usage)
+    try:
+        return int(details.get("web_search_requests") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def tool_calls_executed(usage: dict[str, Any] | None) -> int:
+    details = server_tool_details(usage)
+    try:
+        return int(details.get("tool_calls_executed") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def event_actions(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for event in events:
+        payload = event.get("event") if isinstance(event, dict) else None
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if isinstance(data, dict) and (data.get("action") or data.get("description")):
+            out.append(
+                {
+                    "action": data.get("action"),
+                    "description": data.get("description"),
+                    "done": data.get("done"),
+                    "urls": data.get("urls"),
+                }
+            )
+    return out
+
+
+def has_status_action(events: list[dict[str, Any]], action: str) -> bool:
+    return any(item.get("action") == action for item in event_actions(events))
+
+
+def has_status_description(events: list[dict[str, Any]], needle: str) -> bool:
+    lowered = needle.lower()
+    return any(lowered in str(item.get("description") or "").lower() for item in event_actions(events))
+
+
+def has_source_urls(events: list[dict[str, Any]]) -> bool:
+    for event in events:
+        payload = event.get("event") if isinstance(event, dict) else None
+        if not isinstance(payload, dict) or payload.get("type") != "source":
+            continue
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        source = data.get("source") if isinstance(data.get("source"), dict) else {}
+        url = source.get("url")
+        if isinstance(url, str) and url.startswith("http"):
+            return True
+        metadata = data.get("metadata")
+        if isinstance(metadata, list):
+            for item in metadata:
+                if isinstance(item, dict) and str(item.get("source") or "").startswith("http"):
+                    return True
+    return False
