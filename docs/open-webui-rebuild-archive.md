@@ -146,7 +146,7 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
 与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。现网这 21 个 **均 public + is_active**。picker = 这 21 个。
 
-聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5.1`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max`、`google.gemini-3.1-pro-preview`、`google.gemini-3.8-flash`  
+聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5.1`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max-0902`、`google.gemini-3.1-pro-preview`、`google.gemini-3.8-flash`  
 搜索：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`  
 图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
 
@@ -156,7 +156,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 `GET /api/models` 应为 **21**：与 `PUBLIC_MODEL_IDS` 相同。两条 Gemini 也是 public（不是管理员专属）。
 
-**去除（is_active=false）**：旧 id `claude-fable-5`、`gemini-3.7-flash`；`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`；以及新出现的家族（现网曾漂过：`inclusionai.ling-3.0-flash-fin`、`meta.muse-spark-1.3`、`meta.muse-spark-1.3-contributor`、`minimax.hailuo-3-max`、`~z-ai.glm-flash-latest`）。契约外模型若带 `*` read，跑 `restore_public_grants.py` 剥掉。
+**去除（is_active=false）**：旧 id `claude-fable-5`、`gemini-3.7-flash`、`qwen.qwen3.8-max`；`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`；以及新出现的家族（现网曾漂过：`inclusionai.ling-3.0-flash-fin`、`inclusionai.ling-3.0-flash-sante:free`、`openai.gpt-6-astra*`、`meta.muse-spark-1.3`、`meta.muse-spark-1.3-contributor`、`minimax.hailuo-3-max`、`~z-ai.glm-flash-latest`）。契约外模型若带 `*` read，跑 `restore_public_grants.py` 剥掉。
 
 灾后跑 `apply_model_catalog_visibility.py`（按 `ACTIVE_MODEL_IDS`），再跑 `restore_public_grants.py`（21 public + 剥额外 `*`）。不要把新家族塞进 picker。
 

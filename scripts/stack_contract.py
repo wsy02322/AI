@@ -56,7 +56,7 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.perplexity.sonar-pro-search",
     f"{PIPE}.qwen.qwen-image-3-pro",
-    f"{PIPE}.qwen.qwen3.8-max",
+    f"{PIPE}.qwen.qwen3.8-max-0902",
     f"{PIPE}.x-ai.grok-4.6",
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
@@ -68,6 +68,7 @@ EXTRA_ACTIVE_MODEL_IDS: list[str] = []
 RETIRED_MODEL_IDS = [
     f"{PIPE}.anthropic.claude-fable-5",
     f"{PIPE}.google.gemini-3.7-flash",
+    f"{PIPE}.qwen.qwen3.8-max",
 ]
 
 # Runtime picker == public (21). Granite / Mercury / new families stay inactive.
