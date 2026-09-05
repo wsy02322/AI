@@ -84,9 +84,14 @@ def expand_jobs(models: list[str], cases: list[dict], *, seed: int, canary: bool
 
 def atomic_write(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    tmp.replace(path)
+    tmp.write_text(text, encoding="utf-8")
+    try:
+        tmp.replace(path)
+    except OSError:
+        path.write_text(text, encoding="utf-8")
+        tmp.unlink(missing_ok=True)
 
 
 def load_payload(path: Path) -> dict[str, Any] | None:
