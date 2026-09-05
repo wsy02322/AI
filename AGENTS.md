@@ -60,7 +60,7 @@
 | `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
 | `scripts/run_text_web_search_canary.py` | ST-14 W2：Gemini Flash 真实工具事件 + 图像零回归 |
 | `scripts/run_text_web_search_smoke.py` | ST-14 W3：7 个 allowlist 模型 Search + Fetch |
-| `scripts/run_text_web_search_eval.py` | ST-14 质量基线：7×6 自然语言题，只读，不改实例 |
+| `scripts/run_text_web_search_eval.py` | ST-14 质量评测：`--suite eval-b` 定向补测；只读，不改实例 |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |

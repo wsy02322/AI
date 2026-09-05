@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -12,6 +13,7 @@ from typing import Any
 import requests
 
 from stack_contract import (
+    DISABLED_FILTERS,
     TEXT_WEB_SEARCH_FILTER,
     TEXT_WEB_SEARCH_FILTER_MARKER,
     TEXT_WEB_SEARCH_MODEL_IDS,
@@ -256,7 +258,11 @@ def collect_stream(h: dict[str, str], payload: dict[str, Any], *, timeout: int =
                 elif isinstance(message, str):
                     text_parts.append(message)
     blob = json.dumps(events, ensure_ascii=False)
-    usage = next((e.get("usage") for e in reversed(events) if isinstance(e, dict) and e.get("usage")), {})
+    usage: dict[str, Any] = {}
+    for event in events:
+        chunk_usage = event.get("usage") if isinstance(event, dict) else None
+        if isinstance(chunk_usage, dict) and chunk_usage:
+            usage.update(chunk_usage)
     return {
         "status": response.status_code,
         "error": raw[:600],
@@ -304,6 +310,14 @@ def tool_calls_executed(usage: dict[str, Any] | None) -> int:
     details = server_tool_details(usage)
     try:
         return int(details.get("tool_calls_executed") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def tool_calls_requested(usage: dict[str, Any] | None) -> int:
+    details = server_tool_details(usage)
+    try:
+        return int(details.get("tool_calls_requested") or 0)
     except (TypeError, ValueError):
         return 0
 
@@ -401,25 +415,74 @@ def usage_cost_usd(usage: dict[str, Any] | None) -> float | None:
     return None
 
 
-def has_search_evidence(result: dict[str, Any]) -> bool:
+def search_called(result: dict[str, Any]) -> bool:
     usage = result.get("usage") or {}
     events = result.get("events") or []
-    if web_search_requests(usage) >= 1:
+    return web_search_requests(usage) >= 1 or has_status_action(events, "web_search")
+
+
+def fetch_called_hard(result: dict[str, Any]) -> bool:
+    usage = result.get("usage") or {}
+    events = result.get("events") or []
+    if web_fetch_requests(usage) >= 1 or has_status_action(events, "web_fetch"):
         return True
-    if has_status_action(events, "web_search"):
-        return True
-    if has_source_urls(events):
-        return True
+    for item in event_actions(events):
+        description = str(item.get("description") or "").lower()
+        if "fetching web page" in description and item.get("done") is True:
+            return True
     return False
+
+
+def fetch_called_soft(result: dict[str, Any]) -> bool:
+    events = result.get("events") or []
+    return (not fetch_called_hard(result)) and has_status_description(events, "Fetching web page")
+
+
+def has_search_evidence(result: dict[str, Any]) -> bool:
+    return search_called(result)
 
 
 def has_fetch_evidence(result: dict[str, Any]) -> bool:
-    usage = result.get("usage") or {}
-    events = result.get("events") or []
-    if web_fetch_requests(usage) >= 1:
-        return True
-    if has_status_description(events, "Fetching web page"):
-        return True
-    if has_status_action(events, "web_fetch"):
-        return True
-    return False
+    return fetch_called_hard(result) or fetch_called_soft(result)
+
+
+def snapshot_search_state(h: dict[str, str]) -> dict[str, Any]:
+    status, function = get_function(h, TEXT_WEB_SEARCH_FILTER)
+    if status != 200 or not function:
+        raise RuntimeError("thin filter missing")
+    content = function.get("content") or ""
+    valves = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/functions/id/{TEXT_WEB_SEARCH_FILTER}/valves",
+        headers=h,
+        timeout=30,
+    )
+    if valves.status_code != 200:
+        raise RuntimeError(f"filter valves: {valves.status_code}")
+    attachments: dict[str, dict[str, bool]] = {}
+    for model_id in TEXT_WEB_SEARCH_MODEL_IDS:
+        model = get_model(h, model_id)
+        meta = model.get("meta") or {}
+        filters = meta.get("filterIds") or []
+        defaults = meta.get("defaultFilterIds") or []
+        attachments[model_id] = {
+            "attached": TEXT_WEB_SEARCH_FILTER in filters,
+            "default_on": TEXT_WEB_SEARCH_FILTER in defaults,
+        }
+    disabled: dict[str, dict[str, Any]] = {}
+    for function_id in DISABLED_FILTERS:
+        status, current = get_function(h, function_id)
+        disabled[function_id] = {
+            "present": status == 200,
+            "is_active": bool(current and current.get("is_active")),
+            "is_global": bool(current and current.get("is_global")),
+        }
+    return {
+        "filter_id": TEXT_WEB_SEARCH_FILTER,
+        "content_sha12": hashlib.sha256(content.encode("utf-8")).hexdigest()[:12],
+        "marker_present": TEXT_WEB_SEARCH_FILTER_MARKER in content,
+        "is_active": bool(function.get("is_active")),
+        "is_global": bool(function.get("is_global")),
+        "priority": (valves.json() or {}).get("priority"),
+        "attachments": attachments,
+        "disabled_filters": disabled,
+    }

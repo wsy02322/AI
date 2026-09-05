@@ -23,7 +23,7 @@
 | S2′ | Pipe content-only；**未**关全局 persist |
 | ST-11 Fable | Pipe marker `FABLE_UNSIGNED_SUMMARY_V1`（sha `f797e92d6d3f`；0.11.3 上 `verify_fable_thinking_replay.py` 7 ok，2026-09-05 复验） |
 | ST-14 文本联网 | 薄 Filter `openrouter_text_web_search`；7 模型 attached + default-on；Flash canary 有 `web_search`/`web_fetch` 事件；allowlist smoke 7/7 search；图像三条路由无 tool-use 404。`verify_text_web_search.py --mode final` 11 ok |
-| ST-14 质量基线 | **2026-09-05 只读**：42 题 37 过；该搜 28/28；闲置误搜 0/7；超 `$0.05` 25/42；账单约 $3.02。机械建议调阈值，未改实例。见 `docs/open-webui-text-web-search-eval-results.md` |
+| ST-14 质量基线 | **2026-09-05 v1 暂定**：明确联网 28/28；算术误搜 0/7。已撤回「调阈值 / 不上 Controller」机械结论。EVAL-B 见 `docs/open-webui-text-web-search-eval-b-plan.md` |
 | HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；5× OpenRouter slot **全 `enable=false`** |
 | ST-1 Sonar | **2026-08-21**：两档 Sonar `builtin_tools=false`（堵住 UI native FC 注入 `get_current_timestamp`） |
 | VPS 维护 / L0 | 0.11.3 recreate 后再跑 `apply_ops_l0`（merge 明文；脚本因列表=21 报 catalog low，picker 已恢复）。K1/K2 冻结 |
