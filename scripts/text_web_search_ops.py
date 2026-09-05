@@ -334,19 +334,92 @@ def has_status_description(events: list[dict[str, Any]], needle: str) -> bool:
     return any(lowered in str(item.get("description") or "").lower() for item in event_actions(events))
 
 
-def has_source_urls(events: list[dict[str, Any]]) -> bool:
+def collect_source_urls(events: list[dict[str, Any]]) -> list[str]:
+    urls: list[str] = []
+    seen: set[str] = set()
+
+    def _add(value: object) -> None:
+        if isinstance(value, str) and value.startswith("http") and value not in seen:
+            seen.add(value)
+            urls.append(value)
+
     for event in events:
         payload = event.get("event") if isinstance(event, dict) else None
-        if not isinstance(payload, dict) or payload.get("type") != "source":
+        if not isinstance(payload, dict):
             continue
         data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
         source = data.get("source") if isinstance(data.get("source"), dict) else {}
-        url = source.get("url")
-        if isinstance(url, str) and url.startswith("http"):
-            return True
+        _add(source.get("url"))
         metadata = data.get("metadata")
         if isinstance(metadata, list):
             for item in metadata:
-                if isinstance(item, dict) and str(item.get("source") or "").startswith("http"):
-                    return True
+                if isinstance(item, dict):
+                    _add(item.get("source"))
+                    _add(item.get("url"))
+        action_urls = data.get("urls")
+        if isinstance(action_urls, list):
+            for item in action_urls:
+                _add(item)
+        elif isinstance(action_urls, str):
+            _add(action_urls)
+    return urls
+
+
+def has_source_urls(events: list[dict[str, Any]]) -> bool:
+    return bool(collect_source_urls(events))
+
+
+def web_fetch_requests(usage: dict[str, Any] | None) -> int:
+    details = server_tool_details(usage)
+    for key in ("web_fetch_requests", "web_fetch_request_count"):
+        try:
+            value = int(details.get(key) or 0)
+        except (TypeError, ValueError):
+            continue
+        if value:
+            return value
+    return 0
+
+
+def usage_cost_usd(usage: dict[str, Any] | None) -> float | None:
+    usage = usage or {}
+    for key in ("cost", "total_cost", "cost_usd"):
+        value = usage.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                continue
+    details = usage.get("cost_details")
+    if isinstance(details, dict):
+        for key in ("upstream_inference_cost", "total_cost", "cost"):
+            value = details.get(key)
+            if isinstance(value, (int, float)):
+                return float(value)
+    return None
+
+
+def has_search_evidence(result: dict[str, Any]) -> bool:
+    usage = result.get("usage") or {}
+    events = result.get("events") or []
+    if web_search_requests(usage) >= 1:
+        return True
+    if has_status_action(events, "web_search"):
+        return True
+    if has_source_urls(events):
+        return True
+    return False
+
+
+def has_fetch_evidence(result: dict[str, Any]) -> bool:
+    usage = result.get("usage") or {}
+    events = result.get("events") or []
+    if web_fetch_requests(usage) >= 1:
+        return True
+    if has_status_description(events, "Fetching web page"):
+        return True
+    if has_status_action(events, "web_fetch"):
+        return True
     return False
