@@ -110,7 +110,7 @@
 
 | id | 内容（HTML） |
 |----|----------------|
-| `usage-guide-v4` | `<b>Selected chat models can search the web automatically. Sonar remains Quick Search / Deep Research. Images only on an image model.</b> <b>Reasoning depth</b>: Input box → <b>Valves</b>. <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar.` ；`dismissible: false` |
+| `usage-guide-v5` | `🔍 <b>Grok, Sol, Claude, and Gemini can search the web and read pages.</b> 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 <b>Reasoning depth</b>: Input box → <b>Valves</b>. 📝 <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar.` ；同一段、无 `<br>`；`dismissible: false` |
 
 现网 `ui.prompt_suggestions` = **`[]`**。OWUI Suggested 点击即发送，空 chips 不是缺功能。Follow-up 是另一开关（ST-12）。
 
@@ -178,7 +178,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 | 项 | 仓库 / `verify_stack` | 2026-09-01 现网 | 灾后怎么做 |
 |----|----------------------|-----------------|------------|
-| Banner | 一条 `usage-guide-v4` | 一条 `usage-guide-v4` | 跑 `apply_ui_guidance_banners.py` 即可 |
+| Banner | 一条 `usage-guide-v5` | 一条 `usage-guide-v5` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
 | Picker | 21 public（留下家族最新 id） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（21 public + 剥额外 `*`）；新家族关掉 |
@@ -186,7 +186,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 验 Banner v4、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（21）、ST-14 薄 Web Search。不要为了绿把 Banner 改回 v3/v2。
+`verify_stack.py` 验 Banner v5、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（21）、ST-14 薄 Web Search。不要为了绿把 Banner 改回 v4/v3/v2。
 
 ---
 
@@ -202,7 +202,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
 7. `python3 scripts/apply_model_catalog_visibility.py`（21 public）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
-9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v4` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
+9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v5` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. `python3 scripts/apply_text_web_search.py --mode final`（薄 Web Search 挂 7 个文本模型并 default-on）。  
 11. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
 12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  

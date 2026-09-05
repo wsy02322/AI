@@ -26,17 +26,18 @@ PIPE = "open_webui_openrouter_integration"
 
 BANNERS = [
     {
-        "id": "usage-guide-v4",
+        "id": "usage-guide-v5",
         "type": "info",
         "title": "",
         "content": (
-            "<b>Selected chat models can search the web automatically. "
-            "Sonar remains Quick Search / Deep Research. Images only on an image model.</b> "
-            "<b>Reasoning depth</b>: Input box → <b>Valves</b>. "
-            "<b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
+            "🔍 <b>Grok, Sol, Claude, and Gemini can search the web and read pages.</b> "
+            "🔗 GitHub: use a github.com URL, not api.github.com. "
+            "🖼️ Images only on an image model. "
+            "🧠 <b>Reasoning depth</b>: Input box → <b>Valves</b>. "
+            "📝 <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1788610000,
+        "timestamp": 1788610001,
     },
 ]
 
@@ -187,10 +188,10 @@ def verify(h: dict[str, str]) -> int:
     ).json().get("ui.prompt_suggestions") or []
     ids = [b.get("id") for b in banners]
     print("verify banners", ids)
-    if len(banners) != 1 or "usage-guide-v4" not in ids:
-        print("ERROR want single usage-guide-v4 banner")
+    if len(banners) != 1 or "usage-guide-v5" not in ids:
+        print("ERROR want single usage-guide-v5 banner")
         errors += 1
-    if any(bid in ids for bid in ("usage-guide-v3", "usage-pick-model-v2", "usage-reasoning-depth-v2")):
+    if any(bid in ids for bid in ("usage-guide-v4", "usage-guide-v3", "usage-pick-model-v2", "usage-reasoning-depth-v2")):
         print("ERROR legacy banners still present")
         errors += 1
     old = [b for b in banners if "resoning" in str(b.get("content") or "").lower()]
@@ -210,31 +211,34 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     else:
         print("ok suggestions empty")
-    guide = next((b for b in banners if b.get("id") == "usage-guide-v4"), {})
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v5"), {})
     guide_html = str(guide.get("content") or "")
-    if "Selected chat models can search the web automatically" not in guide_html:
-        print("ERROR guide banner missing selected-chat search lead")
-        errors += 1
-    if "Sonar remains Quick Search / Deep Research" not in guide_html:
-        print("ERROR guide banner missing Sonar Quick/Deep split")
-        errors += 1
-    if "Images only on an image model" not in guide_html:
-        print("ERROR guide banner missing image-model lead")
-        errors += 1
-    if "Reasoning depth" not in guide_html:
-        print("ERROR guide banner missing Reasoning depth")
-        errors += 1
-    if "Settings → General → System Prompt" not in guide_html:
-        print("ERROR guide banner missing General System Prompt note")
-        errors += 1
-    if "may also affect image models and Perplexity sonar" not in guide_html:
-        print("ERROR guide banner missing image/search System Prompt impact")
+    for needle, label in (
+        ("🔍", "search icon"),
+        ("Grok, Sol, Claude, and Gemini can search the web and read pages", "search lead"),
+        ("🔗", "github icon"),
+        ("GitHub: use a github.com URL, not api.github.com", "github hint"),
+        ("🖼️", "image icon"),
+        ("Images only on an image model", "image-model lead"),
+        ("🧠", "reasoning icon"),
+        ("Reasoning depth", "Reasoning depth"),
+        ("📝", "prompt icon"),
+        ("Settings → General → System Prompt", "General System Prompt note"),
+        ("may also affect image models and Perplexity sonar", "image/search System Prompt impact"),
+    ):
+        if needle not in guide_html:
+            print(f"ERROR guide banner missing {label}")
+            errors += 1
+    if "<br" in guide_html.lower():
+        print("ERROR guide banner is split across lines")
         errors += 1
     if any(
         p in guide_html
         for p in (
             "Web search only on Perplexity Sonar",
             "Do not use Sonar for everyday chat",
+            "Sonar remains Quick Search / Deep Research",
+            "Selected chat models can search the web automatically",
             "use <b>high</b> or <b>xhigh</b>",
         )
     ):
@@ -248,8 +252,8 @@ def verify(h: dict[str, str]) -> int:
     if hit:
         print("ERROR guide banner still has", hit)
         errors += 1
-    elif guide_html and "Selected chat models can search the web automatically" in guide_html:
-        print("ok guide banner merged English")
+    elif guide_html and "Grok, Sol, Claude, and Gemini can search the web and read pages" in guide_html:
+        print("ok guide banner search English")
     listed = {
         m["id"]: m
         for m in requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=60).json()["data"]

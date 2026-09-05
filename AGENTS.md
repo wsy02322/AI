@@ -46,7 +46,7 @@
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 21 public（留下家族最新 id）；其余 Pipe catalog 禁用 |
-| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v4` + Description + **空** chips + DEFAULT_MODELS |
+| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v5` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 21 public `access_grants`，并剥掉契约外 `*` read（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/apply_notebook_n1.py` | N1：RAG embedding → OpenRouter、YouTube loader 语言、Knowledge 集合 |
@@ -71,7 +71,7 @@
 2. **Merge** valves：见 SPEC ST-4～ST-6（`apply_plan_a_hide_integrations.py` 会 merge）  
 3. 确认 3 个 Guard 仍 global active：`image_tool_guard`、`image_context_guard`、`search_native_tool_guard`  
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
-5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v4` + 空 chips；**不要**写回 v3 / 双条 v2）  
+5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v5` + 空 chips；**不要**写回 v4 / v3 / 双条 v2）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
 8. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 7 模型 default-on 则只校验）  

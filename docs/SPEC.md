@@ -33,7 +33,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ID | 必须 |
 |----|------|
 | UX-1 | **四格捷径**：Chat = Sol Pro / Opus（指定聊天模型也可自动联网）；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
-| UX-2 | 英文指引：**一条** Banner `usage-guide-v4`（指定聊天模型可自动搜索 + Sonar 仍是 Quick/Deep + 图像只走图像模型 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
+| UX-2 | 英文指引：**一条** Banner `usage-guide-v5`（🔍 Grok/Sol/Claude/Gemini 可搜可读页；🔗 GitHub 用 github.com 不用 api.github.com；🖼️ 图像只走图像模型；🧠 Valves Reasoning depth；📝 System Prompt 会影响图像与 Perplexity sonar；同一段、句首图标）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI native Web Search；指定 7 个文本模型可有薄 **Web Search**；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **21 个 public**（对比用）；不缩到 6、不扩新家族。**原则**：目前留下的家族只跟 catalog **最新 id**，且 **全部 public**。含 `claude-fable-5.1`（替换 `claude-fable-5`）、`gemini-3.1-pro-preview`、`gemini-3.8-flash`（替换已下线的 `gemini-3.7-flash`）、`qwen3.8-max-0902`（替换 `qwen3.8-max`）。`granite-4.2-8b`、`mercury-2.5-preview` 及新出现的家族（Ling / Muse / Hailuo / GLM Flash / GPT-6 Astra 等）**不** active。契约外模型不得带 `*` read |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
