@@ -88,6 +88,20 @@ GUARDS = [
 DISABLED_FILTERS = ["openrouter_web_tools", "openrouter_image_gen"]
 DETACH_FILTERS = set(DISABLED_FILTERS)
 
+# ST-14 WS-A: thin OpenRouter Search + Fetch for selected text models only.
+TEXT_WEB_SEARCH_FILTER = "openrouter_text_web_search"
+TEXT_WEB_SEARCH_FILTER_MARKER = "TEXT_WEB_SEARCH_FILTER_V1"
+TEXT_WEB_SEARCH_CANARY_MODEL_ID = f"{PIPE}.google.gemini-3.8-flash"
+TEXT_WEB_SEARCH_MODEL_IDS = [
+    f"{PIPE}.x-ai.grok-4.6",
+    f"{PIPE}.openai.gpt-5.6-sol-pro",
+    f"{PIPE}.openai.gpt-5.6-sol",
+    f"{PIPE}.anthropic.claude-opus-5",
+    f"{PIPE}.anthropic.claude-fable-5.1",
+    f"{PIPE}.google.gemini-3.1-pro-preview",
+    TEXT_WEB_SEARCH_CANARY_MODEL_ID,
+]
+
 PIPE_VALVES_FALSE = [
     "AUTO_ATTACH_WEB_TOOLS_FILTER",
     "AUTO_ATTACH_IMAGE_GEN_FILTER",

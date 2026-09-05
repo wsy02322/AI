@@ -55,6 +55,9 @@
 | `scripts/apply_ops_l0.py` | **L0 执行**：Pipe key / api_configs / catalog / public grants（merge-only） |
 | `scripts/verify_ops_l0.py` | **L0 验收**：ST-OPS 探针 |
 | `scripts/probe_text_web_search_readiness.py` | WS-A 确认前只读：server tools / Guard 顺序 / 候选文本模型 |
+| `scripts/apply_text_web_search.py` | ST-14：安装/挂载薄 Web Search Filter（`--mode install|canary|attach|final`） |
+| `scripts/rollback_text_web_search.py` | ST-14：从模型卸下薄 Filter 并停用，不删 Function |
+| `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |
