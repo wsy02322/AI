@@ -19,7 +19,7 @@
 
 | ID | 主线 | 现状 | 独立 plan |
 |----|------|------|-----------|
-| **P0-A** | **图像生成** | Now：聊天路线 S；**独立 Studio IS-A+ 施工中**（`image-studio/`） | `open-webui-image-studio-plan.md` + 聊天连续性 `open-webui-openrouter-image-continuity-plan.md` |
+| **P0-A** | **图像生成** | Now：聊天路线 S；**独立 Studio IS-A+ 施工中**（`image-studio/`）。下一波收口 **待确认**：`open-webui-image-studio-next-plan.md` | `open-webui-image-studio-plan.md` + 聊天连续性 `open-webui-openrouter-image-continuity-plan.md` |
 | **P0-B** | **语音聊天** | L1 串联已落地但**未达顶级**；S2S / barge-in 待确认方案 | `open-webui-live-voice-screen-plan.md` |
 | **P0-C** | **屏幕共享** | L1 入口已落地但**未达持续屏流顶级** | `open-webui-live-voice-screen-plan.md` |
 | **P0-D** | **Notebook / YouTube** | N1 已落地（RAG OpenRouter + Knowledge + 视觉时间线）；字幕/ASR 受数据中心 YouTube 风控限制 | `open-webui-notebook-youtube-plan.md` |
