@@ -28,9 +28,9 @@ WS-A 可接近 ChatGPT 的即时 Search：模型自主查找、追问、抓整�
 
 ---
 
-## 1. 只读前提核查（2026-09-05）
+## 1. 非变更前提核查（2026-09-05）
 
-已执行 `VERIFY_SMOKE=0 python3 scripts/verify_stack.py` 与 API 只读检查，未发模型推理请求、未改实例。
+已执行 `VERIFY_SMOKE=0 python3 scripts/verify_stack.py` 与管理 API 检查，未发模型推理请求、未提交任何配置更新。第一次检查调用了 runtime `/api/models`；该入口可能触发 manifold `pipes()`，所以后续 readiness 探针已改为只读存储层 `/api/v1/models`，不再把“HTTP GET”错误等同于“绝无间接行为”。
 
 | 检查 | 结果 | 含义 |
 |------|------|------|
@@ -42,9 +42,9 @@ WS-A 可接近 ChatGPT 的即时 Search：模型自主查找、追问、抓整�
 | Sonar Guard | active + global；priority 100 | Sonar 最后剥工具 |
 | 模型 metadata | 拟定文本模型只挂 `openrouter_direct_uploads`；Sonar/图像无 Web Tools | 无历史 attachment 要清 |
 | public | 21 个 public 权限正确 | 不改 public |
-| active catalog | **28，契约应为 21** | 既有 catalog 漂移；实施前须单独恢复 21，再取绿基线 |
+| runtime catalog | 首次 28，复验 26；契约应为 21 | catalog 正在漂移；实施前须先处理 retained-family 换代并恢复 21 |
 
-最后一项不是搜索施工造成的，但 `verify_stack.py` 当前因此为 `22 ok / 1 err`。实施不得把 catalog 修复和搜索改动混成一个不可辨认步骤；落地时先运行既有 `apply_model_catalog_visibility.py`，复验 21 后再开始 WS-A。禁止空 `models/sync`。
+最后一项不是搜索施工造成的，但 `verify_stack.py` 当前因此为 `22 ok / 1 err`。第二次检查还发现旧 `qwen.qwen3.8-max` 从 runtime picker 消失、同家族出现 `qwen.qwen3.8-max-0902`；按“保留家族跟最新 id”原则，不能只运行旧契约的 visibility 脚本硬压。落地时先核实该 replacement，必要时在一个独立提交里把 Qwen id、public grants 和契约同步到新 id，且把旧 id 加进 `RETIRED_MODEL_IDS` 以剥除遗留 `* read`；同时排除 GPT-6 Astra / Ling 等新家族。复验恰好 21 后再开始 WS-A。禁止空 `models/sync`。
 
 可重跑的只读前置探针：
 
@@ -52,7 +52,7 @@ WS-A 可接近 ChatGPT 的即时 Search：模型自主查找、追问、抓整�
 python3 scripts/probe_text_web_search_readiness.py
 ```
 
-它只在登录后发 GET，不激活 Function、不改 valves/模型、不发推理请求；会报告 Pipe/Filter markers、Guard 顺序、候选模型和 catalog 漂移。
+它用 POST 登录；之后只读 Function/模型存储层，不调用 runtime `/api/models`，不读取 Pipe valves（避免让 `API_KEY` 进入探针内存），不激活 Function、不改 valves/模型、不发推理请求。它会报告源码接口 markers、Guard 顺序、候选模型和 stored active 漂移；markers 只证明接口候选存在，不能替代 canary 的真实工具事件/引用验收。若 catalog 漂移，退出码为 2（rollout blocker），不是“ready”成功信号。
 
 ---
 
@@ -64,6 +64,7 @@ python3 scripts/probe_text_web_search_readiness.py
 
 - Function id：`openrouter_text_web_search`
 - 用户名：`Web Search`
+- priority：0；canary 前必须验证它早于 image guard（1）和 Sonar guard（100）执行。
 - 只写现有 Pipe 接口：
   - `__metadata__["openrouter_pipe"]["server_tools"]["web_search"]`
   - `__metadata__["openrouter_pipe"]["server_tools"]["web_fetch"]`
@@ -126,18 +127,17 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 |----|--------|------|
 | Filter | 指定 7 模型 attached + default-on；用户可关 | 最接近 ChatGPT 自动搜索；普通问题模型可选择 0 次 |
 | Search engine | `auto` | 优先厂商原生；不支持才回落 Exa |
-| Search results | 每次 5，总计最多 15 | 最多约 3 个搜索角度，控制上下文 |
+| Search results | 每次 5；`max_uses=3`；总计最多 15 | 最多 3 个搜索角度，控制上下文 |
 | Search context | `medium` | 质量/成本中点 |
 | Web Fetch | **默认开** | 能读整页，不把摘要注入冒充浏览 |
 | Fetch engine | `auto` | 能原生则原生，否则 OpenRouter 选择 |
 | Fetch uses | 最多 5 | 防无限追链接 |
 | Fetch content | 每页最多约 12k tokens | 足够文档/PDF主体，避免撑爆上下文 |
-| Tool budget | `max_tool_calls=8`（若当前 Pipe 路径实测接受） | 3 搜索 + 5 抓取的硬上限 |
 | Cost stop | server tools 每请求 `$0.05` | 防失控；不替代模型 token 成本 |
 | OWUI native | off | 防双搜、双计费、引用来源混杂 |
 | Datetime/Advisor/Subagent | 不提供 | 本波只做搜索 |
 
-`max_tool_calls` 必须先用 canary 验证 Pipe/OpenRouter 当前端点接受；若 400，则不硬塞未知参数，以 Search/Fetch 的各自上限 + `$0.05` cost stop 收口。
+本方案不同时发送 `max_tool_calls`：OpenRouter 的 `stop_server_tools_when` 会覆盖它。薄 Filter 只提供 Search + Fetch，因此 `web_search.max_uses=3` 与 `web_fetch.max_uses=5` 构成最多 8 次的工具级硬上限，另用 `$0.05` cost stop 收口。
 
 ---
 
@@ -146,16 +146,17 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 ### W0 — 恢复可判定基线
 
 1. `python3 scripts/verify_stack.py` 记录现状。
-2. 若仍为 28 active：运行既有 `apply_model_catalog_visibility.py`，只恢复 21 契约；禁止 sync。
+2. 若 `qwen3.8-max-0902` 仍是旧 Qwen 的 catalog replacement：先更新 retained-family 最新 id 契约和 grants，再运行 `apply_model_catalog_visibility.py`；GPT-6 Astra / Ling 等新家族保持排除。若不是 replacement，则保留旧 id并查清 runtime 缺失原因。禁止 sync。
 3. 再跑 `verify_stack.py`，必须全绿后才进 W1。
 4. 导出/记录：
-   - Pipe valves（密钥只记 set/unset，不落盘）
+   - 本次会修改的 Function/模型/Banner 字段（Pipe valves 本方案不改）
    - `openrouter_web_tools` / 三 Guard 状态与指纹
    - 21 模型 metadata + `access_grants`
+5. `fix_sonar_tool_guard.py` 不是本方案执行/回滚入口；其旧版 partial model update 已在本计划分支修成完整保留 `access_grants`/metadata，但本波仍只使用新的幂等 apply/rollback。
 
-### W1 — 安装但不挂模型
+### W1 — 先备齐实现、验证和回滚
 
-1. 新增仓库脚本 `apply_text_web_search.py` 和 Filter 源码/模板；脚本必须可重复执行。
+1. 新增仓库脚本 `apply_text_web_search.py`、`rollback_text_web_search.py`、`verify_text_web_search.py` 和 Filter 源码/模板；脚本必须可重复执行。
 2. 创建/更新 `openrouter_text_web_search`，先 `is_active=false`、`is_global=false`。
 3. Filter 静态单测：
    - allowlist 文本模型产生且只产生 Search + Fetch；
@@ -163,39 +164,41 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
    - 输入已有 metadata 时 merge，不覆盖其它合法字段；
    - 明确清理本 Filter 自己的 server-tools 时不误删别的 Filter。
 4. 只读重新拉取 Function，确认源码 marker 和 valves。
+5. `verify_text_web_search.py` 在 canary/final 两种模式下精确验证 Filter active/global/priority、allowlist attachment/default、所有排除模型和真实 tool events；先有 verifier，再改生产。
 
 ### W2 — 单模型 canary
 
-1. 先只挂 **Gemini 3.8 Flash**，不 default-on；手动打开 Filter。
-2. 打四类探针：
+1. 将薄 Filter 切为 `active=true`、`global=false`，重新读取并确认 priority=0，且 image guard=1、Sonar guard=100。
+2. 先只挂 **Gemini 3.8 Flash**，不 default-on；手动打开 Filter。
+3. 打四类探针：
    - 新鲜事实：必须真实调用搜索且含可点来源；
    - 指定 URL：必须调用 Fetch 并引用页面；
-   - 普通知识/闲聊：允许 0 次搜索；
+   - 普通知识/闲聊：原始 hosted-tool events/usage 必须是 0 次搜索；
    - 多轮追问：保留上下文，不重复无意义搜索。
-3. 验证响应里的 tool cards / citation annotations，不只检查回答正文“自称搜过”。
-4. 成本和调用数不越界；任何 400/404、空引用、无限循环即回滚 canary。
-5. 同时对一个图像模型发正常出图请求，抓 Pipe 出站前事件/响应，确认没有 tool-use 404。
+4. 验证响应里的 hosted-tool events、usage、tool cards 和 citation annotations，不只检查回答正文“自称搜过”；确认实际 engine/回落行为，不能由 provider 名猜测。
+5. 成本和调用数不越界；任何 400/404、空引用、无限循环即回滚 canary。
+6. 对全量模型 metadata 做排除扫描；同时对一个图像模型发正常出图请求，抓响应事件确认没有 tool-use 404。
 
 ### W3 — 扩到 7 个文本模型
 
 1. 逐个 attach，每次更新模型都带原 `access_grants`，保留全部 metadata/filterIds。
 2. 首轮每个模型不 default-on，分别跑 Search + Fetch smoke。
-3. 全部通过后才加入 `defaultFilterIds`，只影响新对话；已有对话不强改。
+3. 全部通过后，先把最终 SPEC/contract/main verifier 和幂等 apply/rollback 在仓库准备好并通过静态测试；再由一次 apply 原子地加入 `defaultFilterIds`，只影响新对话，已有对话不强改。
 4. `openrouter_web_tools` 继续 inactive；Sonar/图像确认无新 Filter。
-5. 更新一条英文 `usage-guide-v4`（替换 v3，不叠第二条），明确：
+5. 同一次 final apply 更新一条英文 `usage-guide-v4`（替换 v3，不叠第二条），明确：
    - selected chat models can search automatically；
    - Sonar remains Quick Search / Deep Research；
    - Images only on image models。
 
-### W4 — 契约与重建收口
+### W4 — 验收后记录现网指纹
 
-确认 W3 通过后才更新：
+下列文件必须在 W3 final apply 前已包含目标契约和 verifier；W3 全绿后只补现网日期/指纹：
 
 - `docs/SPEC.md`：新增 ST-14；修改 UX-1/UX-3/ST-2，不动 ST-11/ST-12/ST-13。
 - `scripts/stack_contract.py`：Filter id、allowlist、默认 attachment、Banner id。
 - `scripts/verify_stack.py`：精确验证 7 个文本、Sonar/图像排除、broad Filter inactive。
 - `AGENTS.md` / rebuild archive：重建顺序和禁令。
-- `docs/VERSIONS.md`：日期、Filter SHA、最后验收。
+- `docs/VERSIONS.md`：W3 后填写日期、Filter SHA、最后验收。
 
 ---
 
@@ -209,7 +212,7 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 2. **一手来源**：要求仅使用指定官方域名，结果不得引用聚合站代替。
 3. **整页读取**：给出文档 URL，回答页面深处而非搜索摘要中的细节。
 4. **交叉验证**：两个来源有冲突时明确指出，不强行合并。
-5. **无需搜索**：简单改写/数学题不应强制产生搜索费。
+5. **无需搜索**：简单改写/数学题的 hosted-tool events/usage 必须为 0。
 6. **中文问答**：中文提问、英文来源，中文综合并保留来源。
 
 不能只以 HTTP 200 验收。必须验证 response events/annotations 中确有 `openrouter:web_search` / `openrouter:web_fetch` 与 URL citations。
@@ -218,11 +221,13 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 
 - `verify_stack.py` 全绿。
 - 两档 Sonar smoke 200，出站无额外 tools。
-- 9 个图像模型至少抽测：
+- Filter 单测逐个覆盖 9 个 `IMAGE_MODEL_IDS`，再覆盖 Sonar、未知模型和 synthetic video model，必须原样早退且不产生 metadata server tools。
+- 生产 metadata 全量扫描：Filter 只存在于 7 个 allowlist 模型；所有 image/video capability 模型、Sonar 和未知模型均无 attachment/default。
+- 真实出图按三条不同路由抽测：
   - GPT Image 2（Images API）
   - Gemini 3.1 Flash Image（chat/image）
   - Seedream 5 Pro（Images API）
-  三条均真实出图且无 `No endpoints found that support tool use`。
+  三条均真实出图且无 `No endpoints found that support tool use`。这是路由代表性抽测，不虚称已逐个真实生成 9 张。
 - `verify_compare_cross_model.py`、`verify_fable_thinking_replay.py` 全绿。
 - 21 public = picker；无新家族、无额外 `*` read。
 - Follow-up 仍关，Image Generation 仍关，`openai.api_configs` 仍全 disable。
@@ -235,9 +240,8 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 
 1. 从 7 个模型的 `defaultFilterIds` / `filterIds` 移除 `openrouter_text_web_search`，每次更新保留 `access_grants`。
 2. 将薄 Filter 设 inactive；不删除，便于查因。
-3. Pipe valves merge 回本计划前快照；`API_KEY` 必须保留。
-4. Banner 回 `usage-guide-v3`。
-5. `verify_stack.py` + Sonar/图像 smoke。
+3. Banner 回 `usage-guide-v3`。
+4. `verify_stack.py` + Sonar/图像 smoke。
 
 禁止用空 `models/sync`、全量 valves 覆盖、新的非空 `WEBUI_SECRET_KEY` 或启用 `openai.api_configs` 作为“修复”。
 

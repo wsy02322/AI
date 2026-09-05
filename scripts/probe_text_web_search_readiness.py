@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Read-only readiness probe for the proposed text-model web search plan.
+"""Non-mutating readiness probe for the proposed text-model web search plan.
 
-This script signs in and issues GET requests only after authentication. It does
-not activate functions, update models, change valves, or send model inference
-requests.
+The authentication endpoint is POST; all subsequent calls use administrative
+read endpoints that do not invoke the runtime `/api/models` manifold catalog.
+The script does not activate functions, update models, change valves, or send
+model inference requests.
 """
 
 from __future__ import annotations
@@ -71,6 +72,7 @@ class Report:
     def __init__(self) -> None:
         self.oks: list[str] = []
         self.warnings: list[str] = []
+        self.blockers: list[str] = []
         self.errors: list[str] = []
 
     def ok(self, message: str) -> None:
@@ -80,6 +82,10 @@ class Report:
     def warn(self, message: str) -> None:
         self.warnings.append(message)
         print(f"WARN {message}")
+
+    def block(self, message: str) -> None:
+        self.blockers.append(message)
+        print(f"BLOCK {message}")
 
     def error(self, message: str) -> None:
         self.errors.append(message)
@@ -101,9 +107,14 @@ def effective_priority(content: str, valves: dict[str, Any]) -> int | None:
     return int(match.group(1)) if match else None
 
 
-def function_state(h: dict[str, str], function_id: str) -> tuple[dict[str, Any], str, int | None]:
+def function_source(h: dict[str, str], function_id: str) -> tuple[dict[str, Any], str]:
     function = get_json(h, f"/api/v1/functions/id/{function_id}")
     content = function.get("content") or ""
+    return function, content
+
+
+def function_state(h: dict[str, str], function_id: str) -> tuple[dict[str, Any], str, int | None]:
+    function, content = function_source(h, function_id)
     valves = get_json(h, f"/api/v1/functions/id/{function_id}/valves")
     priority = effective_priority(content, valves if isinstance(valves, dict) else {})
     return function, content, priority
@@ -119,21 +130,27 @@ def verify_baseline(h: dict[str, str], report: Report) -> None:
     else:
         report.ok("OWUI native web search off")
 
-    listed = get_json(h, "/api/models").get("data") or []
-    listed_ids = {model.get("id") for model in listed}
-    if listed_ids == set(ACTIVE_MODEL_IDS):
-        report.ok(f"active picker matches contract ({len(ACTIVE_MODEL_IDS)})")
+    stored = get_json(h, "/api/v1/models").get("data") or []
+    active_ids = {
+        model.get("id")
+        for model in stored
+        if str(model.get("id") or "").startswith(f"{PIPE}.") and model.get("is_active") is not False
+    }
+    if active_ids == set(ACTIVE_MODEL_IDS):
+        report.ok(f"stored active model rows match contract ({len(ACTIVE_MODEL_IDS)})")
     else:
-        extra = sorted(listed_ids - set(ACTIVE_MODEL_IDS))
-        missing = sorted(set(ACTIVE_MODEL_IDS) - listed_ids)
-        report.warn(
-            f"active catalog drift: got {len(listed_ids)}, want {len(ACTIVE_MODEL_IDS)}; "
+        extra = sorted(active_ids - set(ACTIVE_MODEL_IDS))
+        missing = sorted(set(ACTIVE_MODEL_IDS) - active_ids)
+        report.block(
+            f"stored active model drift: got {len(active_ids)}, want {len(ACTIVE_MODEL_IDS)}; "
             f"extra={extra or []}; missing={missing or []}"
         )
 
 
 def verify_pipe_and_filters(h: dict[str, str], report: Report) -> None:
-    pipe, pipe_content, _ = function_state(h, PIPE)
+    # Do not fetch Pipe valves: the valve document contains API_KEY and is not
+    # needed to establish source-level server-tool compatibility.
+    pipe, pipe_content = function_source(h, PIPE)
     pipe_markers = (
         "server_tools",
         "openrouter:web_search",
@@ -146,7 +163,7 @@ def verify_pipe_and_filters(h: dict[str, str], report: Report) -> None:
     elif not pipe.get("is_active"):
         report.error("OpenRouter Pipe is inactive")
     else:
-        report.ok("Pipe supports web_search, web_fetch, citations, and cost stop")
+        report.ok("Pipe source exposes web_search, web_fetch, and cost-stop interfaces")
 
     web_filter, web_content, web_priority = function_state(h, UPSTREAM_WEB_TOOLS_FILTER)
     if web_filter.get("is_active"):
@@ -231,13 +248,20 @@ def main() -> int:
     verify_models(h, report)
     print(
         f"\nreadiness: {len(report.oks)} ok, "
-        f"{len(report.warnings)} warning, {len(report.errors)} error"
+        f"{len(report.warnings)} warning, {len(report.blockers)} blocker, "
+        f"{len(report.errors)} error"
     )
     for warning in report.warnings:
         print(f"  WARN: {warning}")
+    for blocker in report.blockers:
+        print(f"  BLOCK: {blocker}")
     for error in report.errors:
         print(f"  ERR: {error}")
-    return 1 if report.errors else 0
+    if report.errors:
+        return 1
+    if report.blockers:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":

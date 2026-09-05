@@ -115,6 +115,39 @@ def update_valves(headers: dict, fid: str, valves: dict) -> None:
         raise RuntimeError(f"valves {fid}: {resp.status_code} {resp.text[:300]}")
 
 
+def reset_sonar_filters(headers: dict, model_id: str) -> None:
+    detail = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/models/model",
+        headers=headers,
+        params={"id": model_id},
+        timeout=30,
+    )
+    if detail.status_code != 200:
+        raise RuntimeError(f"get model {model_id}: {detail.status_code} {detail.text[:300]}")
+    model = detail.json()
+    meta = dict(model.get("meta") or {})
+    meta["filterIds"] = ["openrouter_direct_uploads"]
+    payload = {
+        "id": model["id"],
+        "name": model["name"],
+        "meta": meta,
+        "params": model.get("params") or {},
+        "is_active": model.get("is_active", True),
+        "access_grants": model.get("access_grants") or [],
+    }
+    response = requests.post(
+        f"{OPENWEBUI_URL}/api/v1/models/model/update",
+        headers=headers,
+        json=payload,
+        timeout=30,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"update model {model_id}: {response.status_code} {response.text[:300]}"
+        )
+    print(f"reset Sonar filters: {model_id}")
+
+
 def patch_web_tools(content: str) -> str:
     if "_is_search_native_model" in content and "search_native_model(body, __model__)" in content:
         return content
@@ -190,19 +223,12 @@ def main() -> int:
     update_valves(headers, "openrouter_search_native_tool_guard", {"priority": 100})
     print("guard priority -> 100")
 
-  # Update sonar model filterIds - try model update
+    # Update Sonar model filterIds while preserving metadata, params, active
+    # state, and access grants. Never send the old partial model payload.
     sonar_id = "open_webui_openrouter_integration.perplexity.sonar-pro-search"
     sonar_deep = "open_webui_openrouter_integration.perplexity.sonar-deep-research"
     for model_id in [sonar_id, sonar_deep]:
-        body = {
-            "id": model_id,
-            "meta": {
-                "filterIds": ["openrouter_direct_uploads"],
-            },
-        }
-        for ep in ["/api/v1/models/model/update", "/api/v1/models/update"]:
-            resp = requests.post(f"{OPENWEBUI_URL}{ep}", headers=headers, json=body, timeout=30)
-            print(f"{ep} {model_id}: {resp.status_code} {resp.text[:200]}")
+        reset_sonar_filters(headers, model_id)
 
     return 0
 
