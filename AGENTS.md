@@ -2,7 +2,7 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已确认**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
 **ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search。不要把这三条写成同一个号。
 
@@ -60,6 +60,7 @@
 | `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
 | `scripts/run_text_web_search_canary.py` | ST-14 W2：Gemini Flash 真实工具事件 + 图像零回归 |
 | `scripts/run_text_web_search_smoke.py` | ST-14 W3：7 个 allowlist 模型 Search + Fetch |
+| `scripts/run_text_web_search_eval.py` | ST-14 质量评测（**已收口**）：复验 / `--rescore` / `--suite fetch-diag`；只读，不改实例 |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |
@@ -113,6 +114,8 @@
 - 把新家族塞进 picker / public；留下的家族升到 catalog 最新 id，且全部 public
 - 把 Follow-up 关（ST-12）、Fable 续聊（ST-11）和文本联网（ST-14）写成同一个 ST 号
 - 激活 broad `openrouter_web_tools` / OWUI native Web Search 来冒充 ST-14
+- 未确认上 Search Controller，或加薄 Filter 指引来修 Anthropic 读不了 `api.github.com`
+- 把 `$0.05` 工具停止条件当成最终账单上限去调高
 - 把截屏 / 录屏当验收，或把演示媒体塞进 GitHub
 - 新增第二份 Agent 入口（不要再写 `AGENT-ONBOARDING.md`；本文件即入口）
 

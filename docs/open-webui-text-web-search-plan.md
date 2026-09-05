@@ -1,6 +1,6 @@
 # 指定文本模型联网搜索（Agentic Search）
 
-> **状态**：**已确认并落地**（W0–W4，2026-09-05）。  
+> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05）：见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller、不加 Filter 指引。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；OWUI Web Search 关闭；`openrouter_web_tools` 停用。  
 > **确认档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。
@@ -262,3 +262,11 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 > **确认 WS-A**：先恢复 21 active 绿基线；创建薄 `Web Search` Filter；首波挂 Grok 4.6、两条 Sol、Opus 5、Fable 5.1、两条 Gemini；Search + Fetch 默认开；Sonar/图像/视频排除；保留 Sonar Deep Research；不部署 GPT Researcher/Open Deep Research；通过 canary 和零回归后才 default-on 并更新 Banner/契约。
 
 用户已确认整包。回滚入口：`python3 scripts/rollback_text_web_search.py`。
+
+---
+
+## 9. 质量收口（2026-09-05，已确认）
+
+EVAL-B v2：隐含时效 42/42；误搜 0/21；普通 HTML（含 GitHub 发布页）能读。Anthropic 读不了 `https://api.github.com/.../releases/latest`；请求级指引无效。用户确认 **收口**：保持现网薄 Filter，不上 Controller，不加 Filter 指引，不抬 `$0.05`。
+
+已知限制写进 SPEC ST-14。Controller 列为 Later，须另 plan、另确认。

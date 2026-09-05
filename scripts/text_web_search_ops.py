@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -12,6 +13,12 @@ from typing import Any
 import requests
 
 from stack_contract import (
+    ACTIVE_MODEL_IDS,
+    BANNER_IDS,
+    DISABLED_FILTERS,
+    PIPE,
+    PIPE_PATCH_MARKERS,
+    PUBLIC_MODEL_IDS,
     TEXT_WEB_SEARCH_FILTER,
     TEXT_WEB_SEARCH_FILTER_MARKER,
     TEXT_WEB_SEARCH_MODEL_IDS,
@@ -256,7 +263,11 @@ def collect_stream(h: dict[str, str], payload: dict[str, Any], *, timeout: int =
                 elif isinstance(message, str):
                     text_parts.append(message)
     blob = json.dumps(events, ensure_ascii=False)
-    usage = next((e.get("usage") for e in reversed(events) if isinstance(e, dict) and e.get("usage")), {})
+    usage: dict[str, Any] = {}
+    for event in events:
+        chunk_usage = event.get("usage") if isinstance(event, dict) else None
+        if isinstance(chunk_usage, dict) and chunk_usage:
+            usage.update(chunk_usage)
     return {
         "status": response.status_code,
         "error": raw[:600],
@@ -308,6 +319,14 @@ def tool_calls_executed(usage: dict[str, Any] | None) -> int:
         return 0
 
 
+def tool_calls_requested(usage: dict[str, Any] | None) -> int:
+    details = server_tool_details(usage)
+    try:
+        return int(details.get("tool_calls_requested") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def event_actions(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for event in events:
@@ -334,19 +353,191 @@ def has_status_description(events: list[dict[str, Any]], needle: str) -> bool:
     return any(lowered in str(item.get("description") or "").lower() for item in event_actions(events))
 
 
-def has_source_urls(events: list[dict[str, Any]]) -> bool:
+def collect_source_urls(events: list[dict[str, Any]]) -> list[str]:
+    urls: list[str] = []
+    seen: set[str] = set()
+
+    def _add(value: object) -> None:
+        if isinstance(value, str) and value.startswith("http") and value not in seen:
+            seen.add(value)
+            urls.append(value)
+
     for event in events:
         payload = event.get("event") if isinstance(event, dict) else None
-        if not isinstance(payload, dict) or payload.get("type") != "source":
+        if not isinstance(payload, dict):
             continue
         data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
         source = data.get("source") if isinstance(data.get("source"), dict) else {}
-        url = source.get("url")
-        if isinstance(url, str) and url.startswith("http"):
-            return True
+        _add(source.get("url"))
         metadata = data.get("metadata")
         if isinstance(metadata, list):
             for item in metadata:
-                if isinstance(item, dict) and str(item.get("source") or "").startswith("http"):
-                    return True
+                if isinstance(item, dict):
+                    _add(item.get("source"))
+                    _add(item.get("url"))
+        action_urls = data.get("urls")
+        if isinstance(action_urls, list):
+            for item in action_urls:
+                _add(item)
+        elif isinstance(action_urls, str):
+            _add(action_urls)
+    return urls
+
+
+def has_source_urls(events: list[dict[str, Any]]) -> bool:
+    return bool(collect_source_urls(events))
+
+
+def web_fetch_requests(usage: dict[str, Any] | None) -> int:
+    details = server_tool_details(usage)
+    for key in ("web_fetch_requests", "web_fetch_request_count"):
+        try:
+            value = int(details.get(key) or 0)
+        except (TypeError, ValueError):
+            continue
+        if value:
+            return value
+    return 0
+
+
+def usage_cost_usd(usage: dict[str, Any] | None) -> float | None:
+    usage = usage or {}
+    for key in ("cost", "total_cost", "cost_usd"):
+        value = usage.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                continue
+    details = usage.get("cost_details")
+    if isinstance(details, dict):
+        for key in ("upstream_inference_cost", "total_cost", "cost"):
+            value = details.get(key)
+            if isinstance(value, (int, float)):
+                return float(value)
+    return None
+
+
+def search_called(result: dict[str, Any]) -> bool:
+    usage = result.get("usage") or {}
+    events = result.get("events") or []
+    return web_search_requests(usage) >= 1 or has_status_action(events, "web_search")
+
+
+def fetch_called_hard(result: dict[str, Any]) -> bool:
+    usage = result.get("usage") or {}
+    events = result.get("events") or []
+    if web_fetch_requests(usage) >= 1 or has_status_action(events, "web_fetch"):
+        return True
+    for item in event_actions(events):
+        description = str(item.get("description") or "").lower()
+        if "fetching web page" in description and item.get("done") is True:
+            return True
     return False
+
+
+def fetch_called_soft(result: dict[str, Any]) -> bool:
+    events = result.get("events") or []
+    return (not fetch_called_hard(result)) and has_status_description(events, "Fetching web page")
+
+
+def has_search_evidence(result: dict[str, Any]) -> bool:
+    return search_called(result)
+
+
+def has_fetch_evidence(result: dict[str, Any]) -> bool:
+    return fetch_called_hard(result) or fetch_called_soft(result)
+
+
+def snapshot_search_state(h: dict[str, str]) -> dict[str, Any]:
+    status, function = get_function(h, TEXT_WEB_SEARCH_FILTER)
+    if status != 200 or not function:
+        raise RuntimeError("thin filter missing")
+    content = function.get("content") or ""
+    valves = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/functions/id/{TEXT_WEB_SEARCH_FILTER}/valves",
+        headers=h,
+        timeout=30,
+    )
+    if valves.status_code != 200:
+        raise RuntimeError(f"filter valves: {valves.status_code}")
+    attachments: dict[str, dict[str, bool]] = {}
+    for model_id in TEXT_WEB_SEARCH_MODEL_IDS:
+        model = get_model(h, model_id)
+        meta = model.get("meta") or {}
+        filters = meta.get("filterIds") or []
+        defaults = meta.get("defaultFilterIds") or []
+        attachments[model_id] = {
+            "attached": TEXT_WEB_SEARCH_FILTER in filters,
+            "default_on": TEXT_WEB_SEARCH_FILTER in defaults,
+        }
+    disabled: dict[str, dict[str, Any]] = {}
+    for function_id in DISABLED_FILTERS:
+        status, current = get_function(h, function_id)
+        disabled[function_id] = {
+            "present": status == 200,
+            "is_active": bool(current and current.get("is_active")),
+            "is_global": bool(current and current.get("is_global")),
+        }
+    return {
+        "filter_id": TEXT_WEB_SEARCH_FILTER,
+        "content_sha12": hashlib.sha256(content.encode("utf-8")).hexdigest()[:12],
+        "marker_present": TEXT_WEB_SEARCH_FILTER_MARKER in content,
+        "is_active": bool(function.get("is_active")),
+        "is_global": bool(function.get("is_global")),
+        "priority": (valves.json() or {}).get("priority"),
+        "attachments": attachments,
+        "disabled_filters": disabled,
+    }
+
+
+def _sha12(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+
+
+def snapshot_eval_instance(h: dict[str, str]) -> dict[str, Any]:
+    """Read-only eval fingerprint. Pipe content + markers only; never valves or API_KEY."""
+    base = snapshot_search_state(h)
+    version = requests.get(f"{OPENWEBUI_URL}/api/version", headers=h, timeout=15).json()
+    pipe_status, pipe = get_function(h, PIPE)
+    if pipe_status != 200 or not pipe:
+        raise RuntimeError("pipe missing")
+    pipe_content = pipe.get("content") or ""
+    export = requests.get(f"{OPENWEBUI_URL}/api/v1/configs/export", headers=h, timeout=60).json()
+    banners = export.get("ui.banners") or []
+    banner_items = []
+    for banner in banners:
+        body = json.dumps(
+            {
+                "id": banner.get("id"),
+                "content": banner.get("content") or banner.get("text") or "",
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        banner_items.append({"id": banner.get("id"), "content_sha12": _sha12(body)})
+    listed = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
+    picker_ids = sorted(str(item.get("id") or "") for item in listed if item.get("id"))
+    return {
+        **base,
+        "owui_version": version.get("version"),
+        "pipe": {
+            "id": PIPE,
+            "content_sha12": _sha12(pipe_content),
+            "markers": {marker: marker in pipe_content for marker in PIPE_PATCH_MARKERS},
+        },
+        "banners": {
+            "ids": [item.get("id") for item in banners],
+            "count": len(banners),
+            "expected_ids": list(BANNER_IDS),
+            "items": banner_items,
+        },
+        "public_picker": {
+            "picker_count": len(picker_ids),
+            "picker_ids_sha12": _sha12("\n".join(picker_ids)),
+            "public_count_expected": len(PUBLIC_MODEL_IDS),
+            "picker_matches_active": picker_ids == sorted(ACTIVE_MODEL_IDS),
+        },
+    }
