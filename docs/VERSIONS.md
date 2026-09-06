@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-09-05**（ST-14 薄 Web Search 落地） |
+| 记录日期 | **2026-09-06**（23 public：Astra 入 picker，不挂搜索） |
 | OWUI | **0.11.3**（`GET /api/version`）。image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`（旧钉 `e97bf9531916` / 0.11.0） |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
@@ -14,7 +14,7 @@
 | Banner | **一条** `usage-guide-v5`（不可 dismiss；🌐 地球、同一段、无粗体） |
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
-| 上次 `verify_stack.py` | **2026-09-05 全绿**（28 ok / 0 err）：Banner v5、ST-14 薄 Web Search active/non-global、7 文本 default-on、Sonar/图像未挂、chips=0、Follow-up 关、**21 public** = picker。烟雾 Grok/Opus/Sol/Sonar 200 |
+| 上次 `verify_stack.py` | **2026-09-06 全绿**（28 ok / 0 err）：Banner v5、ST-14 薄 Web Search active/non-global、7 文本 default-on、Sonar/图像/Astra 未挂、chips=0、Follow-up 关、**23 public** = picker（含 `gpt-6-astra` / `gpt-6-astra-pro`）。烟雾 Grok/Opus/Sol/Sonar 200；Astra / Astra Pro 短聊 200、无薄搜索 Filter |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
