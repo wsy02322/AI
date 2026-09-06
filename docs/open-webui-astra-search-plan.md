@@ -1,6 +1,6 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**C3 红，Filter 已剥回；转 P1**（2026-09-06）。Astra 档案保持 `capabilities: null`（与 Sol 相同）。Banner 仍 v5。  
+> **状态**：**P2 已做完并 revert**（2026-09-06）。Pipe 门对 Astra 是开的；薄 Filter **没有**写入 `server_tools`。Banner 仍 v5；ST-14 仍 7 个。  
 > **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；23 public；ST-14 仍 7 个。
 
 关联：`docs/open-webui-text-web-search-plan.md`；`docs/SPEC.md` UX-3 / ST-14。
@@ -64,4 +64,19 @@ Pipe 请求路径（`f797e92d6d3f`）：
 
 P1 **不能**读 `ModelFamily._DYNAMIC_SPECS` 内存。本环境也没有 VPS 容器日志。
 
-**P2（下一刀，须再动手）：** 不要打到 stdout。在 `_apply_server_tools_metadata` 前后往 **聊天 stream 写一条 status**（我们烟雾已经收 `events`）：`image_output` / `function_calling` / `server_tools` keys / `tools` 条数。Sol + Astra 各一条，看完删补丁。不改业务门。
+**P2（已做、已 revert，Pipe sha 回 `f797e92d6d3f`）：**
+
+同一句提示、同一 `filter_ids`：
+
+| | Sol | Astra |
+|--|-----|-------|
+| `function_calling` | True | True |
+| `image_output` | False | False |
+| metadata `server_tools` | `web_search`, `web_fetch` | **`None`** |
+| 出门 tools | 2（`openrouter:web_search/fetch`） | **None** |
+| `web_search_requests` | 1 | 0 |
+| `input_tokens` | 4321 | 27 |
+
+**结论：不是 Pipe 的出图门，也不是 Astra 不会 function calling。** 薄 Filter 对 Astra **没有**写入 `openrouter_pipe.server_tools`。Toggle Filter 重载后仍 `st=None`。
+
+下一刀（另确认）：在 Filter `inlet` 打一条同样进 stream 的对照（allow / denied / refs），或让 allowlist 把 `/` 和 `.` 当成同一分隔符。先看 Filter 到底有没有跑、refs 是什么。
