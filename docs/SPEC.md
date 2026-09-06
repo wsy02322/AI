@@ -35,7 +35,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | UX-1 | **四格捷径**：Chat = Sol Pro / Opus（指定聊天模型也可自动联网）；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / GPT Image 2 等） |
 | UX-2 | 英文指引：**一条** Banner `usage-guide-v5`（🌐 Grok/Sol/Claude/Gemini 可搜可读页；🔗 GitHub 用 github.com 不用 api.github.com；🖼️ 图像只走图像模型；🧠 Valves Reasoning depth；📝 System Prompt 会影响图像与 Perplexity sonar；同一段、句首图标、无粗体）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI native Web Search；指定 7 个文本模型可有薄 **Web Search**；保留 Direct Uploads；图像模型可有 native image filter |
-| UX-4 | **21 个 public**（对比用）；不缩到 6、不扩新家族。**原则**：目前留下的家族只跟 catalog **最新 id**，且 **全部 public**。含 `claude-fable-5.1`（替换 `claude-fable-5`）、`gemini-3.1-pro-preview`、`gemini-3.8-flash`（替换已下线的 `gemini-3.7-flash`）、`qwen3.8-max-0902`（替换 `qwen3.8-max`）。`granite-4.2-8b`、`mercury-2.5-preview` 及新出现的家族（Ling / Muse / Hailuo / GLM Flash / GPT-6 Astra 等）**不** active。契约外模型不得带 `*` read |
+| UX-4 | **23 个 public**（对比用；**不必守 21**）。**原则**：最顶级 + 若有的轻量版 + 中国约两个顶级文本（现网中文文本实际是 DeepSeek / Kimi / Qwen 三个，这次不拿掉）。留下的家族只跟 catalog **最新 id**，且 **全部 public**。含 `claude-fable-5.1`、`gemini-3.1-pro-preview`、`gemini-3.8-flash`、`qwen3.8-max-0902`，以及 `openai.gpt-6-astra` / `openai.gpt-6-astra-pro`（能选、能聊；**不**挂 ST-14；Banner 暂不改以免假宣传能搜）。`granite-4.2-8b`、`mercury-2.5-preview` 及未确认新家族（Ling / Muse / Hailuo / GLM Flash 等）**不** active。契约外模型不得带 `*` read |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
 | UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false。同会话作图会把图像模型藏进一个开关、再灌 tools（已爆 404）；对比能力比「少点一次切换」更接近宪法 1。视频同一模式：能力在模型上，不在聊天 tool 条上 |
 | UX-7 | 回复下方 **Follow-up 建议芯片关闭**（易误触）。空对话 `prompt_suggestions` 保持 **空**。不关 Autocomplete / Title |
@@ -117,4 +117,4 @@ Pipe 前缀：`open_webui_openrouter_integration.`
 
 **置顶**：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`、`anthropic.claude-opus-5`、`openai.gpt-5.6-sol-pro`
 
-**21 public** 与 `scripts/stack_contract.py` 中 `PUBLIC_MODEL_IDS` 必须一致（picker = public）。
+**23 public** 与 `scripts/stack_contract.py` 中 `PUBLIC_MODEL_IDS` 必须一致（picker = public）。

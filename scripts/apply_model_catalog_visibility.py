@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Disable Pipe catalog models not in ACTIVE_MODEL_IDS (picker == public).
 
-Kept families stay on the newest catalog id and are public. New families stay inactive.
+Kept families stay on the newest catalog id and are public.
+Unconfirmed new families stay inactive. Astra is in PUBLIC_MODEL_IDS.
 """
 
 from __future__ import annotations

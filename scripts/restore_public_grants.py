@@ -2,7 +2,7 @@
 """Recreate the public model rows + access_grants after a catalog wipe.
 
 Also strips leftover `*` read from extra / retired / non-public picker rows
-so verify_stack does not miss a 21st public model.
+so verify_stack does not miss an extra public model.
 
 Does NOT call POST /api/v1/models/sync (empty sync deletes every DB model).
 Requires the Pipe catalog to already be visible on GET /api/models.

@@ -84,7 +84,7 @@ v1 的 L1 **在屏享上并不弱很多**（入口已有）；弱的是 **语音
 | TTS | `openai` → OpenRouter **`minimax/speech-2.8-turbo`**，voice `alloy`，`SPLIT_ON=sentence`。Read Aloud / Call overlay 经 `/audio/speech` 出 MP3（2026-08-21 实测 200）。`openai/tts-1[-hd]` 在 OpenRouter **不存在** |
 | OWUI 内置 | Call overlay：**语音 / 视频 / 屏幕共享 / 多模态输入**（官方文档与 0.11 发行说明） |
 | `enable_websocket` | **true** |
-| 模型目录 | **21 public** = picker（`stack_contract.PUBLIC_MODEL_IDS`）。不要为 L0 去 refresh 把新家族灌进 picker |
+| 模型目录 | **23 public** = picker（`stack_contract.PUBLIC_MODEL_IDS`）。不要为 L0 去 refresh 把未确认新家族灌进 picker |
 
 结论：**屏幕共享 UI 在 OWUI 里已有**；L0 catalog 不再阻塞。真·官网语音仍需 L2 Realtime。
 
