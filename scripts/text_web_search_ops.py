@@ -81,8 +81,8 @@ def get_function(h: dict[str, str], function_id: str) -> tuple[int, dict[str, An
     return 200, response.json()
 
 
-def upsert_filter(h: dict[str, str]) -> dict[str, Any]:
-    content = filter_source()
+def upsert_filter(h: dict[str, str], content: str | None = None) -> dict[str, Any]:
+    content = content if content is not None else filter_source()
     status, existing = get_function(h, TEXT_WEB_SEARCH_FILTER)
     payload = {
         "id": TEXT_WEB_SEARCH_FILTER,
@@ -190,9 +190,15 @@ def update_model(h: dict[str, str], model: dict[str, Any], meta: dict[str, Any])
         raise RuntimeError(f"update model {model['id']}: {response.status_code} {response.text[:300]}")
 
 
-def attach_models(h: dict[str, str], model_ids: list[str], *, default_on: bool) -> None:
+def attach_models(
+    h: dict[str, str],
+    model_ids: list[str],
+    *,
+    default_on: bool,
+    inspect_extra: list[str] | None = None,
+) -> None:
     wanted = set(model_ids)
-    inspect = list(dict.fromkeys([*TEXT_WEB_SEARCH_MODEL_IDS, *model_ids]))
+    inspect = list(dict.fromkeys([*TEXT_WEB_SEARCH_MODEL_IDS, *model_ids, *(inspect_extra or [])]))
     for model_id in inspect:
         model = get_model(h, model_id)
         meta = dict(model.get("meta") or {})

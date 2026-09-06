@@ -93,7 +93,11 @@ DISABLED_FILTERS = ["openrouter_web_tools", "openrouter_image_gen"]
 DETACH_FILTERS = set(DISABLED_FILTERS)
 
 # ST-14 WS-A: thin OpenRouter Search + Fetch for selected text models only.
-# Astra is public; search attach is rolled back until Pipe P-wave.
+# Astra is public; search attach waits on Filter F-wave (plan §7).
+ASTRA_PUBLIC_MODEL_IDS = [
+    f"{PIPE}.openai.gpt-6-astra",
+    f"{PIPE}.openai.gpt-6-astra-pro",
+]
 TEXT_WEB_SEARCH_FILTER = "openrouter_text_web_search"
 TEXT_WEB_SEARCH_FILTER_MARKER = "TEXT_WEB_SEARCH_FILTER_V1"
 TEXT_WEB_SEARCH_CANARY_MODEL_ID = f"{PIPE}.google.gemini-3.8-flash"
