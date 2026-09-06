@@ -20,7 +20,7 @@
 | Notebook N2+ Studio | YouTube 知识产物，不是画图 |
 | `handoff/gemini-live-standalone/` | 语音新产品，**不要并进**本文件 |
 | ComfyUI | **不是默认**。无拘无束档里作为可选本地/GPU 节点层；未点头不上 |
-| 扩新图像家族进 **OWUI picker** | **Don't**。新家族只进 Studio，不进聊天 21 public |
+| 扩新图像家族进 **OWUI picker** | **Don't**。新家族只进 Studio，不进聊天 public picker |
 
 OWUI 升级已落地。本文件是下一条主线，不搭车上 Tika / N2 / Realtime。
 
@@ -57,7 +57,7 @@ OWUI 升级已落地。本文件是下一条主线，不搭车上 Tika / N2 / Re
 | 落盘 | Pipe `IMAGE_DATA_URI_PERSIST_V1`（ST-13）；Studio **必须**用 file URL，禁止聊天里堆 `data:` |
 | Guard | `image_tool_guard` / `image_context_guard` **保持**。Studio 请求不带 tools |
 | 聊天（现状） | 路线 S；`ENABLE_IMAGE_GENERATION=false` |
-| 聊天（若确认剥离） | 9 个纯图像模型 `is_active=false` 且剥 `*`；21 public → **12 文本/搜索**。`verify_stack` / `stack_contract` 必须先改契约再动 |
+| 聊天（若确认剥离） | 9 个纯图像模型 `is_active=false` 且剥 `*`；23 public → **14 文本/搜索**。`verify_stack` / `stack_contract` 必须先改契约再动 |
 
 OpenRouter 官方示例对 GPT Image 2 的「编辑」是 **prompt + `input_references`**，不是永远暴露 OpenAI 旧版 `images/edits` + PNG mask。真蒙版要在 IS0 探针里对每个模型的 `supported_parameters` / passthrough **实测**后再画 UI；不能假设九个模型都吃同一张 alpha mask。
 

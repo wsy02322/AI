@@ -30,7 +30,7 @@
 | `webui.db` / data volume（聊天、Knowledge 文件、用户） | **必须从备份还原**。脚本重建不出聊天记录 |
 | OpenRouter API key | 控制台重开，**merge** 进 Pipe `API_KEY`（明文输入；保存后 DB 常为 `encrypted:`） |
 | JWT / 登录态 | **不必备份**。L0：`WEBUI_SECRET_KEY=""`，重建后 **用户重登** |
-| Pipe / Guard / 21 public / Banner / Task | 本仓库脚本可重放 |
+| Pipe / Guard / 23 public / Banner / Task | 本仓库脚本可重放 |
 | 某一版 Pipe `content` 全文 | 一般不还原旧 blob；装**当时**上游 Pipe，再按 §5 打补丁与 merge valves |
 
 备份口令（运维，不进 git）：升配 / 换镜像 / 大改前复制 `webui.db`。例：`/root/backups/webui-valves-fix-20260821-154729.db`。
@@ -142,23 +142,23 @@
 
 Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
-### 3.5 21 个 public（契约；id 前缀皆 `open_webui_openrouter_integration.`）
+### 3.5 23 个 public（契约；id 前缀皆 `open_webui_openrouter_integration.`）
 
-与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。现网这 21 个 **均 public + is_active**。picker = 这 21 个。
+与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。现网这 23 个 **均 public + is_active**。picker = 这 23 个。**不必守 21**。
 
-聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5.1`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max-0902`、`google.gemini-3.1-pro-preview`、`google.gemini-3.8-flash`  
+聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`openai.gpt-6-astra-pro`、`openai.gpt-6-astra`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5.1`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max-0902`、`google.gemini-3.1-pro-preview`、`google.gemini-3.8-flash`  
 搜索：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`  
 图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
 
-Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。指定 7 个文本模型另挂 `openrouter_text_web_search`（default-on）。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
+Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。指定 7 个文本模型另挂 `openrouter_text_web_search`（default-on）。Astra **不**挂薄 Web Search。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 
-### 3.6 Picker（= 21 public；只跟已留家族的最新 id）
+### 3.6 Picker（= 23 public；只跟已留家族的最新 id）
 
-`GET /api/models` 应为 **21**：与 `PUBLIC_MODEL_IDS` 相同。两条 Gemini 也是 public（不是管理员专属）。
+`GET /api/models` 应为 **23**：与 `PUBLIC_MODEL_IDS` 相同。两条 Gemini 也是 public（不是管理员专属）。Astra 一对已入 public。
 
-**去除（is_active=false）**：旧 id `claude-fable-5`、`gemini-3.7-flash`、`qwen.qwen3.8-max`；`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`；以及新出现的家族（现网曾漂过：`inclusionai.ling-3.0-flash-fin`、`inclusionai.ling-3.0-flash-sante:free`、`openai.gpt-6-astra*`、`meta.muse-spark-1.3`、`meta.muse-spark-1.3-contributor`、`minimax.hailuo-3-max`、`~z-ai.glm-flash-latest`）。契约外模型若带 `*` read，跑 `restore_public_grants.py` 剥掉。
+**去除（is_active=false）**：旧 id `claude-fable-5`、`gemini-3.7-flash`、`qwen.qwen3.8-max`；`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`；以及未确认新家族（现网曾漂过：`inclusionai.ling-3.0-flash-fin`、`inclusionai.ling-3.0-flash-sante:free`、`meta.muse-spark-1.3`、`meta.muse-spark-1.3-contributor`、`minimax.hailuo-3-max`、`~z-ai.glm-flash-latest`）。契约外模型若带 `*` read，跑 `restore_public_grants.py` 剥掉。
 
-灾后跑 `apply_model_catalog_visibility.py`（按 `ACTIVE_MODEL_IDS`），再跑 `restore_public_grants.py`（21 public + 剥额外 `*`）。不要把新家族塞进 picker。
+灾后跑 `apply_model_catalog_visibility.py`（按 `ACTIVE_MODEL_IDS`），再跑 `restore_public_grants.py`（23 public + 剥额外 `*`）。未确认的新家族不要塞进 picker。
 
 ### 3.7 Knowledge
 
@@ -181,12 +181,12 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Banner | 一条 `usage-guide-v5` | 一条 `usage-guide-v5` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
-| Picker | 21 public（留下家族最新 id） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（21 public + 剥额外 `*`）；新家族关掉 |
+| Picker | 23 public（`PUBLIC_MODEL_IDS`） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（23 public + 剥额外 `*`）；未确认新家族关掉 |
 | Pipe sha | VERSIONS 表；以 `verify_stack` INFO 为准 | 可能已是 ST-13 `f797e92d6d3f` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 验 Banner v5、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（21）、ST-14 薄 Web Search。不要为了绿把 Banner 改回 v4/v3/v2。
+`verify_stack.py` 验 Banner v5、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（23）、ST-14 薄 Web Search（仍 7 模型；Astra 不挂）。不要为了绿把 Banner 改回 v4/v3/v2。
 
 ---
 
@@ -200,7 +200,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 4. 确认 3 个 Guard global active；web_tools / image_gen **inactive**。  
 5. `python3 scripts/apply_plan_a_hide_integrations.py`  
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
-7. `python3 scripts/apply_model_catalog_visibility.py`（21 public）  
+7. `python3 scripts/apply_model_catalog_visibility.py`（23 public）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v5` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. `python3 scripts/apply_text_web_search.py --mode final`（薄 Web Search 挂 7 个文本模型并 default-on）。  
@@ -246,7 +246,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑方案 A / Guard |
 | `model/update` 500 | 缺 `access_grants` | 更新必须带 grants |
 | valves 更新后全站断 | 全量覆盖 valves | **只 merge** |
-| picker 多出新家族 | catalog 刷新把 Nemotron / Grok batch 等标成 active | `apply_model_catalog_visibility.py`；新家族不进 `PUBLIC_MODEL_IDS` |
+| picker 多出新家族 | catalog 刷新把 Nemotron / Grok batch 等标成 active | `apply_model_catalog_visibility.py`；未确认新家族不进 `PUBLIC_MODEL_IDS` |
 | 容器重建后 catalog 空（env 密钥仍 `""`） | 新 `.webui_secret_key` 解不开 DB 里 `encrypted:` Pipe key | **L0 预期** — merge 明文 `apply_ops_l0.py`；用户重登。**不要**写非空 `WEBUI_SECRET_KEY`，不要空 sync |
 | picker 空 / `Model not found` | env 写了**非空** `WEBUI_SECRET_KEY` 与 `encrypted:` Pipe key 冲突，或空 `models/sync` | env 改回 `""`；merge 明文 key；**禁止空 sync** |
 | 容器重建后全员掉线 | JWT 不持久化（L0） | **可接受** — 用户重登；agent 跑 verify |
@@ -263,7 +263,7 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后（p
 | `AGENTS.md` | 禁令、Pipe merge、脚本表 |
 | `docs/SPEC.md` | 产品契约 |
 | `docs/VERSIONS.md` | 上次验收指纹 |
-| `scripts/stack_contract.py` | 21 public = picker |
+| `scripts/stack_contract.py` | 23 public = picker |
 | `docs/open-webui-secret-key-persist-plan.md` | L0 SOP |
 | `docs/open-webui-live-voice-screen-plan.md` | P0-B / P0-C |
 | `docs/open-webui-notebook-youtube-plan.md` | P0-D |
