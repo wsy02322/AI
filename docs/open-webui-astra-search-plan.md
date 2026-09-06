@@ -1,47 +1,44 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**已确认执行**（2026-09-06）。public 已 23；本波只补搜索。  
-> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；Banner 起点 `usage-guide-v5`。  
-> **确认**：先 23 public 已落地；现补 Astra / Astra Pro 挂薄 Web Search。不上 Controller、不加 Filter 指引、不抬 `$0.05`。
+> **状态**：**A3 未过门，已回滚挂载**（2026-09-06）。public 仍 23；Banner 仍 `usage-guide-v5`；ST-14 仍原 7 个。  
+> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`。  
+> **确认过的目标**：挂薄 Web Search。未过烟雾，**没有**改 Banner、没有留 Astra 附件。
 
 关联：`docs/open-webui-text-web-search-plan.md`（ST-14 机制）、`docs/SPEC.md` UX-3 / ST-14。
 
 ---
 
-## 0. 目标
+## 0. 目标（未达成）
 
-Astra 与 Astra Pro 和现有 7 个文本模型同一套体验：Integrations 有 **Web Search**、新对话 default-on、模型可 Search + Fetch。Banner 第一句带上 Astra，避免能搜却不写、或没挂上却宣传。
+Astra / Astra Pro 与现有 7 个文本同一套 Web Search。Banner 第一句带 Astra。
 
-**不是**：EVAL-B 全量重跑、Search Controller、改 public 名单、重开 broad Web Tools。
+## 1. 已做与回滚
 
-## 1. 两档（本波选简单档）
+| 步 | 结果 |
+|----|------|
+| **A1** | 仓库 allowlist 曾扩到 9；单测绿 |
+| **A2** | `apply --mode final` 曾挂上两个 Astra（default-on）；`verify_text_web_search --mode final` 11 ok |
+| **A3** | **红**。两模型 Search+Fetch 各 200，但 `web_search_requests=0`、无 hosted 事件、`input_tokens=27`（工具定义没出门） |
+| **回滚** | 剥回 Astra 的 `openrouter_text_web_search`；仓库契约改回 7 + Banner v5 |
 
-| 档 | 做什么 | 不做什么 |
-|----|--------|----------|
-| **简单稳定（本波）** | 扩 allowlist → apply final → Astra 各 1 次 Search + 1 次 Fetch 烟雾 → Banner v6 | 不上 Controller / 指引 / 抬价门 |
-| **顶级（Later，另确认）** | 对 Astra 跑一小截 EVAL-B（隐含时效 / 误搜 / HTML Fetch） | 不绑进本波；不过不阻塞挂上 |
+模型原话是「这个聊天没有 web_search」，不是 `No endpoints found that support tool use`。
 
-OpenRouter 页：Astra / Astra Pro **支持 `tools`**，并标了 Web Search 计价。机制与现网 7 模型相同（Pipe `server_tools`）。若烟雾出现 `No endpoints found that support tool use`，**剥回 Astra 附件、Banner 不改**，再另报。
+## 2. 已排除
 
-## 2. 分步
+- OpenRouter 目录：Astra **支持 `tools` / `tool_choice`**，`output_modalities=["text"]`，不是出图模型。
+- 薄 Filter **本地 inlet** 对 Astra 会写入 `server_tools`（allowlist 命中、未 deny）。
+- 同一助手、同一 `chat_with_optional_search`：Grok 有 `web_search_requests=1`。
+- 现网 Filter content 已含 Astra suffix；toggle 重载无效。
+- 把 Astra `image_generation` 改成 false **无效**（token 仍 27）。挂载已回滚；该 capability 实验后已恢复。
 
-| 步 | 动作 | 过门 |
-|----|------|------|
-| **A1** | `TEXT_WEB_SEARCH_MODEL_IDS` + Filter `ALLOWLIST_SUFFIXES` 加入两个 Astra id；单测 | `python3 scripts/test_text_web_search_filter.py` 绿 |
-| **A2** | `python3 scripts/apply_text_web_search.py --mode final`（upsert Filter + 9 模型 default-on） | `verify_text_web_search.py --mode final`：9 挂、其余不挂 |
-| **A3** | **只**对 Astra / Astra Pro 跑现有 Search + Fetch 烟雾（不重跑原 7，省账单） | 各 200；有 `web_search` / Fetch 证据；无 tool-use 404 |
-| **A4** | Banner → **一条** `usage-guide-v6`：第一句改为 `Grok, Sol, Claude, Gemini, and Astra can search the web and read pages`；其余四句不动。补 Astra Description | `apply_ui_guidance_banners.py` + `verify_stack.py` 全绿 |
-| **B** | EVAL-B 子集 | **另确认**，本波不做 |
+结论：卡在 **OWUI/Pipe 运行时没把 `server_tools` 发给 OpenRouter**，不是 allowlist 写错。候选：Pipe `_apply_server_tools_metadata` / `build_tools` 对 Astra 的 `ModelFamily` 缓存、或 Filter 在该模型请求上没真正执行。未再改 Pipe content。
 
-A3 失败则停在 A2 回滚 Astra 附件，不进 A4。
+## 3. 下一步（另确认）
 
-## 3. 不改
+| 档 | 做什么 |
+|----|--------|
+| **简单** | 维持现状：Astra 能选能聊，不挂搜索；Banner 不写 Astra。代价：旗舰看起来像能搜。 |
+| **顶级** | Pipe content-only 加日志/例外，确认 `server_tools` 是否被 `image_output` 门或 metadata key 丢掉；修好后再挂、再改 Banner。动 Pipe，须另点头。 |
+| **Later** | EVAL-B 子集。工具都没出门，现在跑评测无意义。 |
 
-- Pipe valves / `WEBUI_SECRET_KEY` / `openai.api_configs`
-- public 23、ST-14 循环门 `$0.05` / `step_count=8`
-- 原 7 个文本的挂载与 default-on
-- Controller、Filter 内指引
-
-## 4. 回滚
-
-把两个 Astra id 移出 `TEXT_WEB_SEARCH_MODEL_IDS` 与 `ALLOWLIST_SUFFIXES`，再 `apply_text_web_search.py --mode final`，Banner 留 v5。
+不上 Controller、不加 Filter 指引、不抬 `$0.05`。
