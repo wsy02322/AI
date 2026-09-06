@@ -26,18 +26,18 @@ PIPE = "open_webui_openrouter_integration"
 
 BANNERS = [
     {
-        "id": "usage-guide-v5",
+        "id": "usage-guide-v6",
         "type": "info",
         "title": "",
         "content": (
-            "🌐 Grok, Sol, Claude, and Gemini can search the web and read pages. "
+            "🌐 Grok, Sol, Claude, Gemini, and Astra can search the web and read pages. "
             "🔗 GitHub: use a github.com URL, not api.github.com. "
             "🖼️ Images only on an image model. "
             "🧠 Reasoning depth: Input box → Valves. "
             "📝 Settings → General → System Prompt may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1788610001,
+        "timestamp": 1788720001,
     },
 ]
 
@@ -188,8 +188,8 @@ def verify(h: dict[str, str]) -> int:
     ).json().get("ui.prompt_suggestions") or []
     ids = [b.get("id") for b in banners]
     print("verify banners", ids)
-    if len(banners) != 1 or "usage-guide-v5" not in ids:
-        print("ERROR want single usage-guide-v5 banner")
+    if len(banners) != 1 or "usage-guide-v6" not in ids:
+        print("ERROR want single usage-guide-v6 banner")
         errors += 1
     if any(bid in ids for bid in ("usage-guide-v4", "usage-guide-v3", "usage-pick-model-v2", "usage-reasoning-depth-v2")):
         print("ERROR legacy banners still present")
@@ -211,11 +211,11 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     else:
         print("ok suggestions empty")
-    guide = next((b for b in banners if b.get("id") == "usage-guide-v5"), {})
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v6"), {})
     guide_html = str(guide.get("content") or "")
     for needle, label in (
         ("🌐", "globe icon"),
-        ("Grok, Sol, Claude, and Gemini can search the web and read pages", "search lead"),
+        ("Grok, Sol, Claude, Gemini, and Astra can search the web and read pages", "search lead"),
         ("🔗", "github icon"),
         ("GitHub: use a github.com URL, not api.github.com", "github hint"),
         ("🖼️", "image icon"),
@@ -256,7 +256,7 @@ def verify(h: dict[str, str]) -> int:
     if hit:
         print("ERROR guide banner still has", hit)
         errors += 1
-    elif guide_html and "Grok, Sol, Claude, and Gemini can search the web and read pages" in guide_html:
+    elif guide_html and "Grok, Sol, Claude, Gemini, and Astra can search the web and read pages" in guide_html:
         print("ok guide banner search English")
     listed = {
         m["id"]: m

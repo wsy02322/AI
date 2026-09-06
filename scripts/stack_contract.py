@@ -37,7 +37,7 @@ IMAGE_MODEL_IDS = [
 
 # Picker policy: flagship (+ lite if any) of kept families, plus China text
 # flagships (DeepSeek / Kimi / Qwen; do not drop any this wave). Count is not
-# frozen. New families need confirmation. Astra is public but not on ST-14.
+# frozen. New families need confirmation. Astra is public and on ST-14.
 # Verify leftover * read on retired ids.
 PUBLIC_MODEL_IDS = [
     f"{PIPE}.anthropic.claude-fable-5.1",
@@ -93,7 +93,6 @@ DISABLED_FILTERS = ["openrouter_web_tools", "openrouter_image_gen"]
 DETACH_FILTERS = set(DISABLED_FILTERS)
 
 # ST-14 WS-A: thin OpenRouter Search + Fetch for selected text models only.
-# Astra is public; search attach waits on Filter F-wave (plan §7).
 ASTRA_PUBLIC_MODEL_IDS = [
     f"{PIPE}.openai.gpt-6-astra",
     f"{PIPE}.openai.gpt-6-astra-pro",
@@ -109,6 +108,7 @@ TEXT_WEB_SEARCH_MODEL_IDS = [
     f"{PIPE}.anthropic.claude-fable-5.1",
     f"{PIPE}.google.gemini-3.1-pro-preview",
     TEXT_WEB_SEARCH_CANARY_MODEL_ID,
+    *ASTRA_PUBLIC_MODEL_IDS,
 ]
 
 PIPE_VALVES_FALSE = [
@@ -132,7 +132,7 @@ PIPE_PATCH_MARKERS = [
 ]
 
 # Live UX (2026-09-05): one banner, no empty-chat chips, reply Follow-up off.
-BANNER_IDS = ["usage-guide-v5"]
+BANNER_IDS = ["usage-guide-v6"]
 SUGGESTIONS_COUNT = 0
 TASK_FOLLOW_UP_ENABLE = False
 

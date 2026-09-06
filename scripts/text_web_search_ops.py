@@ -190,6 +190,21 @@ def update_model(h: dict[str, str], model: dict[str, Any], meta: dict[str, Any])
         raise RuntimeError(f"update model {model['id']}: {response.status_code} {response.text[:300]}")
 
 
+def refresh_runtime_models(h: dict[str, str]) -> int:
+    """Reload request.app.state.MODELS so newly attached filterIds take effect."""
+    response = requests.get(
+        f"{OPENWEBUI_URL}/api/models",
+        headers=h,
+        params={"refresh": "true"},
+        timeout=120,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(f"refresh models: {response.status_code} {response.text[:300]}")
+    count = len((response.json() or {}).get("data") or [])
+    print(f"runtime catalog refresh n={count}")
+    return count
+
+
 def attach_models(
     h: dict[str, str],
     model_ids: list[str],
@@ -231,6 +246,7 @@ def attach_models(
             meta.pop("defaultFilterIds", None)
         update_model(h, model, meta)
         print(f"attach {model_id}: filters={filters} default={defaults}")
+    refresh_runtime_models(h)
 
 
 def detach_all(h: dict[str, str]) -> None:
