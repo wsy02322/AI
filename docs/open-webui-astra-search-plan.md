@@ -1,8 +1,7 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**C 波已确认执行**（2026-09-06）。先把 Astra 档案改成和 Sol 一样再挂；一轮烟雾决定是否改 Banner 或转 Pipe。  
-> **现网起点**：OWUI 0.11.3；Pipe `f797e92d6d3f`；23 public；ST-14 仍 7 个；Banner `usage-guide-v5`。  
-> **A 波**：只挂 Filter，A3 红（`input_tokens=27`），已回滚。
+> **状态**：**C3 红，Filter 已剥回；转 P1**（2026-09-06）。Astra 档案保持 `capabilities: null`（与 Sol 相同）。Banner 仍 v5。  
+> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；23 public；ST-14 仍 7 个。
 
 关联：`docs/open-webui-text-web-search-plan.md`；`docs/SPEC.md` UX-3 / ST-14。
 
@@ -38,6 +37,31 @@ Pipe valves / `WEBUI_SECRET_KEY` / `openai.api_configs` / public 23 / `$0.05` �
 
 ## 4. 回滚
 
-- Filter：`TEXT_WEB_SEARCH_MODEL_IDS` 去掉 Astra，再 `apply_text_web_search.py --mode final`。
+- Filter：`TEXT_WEB_SEARCH_MODEL_IDS` 去掉 Astra，再 `apply_text_web_search.py --mode final`（`attach_models` 的 inspect 不含已移出 id，剥 Astra 须另写一遍）。
 - 档案：需要时可把 capabilities 写回整排 true（默认不写回）。
 - Banner：没升 v6 则不用回。
+
+## 5. C 波结果（2026-09-06）
+
+| 步 | 结果 |
+|----|------|
+| C1 | Astra / Astra Pro `capabilities` → `null`（与 Sol 相同） |
+| C2 | 9 模型挂载校验绿 |
+| C3 | **红**。Astra search `input_tokens=41`、Pro `1931`（Pro 的大输入不是工具；仍无 `web_search`）。模型仍说没有 web_search |
+| 回滚 | Filter 已剥；档案 **保持 null**；Banner 未改 |
+
+C 排除：「整排勾」不是原因。只关 `image_generation` 和整份 `null` 都一样红。
+
+## 6. P1 只读（2026-09-06）
+
+现网模型档案里 `meta.openrouter_pipe.capabilities` **Sol 与 Astra 相同**：`image_output=false`、`video_generation=false`、`vision=true`、`file_input=true`。Pipe 元数据键是 `openrouter_pipe`（与薄 Filter 写入的键一致）。
+
+Pipe 请求路径（`f797e92d6d3f`）：
+
+- `image_output` → `tools=None`，且 `_apply_server_tools_metadata` 直接 return（连 Search 也不注入）
+- 无 `function_calling` → 不转发 OWUI tools，但 **仍应** 注入 metadata 里的 `server_tools`
+- 因此：若运行时缓存把 Astra 标成出图 → 完全对上 41 token；若只是缺 `function_calling` 而 Filter 跑过 → 应仍能搜
+
+P1 **不能**读 `ModelFamily._DYNAMIC_SPECS` 内存。本环境也没有 VPS 容器日志。
+
+**P2（下一刀，须再动手）：** 不要打到 stdout。在 `_apply_server_tools_metadata` 前后往 **聊天 stream 写一条 status**（我们烟雾已经收 `events`）：`image_output` / `function_calling` / `server_tools` keys / `tools` 条数。Sol + Astra 各一条，看完删补丁。不改业务门。
