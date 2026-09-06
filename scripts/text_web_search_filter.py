@@ -22,6 +22,8 @@ ALLOWLIST_SUFFIXES = (
     "anthropic.claude-fable-5.1",
     "google.gemini-3.1-pro-preview",
     "google.gemini-3.8-flash",
+    "openai.gpt-6-astra-pro",
+    "openai.gpt-6-astra",
 )
 
 DENY_MARKERS = (

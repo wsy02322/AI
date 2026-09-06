@@ -1,7 +1,7 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**P2 已做完并 revert**（2026-09-06）。**F 波（Filter 下一刀）只写了 plan，未确认、未执行。**  
-> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；23 public；Banner `usage-guide-v5`；ST-14 仍 7 个；Astra 档案 `capabilities=null`，**无**薄 Filter。
+> **状态**：**F 波已确认并落地**（2026-09-06）。Astra / Astra Pro 挂 ST-14；Banner `usage-guide-v6`。Pipe 仍 `f797e92d6d3f`（F1 探针已 revert）。  
+> **现网**：OWUI 0.11.3；23 public；ST-14 = 9 个。
 
 关联：`docs/open-webui-text-web-search-plan.md`；`docs/SPEC.md` UX-3 / ST-14。
 
@@ -167,7 +167,12 @@ F1 的 Pipe 补丁可复用 `scripts/patch_pipe_astra_search_debug.py` 缩小版
 
 未点头前：**不改实例、不改 Pipe、不改 Filter、不改 Banner、不扩 `TEXT_WEB_SEARCH_MODEL_IDS`。**
 
-请选一档：
+### 7.8 执行结果（2026-09-06）
 
-1. **顶级**：F1 → 对症 F2 → 绿了才 F3  
-2. **略降级**：跳过 F1，直接 `/`≡`.` + 写回 `body["__metadata__"]`，再挂烟雾；红了剥回再议 H2/H3
+选了顶级档。F1 第一轮：Sol `fp` 有戳且能搜；Astra `fp=None`/`bfp=None`、`st=None`、`input_tokens=41`（H2：Filter 没跑）。档案 / runtime `info.meta.filterIds` 当时已经含薄 Filter。
+
+`GET /api/models?refresh=true` 后再跑同一探针：Astra `allow=1` `denied=0`，refs 是点号 Pipe id（**不是 H1**），`st=['web_search','web_fetch']`，`web_search_requests=2`，`input_tokens=38747`。
+
+根因：挂载只写了 DB 模型行，OWUI 内存 `MODELS` 仍是旧的 `info.meta.filterIds`。toggle Filter 只看这份缓存，请求里的 `filter_ids` 也救不了（不在 `get_model_filter_ids` 里会被丢掉）。
+
+F2：allowlist 加 Astra；`attach_models` 末尾强制 refresh。F2 烟雾（无探针）：Sol / Astra / Astra Pro 各 Search+Fetch 全绿。F3：Banner → `usage-guide-v6`。Pipe 无 debug marker。

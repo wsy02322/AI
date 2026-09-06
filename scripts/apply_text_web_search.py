@@ -27,7 +27,7 @@ def main() -> int:
         "--mode",
         required=True,
         choices=("install", "canary", "attach", "final"),
-        help="install=inactive no attach; canary=Flash only; attach=7 models; final=default-on",
+        help="install=inactive no attach; canary=Flash only; attach=allowlist; final=default-on",
     )
     args = parser.parse_args()
     h = headers(signin())
