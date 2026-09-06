@@ -1,44 +1,67 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**A3 未过门，已回滚挂载**（2026-09-06）。public 仍 23；Banner 仍 `usage-guide-v5`；ST-14 仍原 7 个。  
-> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`。  
-> **确认过的目标**：挂薄 Web Search。未过烟雾，**没有**改 Banner、没有留 Astra 附件。
+> **状态**：**C3 红，Filter 已剥回；转 P1**（2026-09-06）。Astra 档案保持 `capabilities: null`（与 Sol 相同）。Banner 仍 v5。  
+> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；23 public；ST-14 仍 7 个。
 
-关联：`docs/open-webui-text-web-search-plan.md`（ST-14 机制）、`docs/SPEC.md` UX-3 / ST-14。
+关联：`docs/open-webui-text-web-search-plan.md`；`docs/SPEC.md` UX-3 / ST-14。
 
 ---
 
-## 0. 目标（未达成）
+## 0. 目标
 
-Astra / Astra Pro 与现有 7 个文本同一套 Web Search。Banner 第一句带 Astra。
+Astra / Astra Pro 与现有 7 个文本同一套薄 Web Search。Banner 第一句带 Astra。不上 Controller、不加 Filter 指引、不抬 `$0.05`。
 
-## 1. 已做与回滚
+## 1. 已排除（A 波）
+
+- 只扩 allowlist：Filter 本地会写 `server_tools`，真请求工具没出门。
+- 只关 `image_generation`：仍 27 token。
+- 模型本身：OpenRouter 上与 Sol Pro 同级（`tools`、只出文本、有 search 计价）。
+
+## 2. 本波分步（已确认）
+
+| 步 | 动作 | 过门 |
+|----|------|------|
+| **C1** | Astra / Astra Pro 的 `meta.capabilities` 改成与 Sol 相同的 **`null`**（整份去掉，不是再拧一个勾） | GET 模型 `capabilities` 为 null |
+| **C2** | Filter allowlist + 挂载 default-on（9 个） | `verify_text_web_search --mode final` 绿 |
+| **C3** | **只**对两个 Astra 跑现有 Search + Fetch 烟雾 | 各 200；有 hosted `web_search` / Fetch；`input_tokens` 明显大于 27 |
+| **C4** | 仅 C3 绿：Banner → `usage-guide-v6`（第一句加 Astra）+ 契约 9 模型 | `verify_stack` 绿 |
+| **C3 红** | 剥回 Astra Filter；Banner 不动。档案：保持 `null`（更像 Sol，便于下一刀） | 附件回到 7 |
+| **P1** | C3 红之后：只读对照 Pipe（`build_tools` / `_apply_server_tools_metadata` / `ModelFamily`）+ Sol vs Astra 一条请求 | 写出「哪道门」或「必须打日志」 |
+| **P2** | 若 P1 不够：Pipe **content-only** 临时日志（不打 key），Sol + Astra 各一条，看完删除 | 另见当时记录；不扩大改逻辑 |
+
+C3 失败不改 Banner。不重跑原 7 的 EVAL-B。
+
+## 3. 不改
+
+Pipe valves / `WEBUI_SECRET_KEY` / `openai.api_configs` / public 23 / `$0.05` 门 / 空 `models/sync`。
+
+## 4. 回滚
+
+- Filter：`TEXT_WEB_SEARCH_MODEL_IDS` 去掉 Astra，再 `apply_text_web_search.py --mode final`（`attach_models` 的 inspect 不含已移出 id，剥 Astra 须另写一遍）。
+- 档案：需要时可把 capabilities 写回整排 true（默认不写回）。
+- Banner：没升 v6 则不用回。
+
+## 5. C 波结果（2026-09-06）
 
 | 步 | 结果 |
 |----|------|
-| **A1** | 仓库 allowlist 曾扩到 9；单测绿 |
-| **A2** | `apply --mode final` 曾挂上两个 Astra（default-on）；`verify_text_web_search --mode final` 11 ok |
-| **A3** | **红**。两模型 Search+Fetch 各 200，但 `web_search_requests=0`、无 hosted 事件、`input_tokens=27`（工具定义没出门） |
-| **回滚** | 剥回 Astra 的 `openrouter_text_web_search`；仓库契约改回 7 + Banner v5 |
+| C1 | Astra / Astra Pro `capabilities` → `null`（与 Sol 相同） |
+| C2 | 9 模型挂载校验绿 |
+| C3 | **红**。Astra search `input_tokens=41`、Pro `1931`（Pro 的大输入不是工具；仍无 `web_search`）。模型仍说没有 web_search |
+| 回滚 | Filter 已剥；档案 **保持 null**；Banner 未改 |
 
-模型原话是「这个聊天没有 web_search」，不是 `No endpoints found that support tool use`。
+C 排除：「整排勾」不是原因。只关 `image_generation` 和整份 `null` 都一样红。
 
-## 2. 已排除
+## 6. P1 只读（2026-09-06）
 
-- OpenRouter 目录：Astra **支持 `tools` / `tool_choice`**，`output_modalities=["text"]`，不是出图模型。
-- 薄 Filter **本地 inlet** 对 Astra 会写入 `server_tools`（allowlist 命中、未 deny）。
-- 同一助手、同一 `chat_with_optional_search`：Grok 有 `web_search_requests=1`。
-- 现网 Filter content 已含 Astra suffix；toggle 重载无效。
-- 把 Astra `image_generation` 改成 false **无效**（token 仍 27）。挂载已回滚；该 capability 实验后已恢复。
+现网模型档案里 `meta.openrouter_pipe.capabilities` **Sol 与 Astra 相同**：`image_output=false`、`video_generation=false`、`vision=true`、`file_input=true`。Pipe 元数据键是 `openrouter_pipe`（与薄 Filter 写入的键一致）。
 
-结论：卡在 **OWUI/Pipe 运行时没把 `server_tools` 发给 OpenRouter**，不是 allowlist 写错。候选：Pipe `_apply_server_tools_metadata` / `build_tools` 对 Astra 的 `ModelFamily` 缓存、或 Filter 在该模型请求上没真正执行。未再改 Pipe content。
+Pipe 请求路径（`f797e92d6d3f`）：
 
-## 3. 下一步（另确认）
+- `image_output` → `tools=None`，且 `_apply_server_tools_metadata` 直接 return（连 Search 也不注入）
+- 无 `function_calling` → 不转发 OWUI tools，但 **仍应** 注入 metadata 里的 `server_tools`
+- 因此：若运行时缓存把 Astra 标成出图 → 完全对上 41 token；若只是缺 `function_calling` 而 Filter 跑过 → 应仍能搜
 
-| 档 | 做什么 |
-|----|--------|
-| **简单** | 维持现状：Astra 能选能聊，不挂搜索；Banner 不写 Astra。代价：旗舰看起来像能搜。 |
-| **顶级** | Pipe content-only 加日志/例外，确认 `server_tools` 是否被 `image_output` 门或 metadata key 丢掉；修好后再挂、再改 Banner。动 Pipe，须另点头。 |
-| **Later** | EVAL-B 子集。工具都没出门，现在跑评测无意义。 |
+P1 **不能**读 `ModelFamily._DYNAMIC_SPECS` 内存。本环境也没有 VPS 容器日志。
 
-不上 Controller、不加 Filter 指引、不抬 `$0.05`。
+**P2（下一刀，须再动手）：** 不要打到 stdout。在 `_apply_server_tools_metadata` 前后往 **聊天 stream 写一条 status**（我们烟雾已经收 `events`）：`image_output` / `function_calling` / `server_tools` keys / `tools` 条数。Sol + Astra 各一条，看完删补丁。不改业务门。
