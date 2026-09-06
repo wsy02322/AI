@@ -18,6 +18,8 @@ ALLOWLIST_SUFFIXES = (
     "x-ai.grok-4.6",
     "openai.gpt-5.6-sol-pro",
     "openai.gpt-5.6-sol",
+    "openai.gpt-6-astra-pro",
+    "openai.gpt-6-astra",
     "anthropic.claude-opus-5",
     "anthropic.claude-fable-5.1",
     "google.gemini-3.1-pro-preview",
