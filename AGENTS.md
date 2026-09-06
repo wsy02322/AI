@@ -14,7 +14,7 @@
 
 目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。发现与顶级档的能力缺口、或明显更强的实现路径时，当场主动提案（含是否升主线、风险、和不做的代价）；未确认不得动手。
 
-**P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **23 个 public**（原则：顶级 + 轻量 + 中国约两个顶级文本；名单见 `PUBLIC_MODEL_IDS`。Astra 一对已入；ST-14 仍只挂原 7 个）。
+**P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **23 个 public**（原则：顶级 + 轻量 + 中国约两个顶级文本；名单见 `PUBLIC_MODEL_IDS`。Astra 一对已入且挂 ST-14）。
 
 未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换 Realtime 镜像**。官方 **0.11.3** 已落地（钉 digest，不是 `:latest`），见 **`docs/open-webui-upgrade-0113-plan.md`**。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
 
@@ -46,7 +46,7 @@
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 23 public（`PUBLIC_MODEL_IDS`）；其余 Pipe catalog 禁用 |
-| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v5` + Description + **空** chips + DEFAULT_MODELS |
+| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v6` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 23 public `access_grants`，并剥掉契约外 `*` read（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/apply_notebook_n1.py` | N1：RAG embedding → OpenRouter、YouTube loader 语言、Knowledge 集合 |
@@ -71,10 +71,10 @@
 2. **Merge** valves：见 SPEC ST-4～ST-6（`apply_plan_a_hide_integrations.py` 会 merge）  
 3. 确认 3 个 Guard 仍 global active：`image_tool_guard`、`image_context_guard`、`search_native_tool_guard`  
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
-5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v5` + 空 chips；**不要**写回 v4 / v3 / 双条 v2）  
+5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v6` + 空 chips；**不要**写回 v5 / v4 / v3 / 双条 v2）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-8. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 7 模型 default-on 则只校验）  
+8. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 9 模型 default-on 则只校验）  
 9. `python3 scripts/verify_stack.py` 全绿  
 10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
