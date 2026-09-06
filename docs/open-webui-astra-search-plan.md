@@ -1,6 +1,6 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**C3 红，Filter 已剥回；转 P1**（2026-09-06）。Astra 档案保持 `capabilities: null`（与 Sol 相同）。Banner 仍 v5。  
+> **状态**：**P2 已确认执行**（2026-09-06）。Pipe content-only 打一条 stream status，Sol + Astra 各一枪，看完必须 `--revert`。Banner 不动。  
 > **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；23 public；ST-14 仍 7 个。
 
 关联：`docs/open-webui-text-web-search-plan.md`；`docs/SPEC.md` UX-3 / ST-14。
