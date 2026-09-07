@@ -1,6 +1,6 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 / W4 已过门**。**W5** 官方 X 按次 Tool **已挂**，过门 **等 Key**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
+> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 / W4 / W5 已过门**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
 > **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
@@ -76,7 +76,7 @@
 - T1 `SEARCH_PAGE_COMPACT_V1`；`$0.05` / `step_count=8`；OpenRouter 写明 `max_uses` **只转 Anthropic**。  
 - 无 X 原厂、无 T2、无单发 token 顶。  
 - **ST-16**：`amap_drive_route` + `google_drive_route` 已挂 12 个 public 文本；高德 / Google Maps Key **已注入** Valves（不进 git）。  
-- **ST-17 / W5**：`x_recent_search`（显示名 X Recent Posts）已挂同一批 12 个 public 文本；`X_BEARER_TOKEN` **未注入**，活测过门未过。Grok native X 仍在。  
+- **ST-17 / W5**：`x_recent_search`（显示名 X Recent Posts）已挂同一批 12 个 public 文本；Bearer **已注入** Valves。Grok native X 仍在。  
 - 钥匙：不入库；**不** `enable` `openai.api_configs`；不写新的非空 `WEBUI_SECRET_KEY`。
 
 ---
@@ -109,7 +109,7 @@
 ### 3.3 X
 
 - **W3**：Grok native 自带 X（与网页绑定）。  
-- **W5**（已选官方 X API 按次）：薄 Tool `x_recent_search` 已挂 12 个 public 文本。近 7 天关键词真帖 + `x.com/status`。API `max_results` 下限 **10**（不是 5）。每轮最多 3 次。失败说「X 接口不可用」。过门等 Valves Key。  
+- **W5**（已过门）：薄 Tool `x_recent_search` 已挂 12 个 public 文本。近 7 天关键词真帖 + `x.com/status`。API `max_results` 下限 **10**。每轮最多 3 次。失败说「X 接口不可用」。  
 - 推文只回摘要 + 链接，不全文墙。不采用 Nitter / xAI 侧车。
 
 ### 3.4 硬顶（服务 `$0.2`）
@@ -135,7 +135,7 @@
 | **W2** Gemini native | **已过门**。Google 类 Search+Fetch `engine=native`。OpenAI 仍 Exa。见 **§14** | Flash 短问 4 次搜 / `$0.056`；北京南站→首都机场走高德 36.7km / 41 分钟，0 次网页搜 | 改回 `exa` |
 | **W3** Grok native | **已过门**。xAI 类 Search+Fetch `engine=native`。见 **§13** | 能引用 X；网页即时搜仍出活链；Grok「继续」超额符合 §1.1 | 把 xAI 改回 `exa` 后 `apply_search_quality_w3.py` 的逆操作（Filter content） |
 | **W4** Google Routes | **已过门**。Tool `google_drive_route` 挂 12 个 public 文本；Key 在 Valves。见 **§16** | Flash 海外 27km / 57 分钟；国内仍高德 36.7km / 41 分钟 | `scripts/rollback_google_drive_route.py` |
-| **W5** 全模型 X | **已挂**。官方 X API 按次 Tool `x_recent_search`；12 个 public 文本；Key **未注入**。见 **§18** | Flash 必须调工具并引活链；Grok 回归仍能搜 X；纯网页题不得无故狂调 X；次数顶有效 | `scripts/rollback_x_recent_search.py` |
+| **W5** 全模型 X | **已过门**。官方 X API 按次 Tool `x_recent_search`；Key 在 Valves。见 **§19** | Flash 调工具并引活链；Grok 回归仍能引 X；纯网页题未狂调 X | `scripts/rollback_x_recent_search.py` |
 | **W6** OpenAI native | **W0 未开绿灯**（Sol 能刹，Astra Pro 未测；Grok 续轮已证明 native 可越过 `max_tool_calls`） | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
 | **W7** T2 | 单次用户消息内轮累计 | 「继续」叠 spike 变稀 | 去 Pipe marker |
 
@@ -199,7 +199,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W0 / W1 / W2 / W3 / W4 已过门**（§10–§11、§13–§14、§16）。**W5** 已挂、过门等 Key（§18–§19）。**不要自行开 W6。** W6 仍关。
+**W0 / W1 / W2 / W3 / W4 / W5 已过门**（§10–§11、§13–§14、§16、§19）。**不要自行开 W6。** W6 仍关。
 
 
 ---
@@ -285,7 +285,7 @@ Grok 4.6 烟雾（`$0.25`）：
 
 `verify_text_web_search.py --mode final` 15 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w3-results.json`。
 
-W0 已接受 Grok 续轮可 >4 次搜。**W2 Gemini native 已过门**（§14）。W5 已挂、过门等 Key（§18）。W6 OpenAI native **未做**。
+W0 已接受 Grok 续轮可 >4 次搜。**W2 Gemini native 已过门**（§14）。**W5 已过门**（§19）。W6 OpenAI native **未做**。
 
 ---
 
@@ -300,7 +300,7 @@ Flash 3.8 烟雾（`$0.059`）：
 
 `verify_text_web_search.py --mode final` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w2-results.json`。
 
-**过门通过。** 中国路况仍走高德，不是 Google 网页搜。W5 见 **§18**（已挂、过门等 Key）。W6 **未做**。
+**过门通过。** 中国路况仍走高德，不是 Google 网页搜。**W5 已过门**（§19）。W6 **未做**。
 
 ---
 
@@ -346,7 +346,7 @@ Flash 烟雾（`GOOGLE_EXPECT_LIVE=1`，约 `$0.005`）：
 
 `verify_google_drive_route.py --require-key` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w4-results.json`。
 
-**过门通过。** W5 已挂、过门等 Key（§18）。W6 **未做**。
+**过门通过。** **W5 已过门**（§19）。W6 **未做**。
 
 ---
 
@@ -429,7 +429,7 @@ xAI 文档里的 `x_search` 是 **Grok 身上的 server tool**（`$5` / 1k 次 =
 
 - `GET https://api.x.com/2/tweets/search/recent`（`tweet.fields=created_at,author_id`；`expansions=author_id`；`user.fields=username`）
 
-Tool **已挂** 12 个 public 文本（2026-09-07）。Valves `X_BEARER_TOKEN` **未注入**。活测过门未过。Grok native X 不受影响。
+Tool **已挂** 12 个 public 文本。Key **已注入**（2026-09-07），过门见 **§19**。Grok native X 仍可用。
 
 ### 18.1 申请
 
@@ -450,11 +450,19 @@ Tool **已挂** 12 个 public 文本（2026-09-07）。Valves `X_BEARER_TOKEN` *
 
 ---
 
-## 19. W5 安装记录（2026-09-07，过门等 Key）
+## 19. W5 结果（2026-09-07）
 
-落地：OWUI Tool `x_recent_search`（`X_RECENT_SEARCH_V1`），显示名 X Recent Posts；挂在与 ST-14 相同的 **12** 个 public 文本。Sonar / 图像未挂。压缩 JSON（`author` / `time` / 短 `text` / `x.com/.../status/...`）。每 chat 120s 最多 3 次。`max_results` 默认 10（API 下限）。不请求 `public_metrics`。无嵌入 UI。Pipe / 搜索引擎 **未改**（OpenAI Exa、Google native、xAI native）。Token 只在 Tool Valves，不进 git。
+落地：OWUI Tool `x_recent_search`（`X_RECENT_SEARCH_V1`），显示名 X Recent Posts；挂在与 ST-14 相同的 **12** 个 public 文本。Sonar / 图像未挂。压缩 JSON（`author` / `time` / 短 `text` / `x.com/.../status/...`）。每 chat 120s 最多 3 次。`max_results` 默认 10（API 下限）。不请求 `public_metrics`。无嵌入 UI。Pipe / 搜索引擎 **未改**（OpenAI Exa、Google native、xAI native）。Token 在 Tool Valves，不进 git。
 
-`verify_x_recent_search.py` 17 ok（`X_BEARER_TOKEN unset`）；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。Pipe 仍 `9c4836ace251`。JSON：`docs/open-webui-search-quality-w5-results.json`。
+上游（`Tesla OR SpaceX`）：10 条，首条 `https://x.com/KayoteWyley420/status/2097037068740518329`。
 
-**活测过门未过。** 注入 Key 后再跑 §17.2。W6 **未做**。
+烟雾（`X_EXPECT_LIVE=1`）：
+
+- Flash：`function_call_count=1`，正文引 `https://x.com/SpaceX/status/2096625304009597207`（X API 核对：`SpaceX`，2026-09-06）。`$0.0022`。未说「X 接口不可用」。
+- Grok 回归（W3 口径，不逼它点名工具）：4 次搜，正文引 `https://x.com/elonmusk/status/2093794675660378441`（X API 核对：`elonmusk`）。`$0.092`。强制「用 X 最近帖工具」时 Grok 可能改走网页、不引帖；native X 仍在。
+- Flash 网页对照：4 次网页搜，**未**调 X 工具。`$0.044`。
+
+`verify_x_recent_search.py --require-key` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。Pipe 仍 `9c4836ace251`。JSON：`docs/open-webui-search-quality-w5-results.json`。
+
+**过门通过。** W6 **未做**。
 

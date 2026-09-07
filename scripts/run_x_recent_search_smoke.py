@@ -32,11 +32,16 @@ GROK = f"{PIPE}.x-ai.grok-4.6"
 X_RE = re.compile(r"https?://(?:www\.)?(?:x\.com|twitter\.com)/[\w]+/status/\d+", re.I)
 MAX_SINGLE_COST_USD = float(os.environ.get("W5_MAX_SINGLE_COST_USD", "2.0"))
 
-X_PROMPT = (
+FLASH_X_PROMPT = (
     "用 X 最近帖工具查询，不要编造推文或链接。"
     "Search X (Twitter) for a real recent post from the last 7 days about Tesla or SpaceX. "
     "Cite at least one https://x.com/ status URL from the tool result. "
     "One short paragraph plus the URL."
+)
+GROK_X_PROMPT = (
+    "Search X (Twitter) for a real recent post from the last 7 days about Tesla or SpaceX. "
+    "Cite at least one https://x.com/ or https://twitter.com/ status URL. "
+    "Do not invent tweets or URLs. One short paragraph plus the URL."
 )
 WEB_PROMPT = (
     "What official product news did OpenAI announce this week? "
@@ -102,13 +107,13 @@ def main() -> int:
     flash_x = chat_with_optional_search(
         h,
         FLASH,
-        [{"role": "user", "content": X_PROMPT}],
+        [{"role": "user", "content": FLASH_X_PROMPT}],
         enable_search=True,
         timeout=180,
         tool_ids=[X_RECENT_SEARCH_TOOL],
     )
     grok_x = chat_with_optional_search(
-        h, GROK, [{"role": "user", "content": X_PROMPT}], enable_search=True, timeout=300
+        h, GROK, [{"role": "user", "content": GROK_X_PROMPT}], enable_search=True, timeout=300
     )
     flash_web = chat_with_optional_search(
         h,
@@ -119,8 +124,8 @@ def main() -> int:
         tool_ids=[X_RECENT_SEARCH_TOOL],
     )
     payload = {
-        "flash_x": _row(flash_x, X_PROMPT),
-        "grok_x": _row(grok_x, X_PROMPT),
+        "flash_x": _row(flash_x, FLASH_X_PROMPT),
+        "grok_x": _row(grok_x, GROK_X_PROMPT),
         "flash_web": _row(flash_web, WEB_PROMPT),
         "max_single_cost_usd": MAX_SINGLE_COST_USD,
     }
@@ -146,6 +151,8 @@ def main() -> int:
             errors.append("flash missing x.com/status URL")
         if not (flash_row["used_x_tool"] or flash_row["function_call_count"]):
             errors.append("flash did not call x_recent_search")
+        if not grok_row["has_x_url"]:
+            errors.append("grok missing x.com/status URL")
         if not (grok_row["has_x_url"] or grok_row["used_x_tool"] or grok_row["web_search_requests"]):
             errors.append("grok X regression lost search")
         if web_row["used_x_tool"] and web_row["function_call_count"] and not (
