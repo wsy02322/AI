@@ -152,9 +152,17 @@ def main() -> int:
         if not overseas_row["function_call_count"]:
             errors.append("overseas single did not call the route tool")
     payload["errors"] = errors
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"wrote {OUT}")
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    written = None
+    try:
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        OUT.write_text(text, encoding="utf-8")
+        written = OUT
+    except OSError:
+        fallback = Path("/tmp/drive-route-m1a-smoke.json")
+        fallback.write_text(text, encoding="utf-8")
+        written = fallback
+    print(f"wrote {written}")
     print(f"direct_china_multi ok={direct.get('ok')} legs={direct.get('leg_count')} km={direct.get('leg_km')}")
     for name in ("china_single", "china_multi", "overseas_single"):
         row = payload[name]

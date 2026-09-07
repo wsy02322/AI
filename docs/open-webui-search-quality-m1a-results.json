@@ -1,0 +1,65 @@
+{
+  "direct_china_multi": {
+    "ok": true,
+    "leg_count": 3,
+    "stops": [
+      "陕西省西安市",
+      "青海省西宁市",
+      "青海湖国家重点风景名胜区",
+      "甘肃省张掖市"
+    ],
+    "leg_km": [
+      865.8,
+      146.7,
+      521.3
+    ],
+    "xining_qinghai_km": 146.7,
+    "error": ""
+  },
+  "china_single": {
+    "status": 200,
+    "cost_usd": 0.00235575,
+    "function_call_count": 1,
+    "has_unavailable": false,
+    "has_km_or_minutes": true,
+    "has_xining": false,
+    "has_zhangye": false,
+    "has_phone": false,
+    "has_rating": false,
+    "text_chars": 149,
+    "text_head": "实时路线查询结果如下：\n\n* **行车路线**：途经南站幸福路、永外车站路、右安门东滨河路、南二环、东二环、东直门北桥，前往首都机场高速至北京首都国际机场\n* **行驶距离**：约 36.9 公里\n* **预计耗时**：约 36 分钟\n* **路况大意**：整体以畅通为主（畅通比例约 98.5%）",
+    "error": "",
+    "prompt_head": "用中国路线工具查询实时路况，不要凭记忆编分钟数。开车从北京南站到北京首都国际机场，现在怎么走、大概多久、路况怎么样？只要距离、时间、路况大意。不要评分、不要电话"
+  },
+  "china_multi": {
+    "status": 200,
+    "cost_usd": 0.0033862500000000004,
+    "function_call_count": 1,
+    "has_unavailable": false,
+    "has_km_or_minutes": true,
+    "has_xining": true,
+    "has_zhangye": true,
+    "has_phone": false,
+    "has_rating": false,
+    "text_chars": 295,
+    "text_head": "自驾路线（起点：西安，途经：西宁、青海湖，终点：张掖）分段数据如下：\n\n* **第一段：西安市 → 西宁市**\n  * 距离：约 865.8 公里\n  * 耗时：约 566 分钟（约 9 小时 26 分钟）\n\n* **第二段：西宁市 → 青海湖**\n  * 距离：约 146.7 公里\n  * 耗时：约 124 分钟（约 2 小时 4 分钟）\n\n* **第三段：青海湖 → 张掖市**\n  * 距离：约 521.3 公里\n  * 耗时：约 536 分钟（约 8 小时 56 分钟）\n\n---\n**全程总计**：约 1533.8 公里，总耗时约 1226 分钟（约 20 小时 26 分钟）。",
+    "error": "",
+    "prompt_head": "用中国路线工具，只调用一次。开车自驾：起点西安，途经西宁、青海湖，终点张掖。把中间城市放进 via，不要每个城市单独打一次。请按段写出每一段的大概公里和分钟。不"
+  },
+  "overseas_single": {
+    "status": 200,
+    "cost_usd": 0.00290775,
+    "function_call_count": 1,
+    "has_unavailable": false,
+    "has_km_or_minutes": true,
+    "has_xining": false,
+    "has_zhangye": false,
+    "has_phone": false,
+    "has_rating": false,
+    "text_chars": 88,
+    "text_head": "- **距离**：约 27 公里\n- **预计耗时**：约 60 分钟\n- **实时路况大意**：路况一般（整体约 72% 路段畅通，近 20% 路段存在拥堵，约 8% 缓行）",
+    "error": "",
+    "prompt_head": "用海外路线工具查询实时路况，不要凭记忆编分钟数。开车从纽约肯尼迪机场（JFK）到时代广场（Times Square），大概多久？只要距离、时间、路况大意。不要评"
+  },
+  "errors": []
+}

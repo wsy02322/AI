@@ -22,6 +22,7 @@
 | 即时搜 W4 | **已过门**（2026-09-07）：Key 在 Tool Valves。Flash JFK→Times Square **27km / ~57 分钟**（对上上游 27.0km / 3394s）；国内仍高德 **36.7km / ~41 分钟**。`verify_google --require-key` 17 ok；`verify_stack` 24 ok；Pipe 仍 `9c4836ace251` |
 | 即时搜 W5 | **已过门**（2026-09-07）：Key 在 Tool Valves。Flash 引 `x.com/SpaceX/status/2096625304009597207`（`function_call_count=1` / `$0.002`）；Grok 回归引 `x.com/elonmusk/status/…`（4 次搜 / `$0.092`）；网页对照未调 X |
 | 即时搜 W6 | **已过门**（2026-09-07）：Astra Pro 两轮 4 次搜 / `$0.95`。生产 OpenAI **native** + `max_tool_calls=3`。Sol 短问 4 次 / `$0.053`；Astra Pro 短问 3 次 / `$0.444`；中国路线仍高德 36.7km。`verify_text_web_search --mode final` 17 ok；`verify_stack` 24 ok；Pipe `7242967443d4` |
+| 即时搜 M1a | **已过门**（2026-09-07）：`via` + `legs[]`。西安→西宁→青海湖→张掖 **865.8 + 146.7 + 521.3 km**（1 次调用）；南站→机场 **36.9 km**；JFK→Times Square **27 km**。`verify_amap` 17 ok；`verify_google` 18 ok；`verify_stack` 24 ok |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |

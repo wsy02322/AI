@@ -4,7 +4,7 @@
 
 灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（**W0–W6 已过门**；W7 未确认）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 已落地：`max_tool_calls=3`（Astra Pro 续轮已刹）。Grok 续轮仍可越过次数顶。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-16** = 出行路线工具（W1 高德已过门；W4 Google Routes 已过门）；**ST-17** = Grok native / X（W3 已过门；W5 官方 X 按次已过门）。不要把这些写成同一个号。
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-16** = 出行路线工具（W1 高德 / W4 Google Routes / **M1a via+legs** 已过门）；**ST-17** = Grok native / X（W3 已过门；W5 官方 X 按次已过门）。不要把这些写成同一个号。
 
 ## 宪法（所有动作）
 
@@ -76,6 +76,8 @@
 | `scripts/verify_google_drive_route.py` | ST-16：海外 Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Key |
 | `scripts/run_google_drive_route_smoke.py` | ST-16：Flash 海外题 + 中国仍高德；有 Key 后加 `GOOGLE_EXPECT_LIVE=1` |
 | `scripts/rollback_google_drive_route.py` | ST-16：从模型剥 `google_drive_route`，不删 Tool |
+| `scripts/apply_search_quality_m1a.py` | ST-16 / M1a：upsert 两把路线工具（via + legs）；merge Valves，不覆盖 Key |
+| `scripts/run_drive_route_m1a_smoke.py` | ST-16 / M1a：直接多站 + Flash 单段/多站/海外；有 Key 后加 `M1A_EXPECT_LIVE=1` |
 | `scripts/apply_search_quality_w5.py` | ST-17 / W5：安装挂载官方 X Recent Search（merge Valves，不覆盖已有 Token） |
 | `scripts/apply_x_recent_search.py` | ST-17：`--mode install\|attach\|detach` |
 | `scripts/verify_x_recent_search.py` | ST-17：Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Token |
