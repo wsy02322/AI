@@ -15,20 +15,25 @@ from pydantic import BaseModel, Field
 TEXT_WEB_SEARCH_FILTER_V1 = "TEXT_WEB_SEARCH_FILTER_V1"
 TEXT_WEB_SEARCH_OPENAI_EXA_V1 = "TEXT_WEB_SEARCH_OPENAI_EXA_V1"
 TEXT_WEB_SEARCH_COUNTED_EXA_V1 = "TEXT_WEB_SEARCH_COUNTED_EXA_V1"
+TEXT_WEB_SEARCH_XAI_NATIVE_V1 = "TEXT_WEB_SEARCH_XAI_NATIVE_V1"
 TEXT_WEB_SEARCH_DENY_CLASS_V1 = "TEXT_WEB_SEARCH_DENY_CLASS_V1"
 
-# Native search ignores max_uses except Anthropic. Route those classes through
-# Exa so OpenRouter can count steps / $0.05. Not a model-id allowlist.
-UNMETERED_NATIVE_MARKERS = (
+# Native search ignores max_uses except Anthropic. OpenAI / Google stay on Exa
+# so OpenRouter can count steps / $0.05. xAI is native (W3: web + X).
+# Not a model-id allowlist. Image ids are denied before this runs.
+COUNTED_EXA_MARKERS = (
     "openai.",
     "openai/",
     "google.",
     "google/",
+)
+XAI_NATIVE_MARKERS = (
     "x-ai.",
     "x-ai/",
     "xai.",
     "xai/",
 )
+UNMETERED_NATIVE_MARKERS = COUNTED_EXA_MARKERS + XAI_NATIVE_MARKERS
 
 DENY_MARKERS = (
     "sonar",
@@ -116,17 +121,26 @@ class Filter:
         caps = self._caps(body, __model__, __metadata__)
         return bool(caps.get("image_output") or caps.get("video_generation"))
 
+    def _is_xai(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
+        refs = self._refs(body, __model__)
+        return any(marker in refs for marker in XAI_NATIVE_MARKERS)
+
     def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
         """Native search ignores max_uses except Anthropic.
 
-        TEXT_WEB_SEARCH_COUNTED_EXA_V1: OpenAI / Google / xAI classes go through
-        Exa so stop_server_tools_when and max_uses count. Anthropic stays auto.
+        TEXT_WEB_SEARCH_COUNTED_EXA_V1: OpenAI / Google classes go through Exa.
+        TEXT_WEB_SEARCH_XAI_NATIVE_V1: xAI uses native (web + X). Anthropic auto.
         Image / video ids are denied before this runs.
         """
+        if self._is_xai(body, __model__):
+            return False
         refs = self._refs(body, __model__)
-        return any(marker in refs for marker in UNMETERED_NATIVE_MARKERS)
+        return any(marker in refs for marker in COUNTED_EXA_MARKERS)
 
     def _tool_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None, default: str) -> str:
+        # TEXT_WEB_SEARCH_XAI_NATIVE_V1
+        if self._is_xai(body, __model__):
+            return "native"
         if self._uses_counted_search_engine(body, __model__):
             return "exa"
         return default

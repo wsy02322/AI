@@ -66,11 +66,15 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
     if "TEXT_WEB_SEARCH_COUNTED_EXA_V1" not in content:
         report.err("thin filter missing counted-Exa marker")
     else:
-        report.ok("thin filter unmetered native classes use Exa")
+        report.ok("thin filter OpenAI/Google classes use Exa")
     if "TEXT_WEB_SEARCH_OPENAI_EXA_V1" not in content:
         report.err("thin filter missing OpenAI Exa marker")
     else:
         report.ok("thin filter OpenAI class uses Exa")
+    if "TEXT_WEB_SEARCH_XAI_NATIVE_V1" not in content:
+        report.err("thin filter missing xAI native marker")
+    else:
+        report.ok("thin filter xAI class uses native")
     if function.get("is_global"):
         report.err("thin filter is global")
     else:
