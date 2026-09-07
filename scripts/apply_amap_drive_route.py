@@ -64,7 +64,7 @@ def upsert_tool(h: dict[str, str]) -> dict[str, Any]:
     payload = {
         "id": AMAP_DRIVE_ROUTE_TOOL,
         "name": TOOL_NAME,
-        "meta": {"description": "Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional static map."},
+        "meta": {"description": "Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional road-following static map."},
         "content": content,
         "access_grants": [PUBLIC_GRANT],
     }

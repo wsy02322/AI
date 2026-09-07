@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import (
     AMAP_DRIVE_ROUTE_M1A_MARKER,
     AMAP_DRIVE_ROUTE_MAP_LITE_MARKER,
+    AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER,
     AMAP_DRIVE_ROUTE_MARKER,
     AMAP_DRIVE_ROUTE_MODEL_IDS,
     AMAP_DRIVE_ROUTE_TOOL,
@@ -63,6 +64,10 @@ def main() -> int:
         report.err("tool missing map-lite marker")
     else:
         report.ok("tool map-lite marker")
+    if AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER not in content:
+        report.err("tool missing map-road marker")
+    else:
+        report.ok("tool map-road marker")
     if tool.get("name") != "China Drive Route":
         report.err(f"tool name={tool.get('name')}")
     else:

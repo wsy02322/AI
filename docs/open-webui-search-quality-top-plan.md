@@ -680,10 +680,10 @@ Flash 烟雾（`M1A_EXPECT_LIVE=1`）：
 |------|--------|----------|
 | 分段表 | `legs[]` 公里 / 分钟 / 路况 | 不编精确分钟 |
 | 官方导航 | 中国 `uri.amap.com/navigation`；海外 `google.com/maps/dir` | 不把带 `key=` 的 URL 回给模型 / 聊天 |
-| 第一张图 | 多站中国线（`len(stops) ≥ 3`）拉高德 `staticmap` 600×400，标记 + 直线连站，回 `map_data_uri` | 不要第二张坐标投影示意图；南站→机场这类**单段不出图** |
+| 第一张图 | 多站中国线（`len(stops) ≥ 3`）拉高德 `staticmap` 600×400，标记 + **抽稀路网折线**（最多约 100 点），回 `map_data_uri`。路网图失败才回退直线连站 | 不要第二张坐标投影示意图；不要把完整折线喂模型；南站→机场这类**单段不出图** |
 | 海外 | 只要 Google 链接 | 不上 Google Static Maps（现网 Key 是 Routes） |
 
-仍记 **ST-16**。工具 1.2.0；marker `AMAP_DRIVE_ROUTE_MAP_LITE_V1` / `GOOGLE_DRIVE_ROUTE_MAP_LITE_V1`。JSON 不得出现 Key / `key=`。可见回复：表 + `[nav_label](nav_url)` + 若有 `map_data_uri` 则一张 markdown 图；不要把 base64 当正文。
+仍记 **ST-16**。工具 1.2.1；marker `AMAP_DRIVE_ROUTE_MAP_LITE_V1` / `AMAP_DRIVE_ROUTE_MAP_ROAD_V1` / `GOOGLE_DRIVE_ROUTE_MAP_LITE_V1`。JSON 不得出现 Key / `key=` / 完整折线。可见回复：表 + `[nav_label](nav_url)` + 若有 `map_data_uri` 则一张 markdown 图；不要把 base64 当正文。
 
 权衡：data URI 进模型上下文会吃 token。未做 OWUI files 短链。失败则只留导航链接。
 

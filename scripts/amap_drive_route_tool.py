@@ -3,7 +3,7 @@ title: China Drive Route
 author: micropigeon
 id: amap_drive_route
 description: Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional static map.
-version: 1.2.0
+version: 1.2.1
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 AMAP_DRIVE_ROUTE_V1 = "AMAP_DRIVE_ROUTE_V1"
 AMAP_DRIVE_ROUTE_M1A_V1 = "AMAP_DRIVE_ROUTE_M1A_V1"
 AMAP_DRIVE_ROUTE_MAP_LITE_V1 = "AMAP_DRIVE_ROUTE_MAP_LITE_V1"
+AMAP_DRIVE_ROUTE_MAP_ROAD_V1 = "AMAP_DRIVE_ROUTE_MAP_ROAD_V1"
 UNAVAILABLE = "路线接口不可用"
 NOTE = "分钟数是路网估算；实时路况只代表现在"
 MAX_STOPS = 8
@@ -38,6 +39,8 @@ PLACE_URL = "https://restapi.amap.com/v3/place/text"
 DRIVING_URL = "https://restapi.amap.com/v5/direction/driving"
 STATICMAP_URL = "https://restapi.amap.com/v3/staticmap"
 JUMP_M = 400000.0
+MAP_PATH_MAX_POINTS = 100
+MAP_PATH_SPACING_M = 15000.0
 
 _CALLS: dict[str, tuple[float, int]] = {}
 HttpFn = Callable[[str, dict[str, str]], dict[str, Any]]
@@ -97,9 +100,38 @@ def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
     return "https://uri.amap.com/navigation?" + urllib.parse.urlencode(params)
 
 
-def fetch_amap_static_png(
+def path_points_from_route(path: dict[str, Any]) -> list[tuple[float, float]]:
+    points = parse_polyline(str(path.get("polyline") or ""))
+    if points:
+        return points
+    for step in path.get("steps") or []:
+        if isinstance(step, dict):
+            points.extend(parse_polyline(str(step.get("polyline") or "")))
+    return points
+
+
+def static_draw_points(
+    resolved: list[tuple[str, tuple[float, float]]],
+    path_points: list[tuple[float, float]] | None,
+) -> list[tuple[float, float]]:
+    stops = [(lng, lat) for _name, (lng, lat) in resolved]
+    if path_points and len(path_points) >= 2:
+        sampled = sparse_via(
+            path_points,
+            total_m=0.0,
+            max_points=MAP_PATH_MAX_POINTS,
+            spacing_m=MAP_PATH_SPACING_M,
+        )
+        drawn = [(float(item[0]), float(item[1])) for item in sampled]
+        if len(drawn) >= 2:
+            return drawn
+    return stops
+
+
+def request_amap_static_png(
     key: str,
     resolved: list[tuple[str, tuple[float, float]]],
+    draw: list[tuple[float, float]],
     *,
     http: HttpFn | None = None,
 ) -> bytes | None:
@@ -107,7 +139,7 @@ def fetch_amap_static_png(
         f"mid,0xC53030,{index + 1}:{lng},{lat}"
         for index, (_name, (lng, lat)) in enumerate(resolved)
     )
-    path = "5,0x2B6CB0,1,,:" + ";".join(f"{lng},{lat}" for _name, (lng, lat) in resolved)
+    path = "5,0x2B6CB0,1,,:" + ";".join(f"{lng},{lat}" for lng, lat in draw)
     params = {
         "key": key,
         "size": "600*400",
@@ -134,18 +166,36 @@ def fetch_amap_static_png(
     return None
 
 
+def fetch_amap_static_png(
+    key: str,
+    resolved: list[tuple[str, tuple[float, float]]],
+    *,
+    path_points: list[tuple[float, float]] | None = None,
+    http: HttpFn | None = None,
+) -> bytes | None:
+    stops = [(lng, lat) for _name, (lng, lat) in resolved]
+    road = static_draw_points(resolved, path_points)
+    png = request_amap_static_png(key, resolved, road, http=http)
+    if png:
+        return png
+    if road != stops:
+        return request_amap_static_png(key, resolved, stops, http=http)
+    return None
+
+
 def attach_closeout(
     payload: dict[str, Any],
     resolved: list[tuple[str, tuple[float, float]]],
     *,
     key: str,
     include_map: bool,
+    path_points: list[tuple[float, float]] | None = None,
     http: HttpFn | None = None,
 ) -> dict[str, Any]:
     payload["nav_url"] = amap_nav_url(resolved)
     payload["nav_label"] = "在高德打开这条路线"
     if include_map:
-        png = fetch_amap_static_png(key, resolved, http=http)
+        png = fetch_amap_static_png(key, resolved, path_points=path_points, http=http)
         if png:
             payload["map_data_uri"] = "data:image/png;base64," + base64.b64encode(png).decode("ascii")
             payload["map_kind"] = "amap_static"
@@ -350,11 +400,7 @@ def compact_route(
         seconds = float(cost.get("duration") or path.get("duration") or 0)
     except (TypeError, ValueError):
         seconds = 0.0
-    points = parse_polyline(str(path.get("polyline") or ""))
-    if not points:
-        for step in path.get("steps") or []:
-            if isinstance(step, dict):
-                points.extend(parse_polyline(str(step.get("polyline") or "")))
+    points = path_points_from_route(path)
     traffic, share = traffic_summary(collect_tmcs(path))
     return {
         "ok": True,
@@ -507,7 +553,7 @@ def drive_one(
     *,
     max_via: int,
     http: HttpFn | None = None,
-) -> dict[str, Any] | None:
+) -> tuple[dict[str, Any] | None, list[tuple[float, float]]]:
     data = amap_get(
         DRIVING_URL,
         {
@@ -521,11 +567,12 @@ def drive_one(
         http,
     )
     if str(data.get("status")) != "1":
-        return None
+        return None, []
     route = data.get("route") if isinstance(data.get("route"), dict) else {}
     paths = route.get("paths")
     if not isinstance(paths, list) or not paths or not isinstance(paths[0], dict):
-        return None
+        return None, []
+    points = path_points_from_route(paths[0])
     return compact_route(
         origin_name=origin_name,
         dest_name=dest_name,
@@ -533,7 +580,7 @@ def drive_one(
         dest=dest_xy,
         path=paths[0],
         max_via=max_via,
-    )
+    ), points
 
 
 def lookup_drive(
@@ -566,10 +613,11 @@ def lookup_drive(
         prev_city = city or prev_city
     leg_max = min(int(max_via), LEG_VIA_CAP) if len(resolved) > 2 else int(max_via)
     compacts: list[dict[str, Any]] = []
+    path_points: list[tuple[float, float]] = []
     for index in range(len(resolved) - 1):
         start_name, start_xy = resolved[index]
         end_name, end_xy = resolved[index + 1]
-        compact = drive_one(
+        compact, points = drive_one(
             key,
             start_name,
             end_name,
@@ -581,6 +629,7 @@ def lookup_drive(
         if compact is None:
             return fail()
         compacts.append(compact)
+        path_points.extend(points)
     first = compacts[0]
     last = compacts[-1]
     totals_km = round(sum(item["km"] for item in compacts), 1)
@@ -610,6 +659,7 @@ def lookup_drive(
         resolved,
         key=key,
         include_map=len(resolved) >= 3,
+        path_points=path_points,
         http=http,
     )
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
@@ -657,7 +707,8 @@ class Tools:
         and overseas cities: use Overseas Drive Route instead. origin/destination:
         place name or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes,
         traffic, legs[], totals, nav_url. Multi-stop also returns map_data_uri
-        (Amap static schematic). In the visible reply: (1) a legs table,
+        (Amap static map of the sparse road polyline, not city-to-city
+        straight lines). In the visible reply: (1) a legs table,
         (2) markdown link [nav_label](nav_url), (3) if map_data_uri exists,
         one markdown image. Do not paste raw base64. Do not print the API key.
         No phone, rating, or interactive map UI. If ok is false, say
@@ -666,6 +717,7 @@ class Tools:
         # AMAP_DRIVE_ROUTE_V1
         # AMAP_DRIVE_ROUTE_M1A_V1
         # AMAP_DRIVE_ROUTE_MAP_LITE_V1
+        # AMAP_DRIVE_ROUTE_MAP_ROAD_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:
