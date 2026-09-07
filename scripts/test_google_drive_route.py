@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from google_drive_route_tool import (
     FIELD_MASK,
     GOOGLE_DRIVE_ROUTE_M1A_V1,
+    GOOGLE_DRIVE_ROUTE_MAP_LITE_V1,
     GOOGLE_DRIVE_ROUTE_V1,
     UNAVAILABLE,
     Tools,
@@ -25,7 +26,11 @@ from google_drive_route_tool import (
     traffic_summary,
     waypoint,
 )
-from stack_contract import GOOGLE_DRIVE_ROUTE_M1A_MARKER, GOOGLE_DRIVE_ROUTE_MARKER
+from stack_contract import (
+    GOOGLE_DRIVE_ROUTE_M1A_MARKER,
+    GOOGLE_DRIVE_ROUTE_MAP_LITE_MARKER,
+    GOOGLE_DRIVE_ROUTE_MARKER,
+)
 
 
 class GoogleDriveRouteTests(unittest.TestCase):
@@ -37,7 +42,9 @@ class GoogleDriveRouteTests(unittest.TestCase):
         self.assertEqual(GOOGLE_DRIVE_ROUTE_M1A_V1, GOOGLE_DRIVE_ROUTE_M1A_MARKER)
         source = Path(__file__).with_name("google_drive_route_tool.py").read_text(encoding="utf-8")
         self.assertIn(GOOGLE_DRIVE_ROUTE_MARKER, source)
+        self.assertEqual(GOOGLE_DRIVE_ROUTE_MAP_LITE_V1, GOOGLE_DRIVE_ROUTE_MAP_LITE_MARKER)
         self.assertIn(GOOGLE_DRIVE_ROUTE_M1A_MARKER, source)
+        self.assertIn(GOOGLE_DRIVE_ROUTE_MAP_LITE_MARKER, source)
         self.assertIn("mainland China", source)
         self.assertNotIn("Place Details", source)
 
@@ -144,6 +151,7 @@ class GoogleDriveRouteTests(unittest.TestCase):
         self.assertEqual(data["km"], 27.8)
         self.assertEqual(data["minutes"], 41)
         self.assertEqual(len(data["legs"]), 1)
+        self.assertIn("google.com/maps/dir", data["nav_url"])
         self.assertEqual(seen["url"], "https://routes.googleapis.com/directions/v2:computeRoutes")
         self.assertEqual(seen["body"]["travelMode"], "DRIVE")
         self.assertEqual(seen["body"]["routingPreference"], "TRAFFIC_AWARE")
@@ -227,6 +235,9 @@ class GoogleDriveRouteTests(unittest.TestCase):
         self.assertEqual(data["legs"][0]["minutes"], 30)
         self.assertEqual(data["legs"][1]["minutes"], 25)
         self.assertEqual(data["totals"]["minutes"], 55)
+        self.assertIn("google.com/maps/dir", data["nav_url"])
+        self.assertNotIn("map_data_uri", data)
+        self.assertNotIn("test-key", raw)
         self.assertEqual(parse_via("Philadelphia; Boston"), ["Philadelphia", "Boston"])
 
     def test_mainland_coord_and_too_many_via_fail(self) -> None:

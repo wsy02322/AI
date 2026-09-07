@@ -2,12 +2,13 @@
 title: China Drive Route
 author: micropigeon
 id: amap_drive_route
-description: Amap driving route and traffic for China. Compact JSON, optional via stops, no map UI.
-version: 1.1.0
+description: Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional static map.
+version: 1.2.0
 """
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -21,6 +22,7 @@ from pydantic import BaseModel, Field
 
 AMAP_DRIVE_ROUTE_V1 = "AMAP_DRIVE_ROUTE_V1"
 AMAP_DRIVE_ROUTE_M1A_V1 = "AMAP_DRIVE_ROUTE_M1A_V1"
+AMAP_DRIVE_ROUTE_MAP_LITE_V1 = "AMAP_DRIVE_ROUTE_MAP_LITE_V1"
 UNAVAILABLE = "路线接口不可用"
 NOTE = "分钟数是路网估算；实时路况只代表现在"
 MAX_STOPS = 8
@@ -34,6 +36,7 @@ TMC_LABELS = ("未知", "畅通", "缓行", "拥堵", "严重拥堵")
 GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo"
 PLACE_URL = "https://restapi.amap.com/v3/place/text"
 DRIVING_URL = "https://restapi.amap.com/v5/direction/driving"
+STATICMAP_URL = "https://restapi.amap.com/v3/staticmap"
 JUMP_M = 400000.0
 
 _CALLS: dict[str, tuple[float, int]] = {}
@@ -73,6 +76,80 @@ def stop_region(lng: float, lat: float) -> str:
     if 73.0 <= lng <= 135.1 and 18.0 <= lat <= 53.7:
         return "cn"
     return "overseas"
+
+
+def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    origin_name, (olng, olat) = resolved[0]
+    dest_name, (dlng, dlat) = resolved[-1]
+    params = {
+        "from": f"{olng},{olat},{origin_name}",
+        "to": f"{dlng},{dlat},{dest_name}",
+        "mode": "car",
+        "policy": "1",
+        "src": "micropigeon",
+        "coordinate": "gaode",
+        "callnative": "0",
+    }
+    if len(resolved) > 2:
+        params["via"] = ";".join(
+            f"{lng},{lat},{name}" for name, (lng, lat) in resolved[1:-1]
+        )
+    return "https://uri.amap.com/navigation?" + urllib.parse.urlencode(params)
+
+
+def fetch_amap_static_png(
+    key: str,
+    resolved: list[tuple[str, tuple[float, float]]],
+    *,
+    http: HttpFn | None = None,
+) -> bytes | None:
+    markers = "|".join(
+        f"mid,0xC53030,{index + 1}:{lng},{lat}"
+        for index, (_name, (lng, lat)) in enumerate(resolved)
+    )
+    path = "5,0x2B6CB0,1,,:" + ";".join(f"{lng},{lat}" for _name, (lng, lat) in resolved)
+    params = {
+        "key": key,
+        "size": "600*400",
+        "markers": markers,
+        "paths": path,
+    }
+    if http is not None:
+        data = http(STATICMAP_URL, params)
+        raw = data.get("_bytes") if isinstance(data, dict) else None
+        return raw if isinstance(raw, (bytes, bytearray)) else None
+    query = urllib.parse.urlencode(params, safe=":|,;")
+    request = urllib.request.Request(
+        f"{STATICMAP_URL}?{query}",
+        headers={"User-Agent": "micropigeon-amap-drive/1.2"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            raw = response.read()
+    except Exception:
+        return None
+    if raw[:8] == b"\x89PNG\r\n\x1a\n" or raw[:2] == b"\xff\xd8":
+        return bytes(raw)
+    return None
+
+
+def attach_closeout(
+    payload: dict[str, Any],
+    resolved: list[tuple[str, tuple[float, float]]],
+    *,
+    key: str,
+    include_map: bool,
+    http: HttpFn | None = None,
+) -> dict[str, Any]:
+    payload["nav_url"] = amap_nav_url(resolved)
+    payload["nav_label"] = "在高德打开这条路线"
+    if include_map:
+        png = fetch_amap_static_png(key, resolved, http=http)
+        if png:
+            payload["map_data_uri"] = "data:image/png;base64," + base64.b64encode(png).decode("ascii")
+            payload["map_kind"] = "amap_static"
+    return payload
 
 
 def attach_itinerary(compact: dict[str, Any], legs: list[dict[str, Any]], stops: list[str]) -> dict[str, Any]:
@@ -528,6 +605,13 @@ def lookup_drive(
         payload["roads"] = first.get("roads") or []
         payload["via"] = first.get("via") or []
     attach_itinerary(payload, legs, [name for name, _xy in resolved])
+    attach_closeout(
+        payload,
+        resolved,
+        key=key,
+        include_map=len(resolved) >= 3,
+        http=http,
+    )
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
 
@@ -572,11 +656,16 @@ class Tools:
         semicolon, max 6). Do not call once per city. Hong Kong / Macau / Taiwan
         and overseas cities: use Overseas Drive Route instead. origin/destination:
         place name or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes,
-        traffic, legs[], totals. No phone, rating, or map UI. If ok is false,
-        say 路线接口不可用 and do not invent exact minutes.
+        traffic, legs[], totals, nav_url. Multi-stop also returns map_data_uri
+        (Amap static schematic). In the visible reply: (1) a legs table,
+        (2) markdown link [nav_label](nav_url), (3) if map_data_uri exists,
+        one markdown image. Do not paste raw base64. Do not print the API key.
+        No phone, rating, or interactive map UI. If ok is false, say
+        路线接口不可用 and do not invent exact minutes.
         """
         # AMAP_DRIVE_ROUTE_V1
         # AMAP_DRIVE_ROUTE_M1A_V1
+        # AMAP_DRIVE_ROUTE_MAP_LITE_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:

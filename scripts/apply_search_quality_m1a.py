@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M1a: upsert ST-16 drive tools with via[] + legs[]. Merge valves only."""
+"""Upsert ST-16 drive tools (M1a via/legs + MAP_LITE nav/static). Merge valves only."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def main() -> int:
     merge_amap_valves(h)
     upsert_google(h)
     merge_google_valves(h)
-    print("apply M1a drive via/legs ok")
+    print("apply M1a + MAP_LITE drive tools ok")
     amap = verify_amap_main()
     google = verify_google_main()
     return 0 if amap == 0 and google == 0 else 1

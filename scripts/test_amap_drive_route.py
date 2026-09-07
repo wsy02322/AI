@@ -12,10 +12,12 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from amap_drive_route_tool import (
     AMAP_DRIVE_ROUTE_M1A_V1,
+    AMAP_DRIVE_ROUTE_MAP_LITE_V1,
     AMAP_DRIVE_ROUTE_V1,
     UNAVAILABLE,
     Tools,
     allow_call,
+    amap_nav_url,
     compact_route,
     lookup_drive,
     parse_polyline,
@@ -24,7 +26,16 @@ from amap_drive_route_tool import (
     stop_region,
     traffic_summary,
 )
-from stack_contract import AMAP_DRIVE_ROUTE_M1A_MARKER, AMAP_DRIVE_ROUTE_MARKER
+from stack_contract import (
+    AMAP_DRIVE_ROUTE_M1A_MARKER,
+    AMAP_DRIVE_ROUTE_MAP_LITE_MARKER,
+    AMAP_DRIVE_ROUTE_MARKER,
+)
+
+MINI_PNG = bytes.fromhex(
+    "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+    "0000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082"
+)
 
 
 class AmapDriveRouteTests(unittest.TestCase):
@@ -35,8 +46,10 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertEqual(AMAP_DRIVE_ROUTE_V1, AMAP_DRIVE_ROUTE_MARKER)
         self.assertEqual(AMAP_DRIVE_ROUTE_M1A_V1, AMAP_DRIVE_ROUTE_M1A_MARKER)
         source = Path(__file__).with_name("amap_drive_route_tool.py").read_text(encoding="utf-8")
+        self.assertEqual(AMAP_DRIVE_ROUTE_MAP_LITE_V1, AMAP_DRIVE_ROUTE_MAP_LITE_MARKER)
         self.assertIn(AMAP_DRIVE_ROUTE_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_M1A_MARKER, source)
+        self.assertIn(AMAP_DRIVE_ROUTE_MAP_LITE_MARKER, source)
 
     def test_sparse_via_about_one_km(self) -> None:
         points = [(116.0 + i * 0.01, 39.9) for i in range(20)]
@@ -126,6 +139,9 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertEqual(data["minutes"], 41)
         self.assertEqual(len(data["legs"]), 1)
         self.assertEqual(data["totals"]["km"], 28.5)
+        self.assertIn("uri.amap.com/navigation", data["nav_url"])
+        self.assertNotIn("map_data_uri", data)
+        self.assertNotIn("test-key", raw)
         self.assertEqual(len(calls), 3)
 
     def test_missing_key_and_cap(self) -> None:
@@ -176,6 +192,8 @@ class AmapDriveRouteTests(unittest.TestCase):
 
         def http(url: str, params: dict[str, str]) -> dict:
             calls.append(url)
+            if "staticmap" in url:
+                return {"_bytes": MINI_PNG}
             if "geocode" in url:
                 locs = {
                     "西安": "108.94,34.26",
@@ -219,6 +237,12 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertEqual(data["totals"]["minutes"], 360)
         self.assertEqual(sum(1 for url in calls if "geocode" in url), 4)
         self.assertEqual(sum(1 for url in calls if "driving" in url), 3)
+        self.assertEqual(sum(1 for url in calls if "staticmap" in url), 1)
+        self.assertIn("uri.amap.com/navigation", data["nav_url"])
+        self.assertIn("via=", data["nav_url"])
+        self.assertTrue(data["map_data_uri"].startswith("data:image/png;base64,"))
+        self.assertNotIn("test-key", raw)
+        self.assertNotIn("key=", raw)
 
     def test_mix_and_too_many_via_fail(self) -> None:
         def tokyo_http(url: str, params: dict[str, str]) -> dict:
@@ -327,6 +351,73 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertTrue(data["ok"])
         self.assertGreater(data["km"], 400)
         self.assertEqual(seen, [("西安", ""), ("西宁", "")])
+
+    def test_static_map_is_data_uri_without_key(self) -> None:
+        def http(url: str, params: dict[str, str]) -> dict:
+            if "staticmap" in url:
+                self.assertEqual(params.get("key"), "secret-key")
+                return {"_bytes": MINI_PNG}
+            if "geocode" in url:
+                locs = {"西安": "108.94,34.26", "西宁": "101.78,36.62", "张掖": "100.45,38.93"}
+                place = params["address"]
+                return {
+                    "status": "1",
+                    "geocodes": [{"formatted_address": place, "location": locs[place], "city": place + "市"}],
+                }
+            return {
+                "status": "1",
+                "route": {
+                    "paths": [
+                        {
+                            "distance": "100000",
+                            "cost": {"duration": "7200"},
+                            "polyline": f"{params['origin']};{params['destination']}",
+                            "tmcs": [{"tmc_status": "畅通", "tmc_distance": "100000"}],
+                            "steps": [{"road_name": "G30"}],
+                        }
+                    ]
+                },
+            }
+
+        raw = lookup_drive("secret-key", "西安", "张掖", via="西宁", max_via=8, http=http)
+        data = json.loads(raw)
+        self.assertTrue(data["ok"])
+        self.assertTrue(data["map_data_uri"].startswith("data:image/png;base64,"))
+        self.assertNotIn("secret-key", raw)
+        self.assertNotIn("key=", raw)
+        url = amap_nav_url([("西安", (108.94, 34.26)), ("西宁", (101.78, 36.62)), ("张掖", (100.45, 38.93))])
+        self.assertIn("uri.amap.com/navigation", url)
+
+    def test_static_map_failure_keeps_nav(self) -> None:
+        def http(url: str, params: dict[str, str]) -> dict:
+            if "staticmap" in url:
+                return {}
+            if "geocode" in url:
+                locs = {"西安": "108.94,34.26", "西宁": "101.78,36.62", "张掖": "100.45,38.93"}
+                place = params["address"]
+                return {
+                    "status": "1",
+                    "geocodes": [{"formatted_address": place, "location": locs[place]}],
+                }
+            return {
+                "status": "1",
+                "route": {
+                    "paths": [
+                        {
+                            "distance": "100000",
+                            "cost": {"duration": "7200"},
+                            "polyline": f"{params['origin']};{params['destination']}",
+                            "tmcs": [{"tmc_status": "畅通", "tmc_distance": "100000"}],
+                            "steps": [{"road_name": "G30"}],
+                        }
+                    ]
+                },
+            }
+
+        data = json.loads(lookup_drive("k", "西安", "张掖", via="西宁", max_via=8, http=http))
+        self.assertTrue(data["ok"])
+        self.assertIn("uri.amap.com/navigation", data["nav_url"])
+        self.assertNotIn("map_data_uri", data)
 
 
 if __name__ == "__main__":

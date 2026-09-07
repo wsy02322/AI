@@ -2,8 +2,8 @@
 title: Overseas Drive Route
 author: micropigeon
 id: google_drive_route
-description: Google Routes driving time and traffic outside mainland China. Compact JSON, optional via stops, no map UI.
-version: 1.1.0
+description: Google Routes driving time and traffic outside mainland China. Compact JSON, via stops, official Maps link.
+version: 1.2.0
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ import os
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Any, Callable
 
@@ -21,6 +22,7 @@ from pydantic import BaseModel, Field
 
 GOOGLE_DRIVE_ROUTE_V1 = "GOOGLE_DRIVE_ROUTE_V1"
 GOOGLE_DRIVE_ROUTE_M1A_V1 = "GOOGLE_DRIVE_ROUTE_M1A_V1"
+GOOGLE_DRIVE_ROUTE_MAP_LITE_V1 = "GOOGLE_DRIVE_ROUTE_MAP_LITE_V1"
 UNAVAILABLE = "路线接口不可用"
 NOTE = "分钟数是路网估算；实时路况只代表现在"
 MAX_STOPS = 8
@@ -497,6 +499,10 @@ def lookup_drive(
             }
         ]
     attach_itinerary(compact, legs_out, names)
+    compact["nav_url"] = "https://www.google.com/maps/dir/" + "/".join(
+        urllib.parse.quote(name) for name in names if name
+    )
+    compact["nav_label"] = "在 Google 地图打开这条路线"
     return json.dumps(compact, ensure_ascii=False, separators=(",", ":"))
 
 
@@ -546,11 +552,14 @@ class Tools:
         middle cities in via (comma or semicolon, max 6). Do not use for
         mainland China — that is China Drive Route. origin/destination: place
         name or 'lng,lat' (WGS84). Returns compact JSON: km, minutes, traffic,
-        legs[], totals. No phone, rating, or map UI. If ok is false, say
+        legs[], totals, nav_url. In the visible reply: a legs table and a
+        markdown link [nav_label](nav_url). No Amap/Google static image, no
+        phone, rating, or interactive map UI. If ok is false, say
         路线接口不可用 and do not invent exact minutes.
         """
         # GOOGLE_DRIVE_ROUTE_V1
         # GOOGLE_DRIVE_ROUTE_M1A_V1
+        # GOOGLE_DRIVE_ROUTE_MAP_LITE_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:

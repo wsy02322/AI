@@ -28,18 +28,22 @@ FLASH = f"{PIPE}.google.gemini-3.8-flash"
 CHINA_SINGLE = (
     "用中国路线工具查询实时路况，不要凭记忆编分钟数。"
     "开车从北京南站到北京首都国际机场，现在怎么走、大概多久、路况怎么样？"
-    "只要距离、时间、路况大意。不要评分、不要电话、不要画地图。"
+    "只要距离、时间、路况大意，可以给官方导航链接。"
+    "不要评分、不要电话、不要出静态示意图。"
 )
 CHINA_MULTI = (
     "用中国路线工具，只调用一次。"
     "开车自驾：起点西安，途经西宁、青海湖，终点张掖。"
     "把中间城市放进 via，不要每个城市单独打一次。"
-    "请按段写出每一段的大概公里和分钟。不要评分、不要电话、不要画地图。"
+    "可见回复必须有分段表（每段公里和分钟）、官方高德导航链接、"
+    "以及工具返回的那一张静态示意图。"
+    "不要评分、不要电话、不要第二张坐标投影图、不要贴 API key 或原始 base64。"
 )
 OVERSEAS_SINGLE = (
     "用海外路线工具查询实时路况，不要凭记忆编分钟数。"
     "开车从纽约肯尼迪机场（JFK）到时代广场（Times Square），大概多久？"
-    "只要距离、时间、路况大意。不要评分、不要电话、不要画地图。"
+    "只要距离、时间、路况大意，可以给 Google 地图链接。"
+    "不要评分、不要电话、不要静态示意图。"
     "这不是中国大陆路线。"
 )
 
@@ -68,6 +72,9 @@ def _summarize(result: dict, prompt: str) -> dict:
         "has_zhangye": "张掖" in text,
         "has_phone": any(token in text.lower() for token in ("电话", "tel:", "phone")),
         "has_rating": any(token in text for token in ("评分", "星级", "rating")),
+        "has_amap_nav": "uri.amap.com" in text or "在高德打开" in text,
+        "has_google_nav": "google.com/maps" in text or "Google 地图" in text,
+        "has_markdown_image": "![" in text or "data:image" in text,
         "text_chars": len(text),
         "text_head": text[:500],
         "error": (result.get("error") or "")[:300],
@@ -89,12 +96,19 @@ def _direct_china_multi(h: dict[str, str]) -> dict:
     raw = lookup_drive(key, "西安", "张掖", via="西宁,青海湖", max_via=8)
     data = json.loads(raw)
     legs = data.get("legs") or []
+    nav = str(data.get("nav_url") or "")
+    uri = str(data.get("map_data_uri") or "")
+    raw = json.dumps(data, ensure_ascii=False)
     return {
         "ok": bool(data.get("ok")),
         "leg_count": len(legs),
         "stops": data.get("stops") or [],
         "leg_km": [leg.get("km") for leg in legs],
         "xining_qinghai_km": legs[1]["km"] if len(legs) > 1 else None,
+        "has_nav_url": "uri.amap.com/navigation" in nav,
+        "has_map_data_uri": uri.startswith("data:image/"),
+        "map_kind": data.get("map_kind") or "",
+        "key_leaked": ("key=" in raw.lower()) or ("amap_key" in raw.lower()),
         "error": data.get("error") or "",
     }
 
@@ -132,6 +146,12 @@ def main() -> int:
         qh = direct.get("xining_qinghai_km")
         if qh is None or float(qh) >= 400:
             errors.append(f"西宁→青海湖 km={qh} want <400")
+        if not direct.get("has_nav_url"):
+            errors.append("direct multi missing amap nav_url")
+        if not direct.get("has_map_data_uri"):
+            errors.append("direct multi missing map_data_uri")
+        if direct.get("key_leaked"):
+            errors.append("direct multi leaked key")
         single = payload["china_single"]
         multi = payload["china_multi"]
         overseas_row = payload["overseas_single"]
@@ -147,10 +167,14 @@ def main() -> int:
             errors.append("china multi text missing 西宁/张掖")
         if not multi["has_km_or_minutes"]:
             errors.append("china multi missing km/minutes")
+        if not multi.get("has_amap_nav"):
+            errors.append("china multi missing 高德 nav link")
         if overseas_row["has_unavailable"] or not overseas_row["has_km_or_minutes"]:
             errors.append("overseas single failed live gate")
         if not overseas_row["function_call_count"]:
             errors.append("overseas single did not call the route tool")
+        if not overseas_row.get("has_google_nav"):
+            errors.append("overseas single missing Google Maps link")
     payload["errors"] = errors
     text = json.dumps(payload, ensure_ascii=False, indent=2)
     written = None
