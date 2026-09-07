@@ -350,12 +350,12 @@ class Tools:
         destination: str,
         __metadata__: dict | None = None,
     ) -> str:
-        """Must-use tool for China driving time, traffic, or how to go by car.
+        """Must-use tool for mainland China driving time, traffic, or how to go by car.
 
-        Call this instead of guessing live minutes. origin/destination: place name
-        or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes, traffic, sparse
-        ~1km via points. No phone, rating, or map UI. If ok is false, say
-        路线接口不可用 and do not invent exact minutes.
+        Call this instead of guessing live minutes. Do not use for overseas cities.
+        origin/destination: place name or 'lng,lat' (GCJ-02). Returns compact JSON:
+        km, minutes, traffic, sparse ~1km via points. No phone, rating, or map UI.
+        If ok is false, say 路线接口不可用 and do not invent exact minutes.
         """
         # AMAP_DRIVE_ROUTE_V1
         origin = (origin or "").strip()
