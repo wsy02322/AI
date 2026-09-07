@@ -1,0 +1,430 @@
+# 搜索长对话费用护栏（保证顶级质量）
+
+> **状态**：**C2 已落地**（2026-09-07）。压页全员；引擎 C；搜索按 public 文本 + deny（12 个含中国三只）。  
+> **白话**：能刹的用原厂搜；刹不住的换 Exa；合格文本默认会搜。  
+> **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_DENY_CLASS_V1`；ST-14 **12** 模型 default-on；Banner `usage-guide-v7`；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
+> **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  
+> **证据**：`/tmp/chat_23d8488c.json` → `/opt/cursor/artifacts/search-cost-northwest-drive.json`。
+
+关联：`docs/open-webui-text-web-search-plan.md` §4；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-eval-b-results.md`（质量已收口）；**覆盖原则** `docs/open-webui-default-coverage-plan.md`（压缩无名单；「所有模型」= 合格类 + 未来同类，不是图像/Sonar/OR 全库）。
+
+---
+
+## 0. 结论先看
+
+**不是账单 bug。** 贵的是 **旗舰单价 × 工具整页在上游会话里连滚 ×「你继续」无界**。Astra Pro 是现网炸过的那只（单轮 `$19`）；同一管道上 Fable / Opus / Sol / Grok 也能炸，只是单价或行为不同（§2.6）。
+
+可见回复约 **5500 字** 不需要 **495 万** prompt。降费且 **输出质量不降**，只能动 **旧工具结果怎么进下一轮**，不能关默认搜索、不能换弱模型、不能全局拧阀门。
+
+本版主线（质量不降；T1 **按请求内容**覆盖，不按 9 个 id）：
+
+| 档 | 做什么 | 质量 | 对 `$19` 轮估效 |
+|----|--------|------|-----------------|
+| **顶级 T** | T0 看清回放 → T1 压旧整页 → T2 单次用户消息跨轮预算 → T3 挡 272k | 当前轮仍读整页；默认搜索仍开；EVAL-B 形态不回退 | ~`$2–5` |
+| **略简、质量仍不降 T−** | 只做 T0 + T1 + T3，**先不做 T2** | 同上；「继续」仍可能新开多轮搜索，但每轮不再吃 30 万旧页 | 约一半到七成（去掉重放，留新搜） |
+
+S1 默认关 Astra 搜索、S2 拧全局阀门、S4 对「继续」剥工具：**本版不进主线**（会降自动搜索或漏新事实）。仍写在 §4.3，供以后另点头，不和「质量不降」绑在一起。
+
+**D0-cover 已同意。** 下一轮只问 **D1**（要不要跑 T0）。T / T− 仍可跟 D1 一起说，或 T0 看完再定。
+
+以后加模型：挂上 ST-14 就会搜，T1 落地后按 **工具结果类型** 自动压旧整页，不再维护费用白名单（§2.7）。现网那几道 `$0.05` / `max_uses` **不是**会话级护栏，所以没挡住 `$19`（§2.8）。
+
+---
+
+## 1. 这一轮的账单（只读）
+
+聊天 id `23d8488c-be6a-4b77-8d86-6e63c61f8b66`。贵的那条：
+
+| 项 | 值 |
+|----|-----|
+| 用户原话 | `需要我做什么吗？需要请说 不需要就你继续` |
+| 消息 id | `f762df80-4a15-48ff-9821-b6f22ac35a61` |
+| 模型 | `openai.gpt-6-astra-pro`（不是 Sol Pro） |
+| UI | `Time: 1599.03s \| Cost $19.40707 \| Total tokens: 5025395`（Input `4947410`，Output `77985`，Cached `3843175`，Reasoning `56845`） |
+| 上游 | `$19.26`（input `$15.36` + output `$3.90`） |
+| 内部轮 | `turn_count=9` |
+| 工具 | Search **46**；Fetch 状态 **132**；`tool_calls_executed=178` |
+| 可见正文 | **5551** 字 |
+| OWUI `sources` | 29 条，约 **21k** 字（不是 495 万的来源） |
+
+按 OpenRouter 标价 Astra Pro **`$10 / $50` per 1M**、缓存读 **`$1` per 1M**、Search 约 **`$0.01`/次** 拆开，与上游对齐：
+
+| 块 | Token / 次数 | 估算 |
+|----|--------------|------|
+| 未缓存 input | `1,104,235` | **`$11.04`** |
+| 缓存 input | `3,843,175` | **`$3.84`**（缓存仍计费） |
+| output | `77,985` | **`$3.90`** |
+| Search 单击 | 46 × `$0.01` | **`$0.46`** |
+| 合计 | | **`$19.24`** ≈ 上游 `$19.26` |
+
+OpenRouter 字段 `cost=$99.21` 是 **9 轮内部请求的 list 加总**（`input_tokens` 合计 2530 万），**不是**用户付的。UI 认 `upstream_inference_cost`。
+
+同一可见分支上，更早的 Astra Pro 已经：`$0.25` → `$1.69`（prompt 15 万）→ `$2.04`（26 万）→ `$2.08`（**30.8 万**）。「你继续」之前上下文已经很大；这一轮把它滚到 **495 万**。
+
+同线 Astra Pro 上游合计约 **`$25`**（含本轮 `$19`）。前面还有对比/换模型分枝（Grok / Flash / Sol），不是本轮主因。
+
+OpenAI 文档：input **超过 272k** 整单可按 input/cache **2×**、output **1.5×**。本轮账单按短档单价就能对上，**没有**吃到 2×。上一轮 prompt 已是 30.8 万，下一次若走这条规则会更贵。护栏仍应把 prompt **压回 272k 以下**，质量以外也挡费率悬崖。
+
+---
+
+## 2. 根因
+
+### 2.1 贵的是模型 token，不是 Search 单击
+
+46 次搜索约 **`$0.46`**。`$15.36` 是把旧工具结果 + 旧推理 **再送进 Astra Pro**。
+
+### 2.2 `$0.05` / `step_count=8` 只管「这一次上游请求」
+
+薄 Filter 每次 inlet 重写 `stop_server_tools_when`。多轮 agent **每轮清零**。9 轮 × `$0.05` ≈ 45 次搜索，与 **46** 次对得上。
+
+这两道门：
+
+- **不管** 模型 input/output token；
+- **不删** 上一轮已经抓下来的整页；
+- **不管** 用户有没有说「继续」。
+
+把 `$0.05` 抬高会让单轮搜得更凶，账单更大。**不要**把它当总账单上限去调高（SPEC Don't 已写）。
+
+### 2.3 495 万不在聊天 JSON 里
+
+OWUI 存下来的 `sources` 只有约 21k 字。4.9M 在 **Pipe 回放给 OpenRouter 的 Responses / server-tool 副本**（整页 Fetch、多次 Search blob、reasoning）。只压缩 OWUI `sources` **省不了钱**。
+
+现成 `middle-out` / `context-compression` 走 `/chat/completions` 图像/超长文本，**替代不了**「132 页整页重放」。
+
+### 2.4 阀门是 9 模型共用一套
+
+`WEB_SEARCH_MAX_USES` / Fetch / `step_count` / `$0.05` 是 Filter **全局阀门**。拧紧会同时打到 Grok / Sol / Claude / Gemini。EVAL-B 收口的是那套形态，不是 Astra 专用档。
+
+`defaultFilterIds` **可以按模型关**（`attach_models(..., default_on=False)` 已支持）。这是略降级档能做、且不伤 EVAL-B 的原因。
+
+### 2.5 「继续」在现网等于续约无限调研
+
+用户原话没有新约束。模型选择：再核路况/假期/街区改造 → 再 Search → 再 Fetch → 再想。旗舰 + 无界工具，这是 ChatGPT 类产品会用 **压缩 + 预算** 接住的场景，不是用户用错。
+
+### 2.6 其他模型要不要同样处理
+
+**机制是 9 个 ST-14 模型共用的，钱不是均摊的。** 薄 Filter、`$0.05` 每轮清零、Pipe 回放整页，Grok / Sol / Claude / Gemini / Astra 走同一条路。EVAL-B 单题 p90 约 `$0.11`、max `$0.18`，那种短问不贵。会炸的是「搜过几轮 → 你继续」叠整页。
+
+同一条西北自驾对话里，**只有 Astra Pro 滚到 495 万 / 9 轮 / 46 次搜索**。同线其他模型没有：
+
+| 模型（本对话） | 最大 prompt | 最大内部轮 | 最大搜索 | 上游合计 |
+|----------------|-------------|------------|----------|----------|
+| Astra Pro | **4,947,410** | **9** | **46** | **`$25.31`**（5 条，含 `$19`） |
+| Sol | 75,606 | 3 | 4 | `$1.05`（4 条） |
+| Grok 4.6 | 81,847 | 2 | 10 | `$0.19`（1 条） |
+| Gemini 3.8 Flash | 5,709 | 1 | 0 | `$0.02` |
+| Sol Pro | （下一条空，未完成） | — | — | — |
+
+所以：**行为上 Astra Pro 是现网唯一炸过的**；**架构上另外 8 个也能炸**，只是单价更低、或它们更少在「继续」里再开 9 轮新抓页。
+
+把本轮 **同一 token 配比**（未缓存 110 万 + 缓存 384 万 + 输出 7.8 万 + 46 次搜索）套到 OpenRouter 标价，只换单价（缓存按各家列出的 cache read；Sol 用本对话实测约 `$2/$10`，与部分目录 `$5/$30` 不一致，以账单为准）：
+
+| 模型 | 标价 in/out per 1M | 同一 4.9M 配比估 | 吃 T1（压旧页） |
+|------|-------------------|------------------|-----------------|
+| Astra Pro | `$10/$50` | **`$19`（已发生）** | 要 |
+| Astra | 同家族，略低或同档 | 同量级或一半 | 要 |
+| Fable 5.1 | `$10/$50`（cache 读 `$0.25`） | ~`$16` | 要 |
+| Opus 5 | `$5/$25` | ~`$10` | 要 |
+| Sol / Sol Pro | 本对话约 `$2/$10` | ~`$4` | 要 |
+| Grok 4.6 | `$2/$6` | ~`$5` | 要 |
+| Gemini 3.1 Pro | `$2/$12` | ~`$4` | 要 |
+| Gemini 3.8 Flash | 远低于上表 | 通常 `<$1` | 跟着做（Pipe 一层） |
+
+读法：
+
+1. **T / T− 做在 Pipe 出站，按「有旧整页就压」，覆盖现网所有可聊模型 + 以后新增。** 不是 9 个 id，也不是 Astra 专用。
+2. **S1 默认关搜索不进「质量不降」主线。**
+3. **不要**再为单模型拧全局阀门或各做一套 Filter。
+4. DeepSeek / Kimi / Qwen **今天不能搜**，T1 对它们是空转；**设计上仍覆盖**（跨模型带进旧页、或以后挂 Search，不用再打补丁）。Sonar / 图像 / 视频无整页回放，同样空转，不要写成「不覆盖」。
+
+Grok 还有「总 token 超 200k 加价」档（OpenRouter 页）。即使单价是 Astra 的 1/5，整页滚起来仍会到数美元。T1 把 prompt 压回十万以内，对这些模型同样值。
+
+### 2.7 覆盖原则：默认全模型 + 后续新增，不要死名单
+
+展开（搜索改 deny、其他功能怎么套、Filter 不要 global）见 **`docs/open-webui-default-coverage-plan.md`**。**D0-cover = C0，已确认 2026-09-07。**
+
+**观点成立，必须拆三类。** 「所有模型 + 以后新增」作为 **管道/护栏** 的默认，比再维护 id 名单更简单，也不会再漏一只 Astra。把它理解成「OpenRouter catalog / picker 每一只自动挂 Search、自动 public」，会违宪、会 404、会再炸账单。
+
+「模型库」有三层：
+
+| 层 | 现网 | 「全部」若字面执行 |
+|----|------|-------------------|
+| OpenRouter catalog | 几百只 | **禁止。** `AUTO_ATTACH_*` 已关；全挂 Search / 全 public = 重开 broad Web Tools |
+| OWUI 可聊（23 public，以及以后点头进 picker 的） | 23 | **A 类管道应当覆盖**；加 Search 只覆盖文本且非 Sonar/图像/视频 |
+| 已挂 ST-14 | 9 | 今天会滚整页的子集，不是 T1 的名单 |
+
+现网两种写法：
+
+| 现网 | 写法 | 后果 |
+|------|------|------|
+| ST-10 / ST-11 / `middle-out` / 三 Guard | 按错误形态或能力，**无聊天模型 id 名单** | 新模型自动吃到 |
+| ST-14 薄 Filter | `ALLOWLIST_SUFFIXES` 9 个 + `DENY_MARKERS` | Astra 曾因不在名单而搜不了。中国三只、未来旗舰都要再改名单 |
+| UX-4 `PUBLIC_MODEL_IDS` | **确认过的露出名单** | Ling / Muse / Hailuo 故意不 active。这不是漏，是宪法第 3 条 |
+
+推荐分类（复杂度不明显增加时，走左列）：
+
+| 类 | 默认 | 这次 / 其他功能 | 新模型怎么进来 |
+|----|------|-----------------|----------------|
+| **A. 管道 / 护栏** | **有这类 payload / 错误就处理，无模型 allowlist** | **T1/T3 必须是 A**；T2 按「这次用户消息」累计，也不按 id。已是 A：ST-10/11、三 Guard、`middle-out`——禁止倒退成名单 | 自动。换 id、新旗舰、中国三只以后挂搜，不用改名单 |
+| **B. 加能力** | 能加的都加，**硬 deny** Sonar / `image_output` / `video_generation` / 无 tools | ST-14 今天仍是 9 个 allowlist。改成「public 文本 + deny」是正确终态，会让 DeepSeek / Kimi / Qwen 默认会搜（`auto` 可能走 Exa） | 新 **public 文本** 应自动挂。**另波确认**，不绑 T0/T1 |
+| **C. 产品露出** | **仍要确认名单** | picker / public / 四格 / Banner | 未点头的新家族不 active。T1 **不**改这条 |
+
+对 **T1/T3**：
+
+- **顶级、也更简单：** Pipe 出站，看有没有可压的旧 Search/Fetch 整页（或超阈值），**不读模型 id**。无工具页 = no-op。对比换模型、以后的 Qwen 搜索、尚未出生的旗舰，只要带了旧整页就会被压。
+- **略简但不推荐：** 仍按 9 个 id 压。省不了多少代码，下次换 id 再漏。
+
+对 **其他功能**（第二句）：
+
+- 已是 A 的保持 A。
+- ST-14 allowlist → deny 是正确终态，**另开确认门**（中国三只 + 费用 + EVAL）。
+- 新模型进 picker 仍走 UX-4：点头 → 入 public → A 自动有；B 在 deny 规则下自动有。不是 catalog 一刷新就全员 public。
+
+落地后继承（D2 写补丁时钉死）：
+
+| 以后发生的事 | 自动搜？（今天） | T1 压旧整页 |
+|--------------|------------------|-------------|
+| 新文本进 public，尚未挂 Filter | 否 | 无页则空转；若跨模型带进旧页 → **压** |
+| 新文本按 B 挂上 Search | 是 | **压** |
+| 中国三只 | 否（仍 allowlist） | 空转或压带进来的旧页 |
+| 换代只改最新 id | 仍看是否挂 Filter | **压**（不看 id） |
+| Sonar / 图像 / 视频 | 否（Guard） | 空转 |
+| 别的 Pipe / 直连 `api_configs` | 不在本栈 | 不会（本护栏只活在现网 OpenRouter Pipe） |
+
+反例（禁止）：`COST_GUARD_MODEL_IDS` / `if "astra" in model`；为「全覆盖」打开 `AUTO_ATTACH_WEB_TOOLS`；给 Sonar/图像灌 Search；未确认把中国三只或新家族挂 Search。
+
+未落地前：新模型一挂 ST-14 = 马上能搜，也马上能滚整页。**没有**第三道自动护栏。这就是 Astra 挂上后同一套阀门直接把 `$19` 放进来的原因。
+
+### 2.8 为什么之前的措施没有有效挡住
+
+不是没设限制。现网有门，但门的对象是 **「这一次上游请求的工具循环」**，不是 **「这段对话里旧整页还要不要再送」**。
+
+| 当时已有的东西 | 它实际管什么 | 对 `$19` 这一轮 |
+|----------------|--------------|-----------------|
+| `$0.05` + `step_count=8` | **单次**请求里停工具循环 | 内轮清零。9 轮 × `$0.05` ≈ 45 次搜索，与 46 次对得上。**放行了** |
+| `max_uses=3` / Fetch `5` / 每页 `12k` | **单次**请求里少抓一点 | 不删上一轮已经抓到的页。132 × 12k 仍可百万级。**挡不住重放** |
+| `search_context_size=medium` | 单次 Search 摘要档 | 不管 Fetch 整页回放 |
+| OWUI `sources` 只存约 21k 字 | 聊天 JSON / 引用卡片 | 4.9M 不在这里，在 Pipe→OpenRouter 副本。看起来「上下文不大」 |
+| `middle-out` / `context-compression` | `/chat/completions` 图像与超长文本 | **不走** server-tool 整页回放 |
+| EVAL-B 收口（2026-09-05） | 短问质量：隐含搜、误搜、HTML 能读 | 成本只观察（p90 `$0.11`，max `$0.18`）。明确 **不抬 `$0.05`、不上 Controller**。题库没有「搜过四轮 → 你继续」 |
+| Astra 进 ST-14（F 波） | 与原 7 个同一套 Filter | 继承上面所有空隙。没有第三层压缩 |
+
+时间线：先按 ChatGPT 即时搜收口 **短问质量**，再把 Astra 挂进同一管道。`$19` 是 **长对话 + 旗舰 +「继续」** 才出现的形态；当时的门不是为它设计的，所以「有措施」但「对这一轮无效」。
+
+不是账单 bug，也不是用户用错。是护栏画在请求边上，没画在会话的旧工具页上。本 plan 的 T1 就是补这一层；T2 补「继续」换新额度。
+
+---
+
+## 3. 质量不降 = 验收，不是口号
+
+降费之后，下面任一红了就回滚，不宣称「差不多」：
+
+1. **默认搜索不关。** 现网已挂 ST-14 的模型新对话仍 default-on。隐含时效仍会搜。本波 **不**用压缩当借口扩/缩搜索名单。
+2. **当前用户消息的调研仍读整页。** 本轮 Fetch 不改成摘要注入。普通 HTML 仍能读。
+3. **可见答案信息密度不降。** 路线取舍、可点来源、关键数字/日期/路况，续聊后仍在正文里，不能只剩空话。
+4. **误搜不升。** 算术 / 闲聊仍≈0 次搜索。
+5. **不碰 ST-10 / ST-11。** 压缩不得剥 encrypted reasoning，不得把 Fable unsigned thinking 回放成假 thinking。
+6. **不**关搜索、不换弱模型、不用 Sonar 冒充旗舰写作；**不**全局拧阀门当主方案。
+
+「质量不降」= 同一条「你继续」仍能写出同等或更好的行程，只是 **不再把旧整页当新上下文**。旧页留下的摘录必须够引用：标题、URL、日期/数字、一两句。
+
+---
+
+## 4. 杠杆（质量不降的两档 + 停用档）
+
+### 4.1 顶级 T（建议终态）
+
+| ID | 动作 | 为什么质量不降 | 风险 / 为何分轮确认 |
+|----|------|----------------|---------------------|
+| **T0** | 只读短链：Flash 或 Sol 一条 Search，再一条「根据刚才来源补一句」。看 Pipe 出门是 `messages[]` tool 项、`previous_response_id`、还是 reasoning item | 不改行为，只看清切哪一层 | 会发真请求（几分钱）。**须单独点头**，看完再设计 T1 |
+| **T1** | Pipe 出站：有旧 Search/Fetch 整页就压成标题 + URL + 日期/数字 + 一两句；**本轮**整页保留。**无模型 allowlist** | 当前轮仍真读页；新模型 / 中国三只 / 跨模型带进来的旧页自动吃到 | 压太狠会丢数字。摘录规则在 T0 之后确认（D2） |
+| **T2** | **单次用户消息** 累计 Search/Fetch/工具 `$`，内轮不重置 | 不关搜索；只防「继续」买 9 × `$0.05` | 封太死会少一次必要复核。数字在 T1 绿了再确认（D3） |
+| **T3** | 出站将超 ~200k 的旧工具页先压（低于 272k / Grok 200k 加价） | 不减信息种类，只减重复整页 | 阈值跟 T1 一起定，不单独拍脑袋 |
+
+T1 是主杠杆。没有 T1，只做 T2，模型仍把已经在手里的 30 万旧页再读一遍。没有 T2，只做 T1，「继续」仍可能新开多轮，但每轮上下文小一个数量级——这就是 **T−**。
+
+**估效（不是承诺）：** 旧整页压成摘录后，单轮 prompt 从 30 万 / 495 万回到 **数万～十余万**。T 再把 9 轮新搜收成 1～2 轮 → `$19` 落到 **`$2–5`**。T− 去掉重放、留下新搜，大约 **一半到七成**。首轮调研应仍在现网 p90（约 `$0.11`）。
+
+### 4.2 略简、质量仍不降：T−
+
+**只做 T0 + T1 + T3，先不做 T2。** 工程更小：不必在 Pipe 里给「一次用户消息」记账。默认搜索、整页 Fetch、EVAL-B 都不动。
+
+代价：「你继续」仍可能再搜再抓。贵的是新工具 + 新推理，不是 495 万旧页。若 T1 之后实测「继续」仍动辄 9 轮，再开 D3 上 T2。
+
+这是宪法要求的「略简单、稳定特别多」档，**不是**关搜索。
+
+### 4.3 停用档（会降质量，本版不选）
+
+| ID | 动作 | 为何不进主线 |
+|----|------|--------------|
+| **S1** | Astra 搜索 default-off | 新对话默认不搜，自动搜索质量下降 |
+| **S2** | 全局拧 `max_uses` / Fetch / `step_count` | 伤 9 个模型的 EVAL-B；挡不住旧页重放 |
+| **S3** | 只给 Astra 更紧阀门 | 首轮调研变薄；另外 8 个仍能滚 |
+| **S4** | 「继续」就剥 tools | 「继续核路况」会漏新事实 |
+| **S5** | 只改 Banner / 靠用户手关 | 忘了就再 `$19`；不是系统保证 |
+
+### 4.4 施工前用法（零工程，不替代 T）
+
+骨架用旗舰可先手关 Search；要现查就打开并问具体问题；已搜过的路线可切 Sol 再展开；长报告走 Sonar Deep Research。避免确认前再烧同样的钱。
+
+---
+
+## 5. 分轮确认（一轮只点一个头）
+
+未确认不施工。T2 若做，记**新 ST 号**，不要写成 ST-11 / ST-12，也不要把 ST-14「质量已收口」改写成费用护栏。本波不是 Search Controller。
+
+| 轮 | 只问这件事 | 你点头之后才允许 | 你不点头则停 |
+|----|------------|------------------|--------------|
+| **D0-cover** | 接受 §2.7：**A 类默认全可聊模型 + 后续新增、无 id 名单**；T1 必须是 A；B/C 不混进本波；ST-14 改 deny **另门**；质量不降；S1/S2/S4 不进主线 | **按最推荐锁定 2026-09-07** | — |
+| **D1** | 是否跑 **T0** 只读探针（真请求，几分钱；不改 Pipe 业务、不留 marker） | **按最推荐：跑** | — |
+| **D2** | T0 看完：切哪一层；摘录留什么；T− 还是排 T2 | 才写 T1（仍无模型 allowlist） | 不改 Pipe |
+| **D3** | T1 绿了之后：T2 做不做；预算用 `$` 还是次数 | 才改跨轮记账 | T− 收口 |
+| **D4** | 验收名单：最低 Sol + Astra Pro；是否加 Opus/Fable/Grok | 按名单跑，红则回滚 | 不扩大评测账单 |
+| **D-search（另波）** | ST-14 是否从 9 个 allowlist 改成「public 文本 + deny」（中国三只会默认会搜） | 才改 Filter / attach | 搜索名单保持 9 个 |
+
+建议下一轮回复：`D1：跑 T0` 或 `D1：先不跑`。可附 `T−` 或 `T`（终态意向；没有则 T0 看完再定）。**不要**在 D1 里批准改 Pipe 业务或中国三只挂搜索。
+
+---
+
+## 6. 落地波次（对应确认门；未确认的步不执行）
+
+### D1 通过后：T0
+
+| 动作 | 过门 |
+|------|------|
+| Flash 或 Sol：一条须搜的短问 + 一条「根据刚才来源补一句」。导出出站 body 里 tool / fetch / reasoning 的形状与体积。可加 **临时** 探针，看完立刻删 | 写清「T1 该切哪一层」；现网 Pipe sha 回到 `f797e92d6d3f`（无旧 F1/P2 marker） |
+
+### 6.1 T0 结果（2026-09-07，只读）
+
+脚本：`scripts/run_search_cost_t0.py`。聊天 `ff207e89-cc60-4af9-9a11-f5c7f847660f`。模型 Flash。证据：`/opt/cursor/artifacts/search-cost-t0.json`。`verify_stack` 24 ok。Pipe **未改**，sha `f797e92d6d3f`。
+
+| 轮 | 行为 | prompt | 搜索 | 上游 $ | OWUI 里留下的 |
+|----|------|--------|------|--------|----------------|
+| 1 | 强制搜本周 OpenAI | 17,393 | 1 | `$0.016` | 可见 532 字；`output` 只有 reasoning + message；sources 5 条约 4k 字。**没有**整页 Fetch item |
+| 2 | 「只用刚才来源补一句中文」 | **4,731**（比第 1 轮小） | 0 | `$0.003` | 同样没有整页 |
+
+白话：
+
+1. **聊天框里存下来的不是 495 万。** 整页不在 JSON 的 `output` 里。Pipe 已把 `web_search_call` 标成不可回放。
+2. **我们这种 API 续聊只带回可见正文，所以第 2 轮变便宜。** `$19` 不是这种路径。
+3. **`$19` 贵在一次点发送里面。** 那条 `turn_count=9`、搜索 46 次。这是 Astra/OpenAI **原厂搜索自己连搜**，不是用户点了 9 次。Flash 同一套阀门只有 1 次搜、`turn_count=2`，刹车有效。
+4. Pipe **已经有**「工具结果太大就丢掉」：`apply_replay_tool_output_budget`。它只砍 `function_call_output`，而且要快撑满整个上下文窗口才动手。Astra 窗口约 100 万，30 万旧页仍算「还没满」，所以 **从来没挡住** `$19`。
+5. 现网 `$0.05` / `max_uses`：文档写明 **原厂搜索（OpenAI/xAI/Google）会忽略 `max_uses`**。Astra 走原厂，46 次搜说明 **那道 5 美分门没有管住原厂内循环**。
+
+因此 T1 若只改「下一轮用户消息里的可见正文」，**挡不住**「你继续」那一轮。要挡 `$19`，必须在 **这一次上游请求的工具循环** 里压页或让刹车对 Astra 原厂搜生效。T− 仍然值得做（挡住 15 万→30 万那种跨轮滚），但不是 `$19` 的主药。
+
+本刀（2026-09-07）：
+
+1. Pipe content-only：`SEARCH_PAGE_COMPACT_V1`，在 `apply_replay_tool_output_budget` 之后压 **最后一条 user 之前** 的大 `function_call_output`。无模型名单。不压 reasoning / 助手正文。
+2. 薄 Filter 当时：OpenAI **类** Search+Fetch `engine=exa`。Grok / Gemini / Claude 仍 `auto`。**随后 C 档**把 Google / xAI 也改成 Exa，见 §6.3。
+3. **先不做 T2**、不改 Banner、不给中国三只挂搜。
+
+### 6.2 T1 结果（2026-09-07）
+
+脚本：`scripts/run_search_cost_t1.py`。证据：`/opt/cursor/artifacts/search-cost-t1.json`。`verify_stack` 24 ok。Pipe **`9c4836ace251`**。`verify_text_web_search --mode final` 12 ok。ST-10 5 ok；ST-11 7 ok。无 F1/P2 debug marker。
+
+| 探针 | 搜索 | 上游 $ | 备注 |
+|------|------|--------|------|
+| Sol Search | 4 | `$0.063` | 有本周产品新闻 |
+| Sol Fetch | 0 | `$0.017` | 引用 `:online` deprecated |
+| Astra Search | 5 | `$0.67` | 有日期与来源 |
+| Astra Fetch | 0 | `$0.087` | 同上引用 |
+| Astra Pro Search | 2 | `$0.26` | 有日期与来源 |
+| Astra Pro Fetch | 0 | `$0.12` | 同上引用 |
+| Astra Pro「你继续」 | **1** | **`$0.23`** | input **28,806**（对照 `$19` 轮：46 次搜 / 495 万 token） |
+
+单测：`test_search_page_compact.py`、`test_patch_pipe_search_page_compact.py`、`test_text_web_search_filter.py` 全绿。压页不改助手正文；OpenAI 类 engine=exa。
+
+### 6.3 C 档结果（2026-09-07）
+
+用户确认「按能力分流」。脚本：`scripts/run_search_cost_counted_exa.py`。证据：`/opt/cursor/artifacts/search-cost-counted-exa.json`。`verify_stack` 24 ok。`verify_text_web_search --mode final` 13 ok。Pipe 未再改（仍 `9c4836ace251`）。
+
+规则：OpenAI / Google / xAI **类** → Exa；Anthropic 留 `auto`。不是 9 个 id。
+
+| 探针 | 搜索 | 上游 $ | 备注 |
+|------|------|--------|------|
+| Grok Search | 1 | `$0.022` | Exa；有本周产品新闻 |
+| Grok Fetch | 0 | `$0.015` | 引用 `:online` deprecated |
+| Flash Search | 4 | `$0.052` | Exa |
+| Flash Fetch | 0 | `$0.006` | 同上引用 |
+| Gemini Pro Search | 1 | `$0.027` | Exa |
+| Gemini Pro Fetch | 0 | `$0.017` | 同上引用 |
+| Opus Search | 2 | `$0.079` | **仍 auto / 原厂** |
+| Opus Fetch | 0 | `$0.035` | 同上引用 |
+| Grok「你继续」 | **2** | **`$0.042`** | 低于 8 步门 |
+
+### 6.4 C2 结果（2026-09-07）
+
+用户确认中国三只要搜。Filter 去掉 allowlist（`TEXT_WEB_SEARCH_DENY_CLASS_V1`）。挂载 = public − 图像 − Sonar = **12**。Banner `usage-guide-v7`。脚本：`scripts/run_search_cost_china.py`。证据：`/opt/cursor/artifacts/search-cost-china.json`。`verify_stack` 24 ok。`verify_text_web_search --mode final` 14 ok。
+
+| 探针 | 搜索 | 上游 $ | 备注 |
+|------|------|--------|------|
+| DeepSeek Search | 1 | `$0.014` | auto→Exa |
+| DeepSeek Fetch | 0 | `$0.009` | 引用 `:online` deprecated |
+| Kimi Search | 2 | `$0.058` | auto→Exa |
+| Kimi Fetch | 0 | `$0.026` | 同上引用 |
+| Qwen Search | 1 | `$0.022` | auto→Exa |
+| Qwen Fetch | 0 | `$0.016` | 同上引用 |
+| Kimi「你继续」 | **0** | **`$0.008`** | 未再开搜；低于 8 步门 |
+
+T2 仍不做。
+
+### D2 通过后：T1 + T3（T− 在这里就可以收口）
+
+| 动作 | 过门 |
+|------|------|
+| Pipe **content-only** 压缩旧 Search/Fetch；本轮整页保留；超 ~200k 先压。**无模型 allowlist**。不碰 valves / `API_KEY`。单测用假 tool item + 「非 ST-14 模型带着旧页」夹具 | 续聊 prompt 少一个数量级；可见答案仍有 URL 和关键数字；Sol + Astra Pro 烟雾仍绿；无工具页的模型空转不 400；ST-10/ST-11 不回退 |
+| `verify_stack`；`verify_text_web_search --mode final` | 12 模型、Banner v7、三 Guard 不变 |
+
+回滚：去掉压缩 marker，回到 `f797e92d6d3f`；Filter / 挂载不动。
+
+### D3 通过后：T2
+
+| 动作 | 过门 |
+|------|------|
+| 单次用户消息累计 Search/Fetch/工具 `$`（数字以 D3 为准）。内轮不重置 | 「继续」不再 9 轮 × 40+ 次搜索；首轮调研次数仍够 EVAL-B |
+
+### D4：费用对照（不追求再烧 `$19`）
+
+短搜 → 继续，记 prompt 与上游 `$`。最低 Sol + Astra Pro。名单以 D4 为准。
+
+### 共用（任何改实例的步）
+
+- 更新模型必须带 `access_grants`。
+- Pipe **只 merge** valves；禁止空 `models/sync`。
+- 不改 `openai.api_configs` enable；不写新的非空 `WEBUI_SECRET_KEY`。
+- 现网禁止留下 F1/P2 debug marker。
+- S1/S2/S4 **本版不排期**。
+
+---
+
+## 7. 明确不做（本 plan 范围）
+
+- 未确认改实例 / Pipe / Filter / Banner（T1 / 引擎 C / C2 **已确认并落地**；T2 仍须另轮）。
+- 为省钱上弱模型、关 ST-14、关默认搜索、或用 Sonar 冒充旗舰写作终态。
+- 全局拧 `max_uses` / Fetch / `step_count` 当唯一方案。
+- 把 `$0.05` 抬高，或把它解释成「整段对话最多 5 美分」。
+- 重开 `openrouter_web_tools` / OWUI native Web Search / `AUTO_ATTACH_*`。
+- 把本波做成 Search Controller、Image Studio、Live、Notebook 的绑车施工。
+- 只压缩 OWUI `sources` 却宣称已省 token。
+- 未看清 T0 回放形态就改 Pipe 业务门。
+- 给 T1 再写一份模型 allowlist；catalog 全员 public / 全员挂 Search。
+
+---
+
+## 8. 纸面债
+
+SPEC UX-3 / ST-14 **已改成 12 个 public 文本**（deny 类，含中国三只）。Banner `usage-guide-v7`。EVAL-B 仍只覆盖原 7 个西方旗舰。T2 跨轮预算另轮确认。
+
+---
+
+## 9. 验收（确认并落地后）
+
+说服人的标准：
+
+1. **复现对照**：同类「搜过几轮 → 你继续」的 prompt，压缩后比压缩前 **少一个数量级**；可见答案仍有可点来源和关键数字/日期。
+2. **EVAL-B 形态不回退**：原 7 个西方旗舰默认仍会搜；误搜仍≈0；12 只 Search+Fetch 烟雾绿。
+3. **ST-10 / ST-11 不回退**。
+4. **272k / 200k**：出站 prompt 不再长期停在 30 万以上还继续叠整页。
+5. **现网契约**：23 public、Banner v7、三 Guard、Pipe 无旧 debug marker、`verify_stack` 绿。
+6. 若走了 T2：单次用户消息不再出现 9 轮 × 40+ 次搜索，且首轮调研次数仍够用。

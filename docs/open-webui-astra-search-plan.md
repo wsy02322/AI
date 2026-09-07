@@ -1,6 +1,6 @@
 # Astra 进 ST-14 薄 Web Search
 
-> **状态**：**F 波已确认并落地**（2026-09-06）。Astra / Astra Pro 挂 ST-14；Banner `usage-guide-v6`。Pipe 仍 `f797e92d6d3f`（F1 探针已 revert）。  
+> **状态**：**F 波已确认并落地**（2026-09-06）。C2（2026-09-07）已把 Banner 升到 `usage-guide-v7`、allowlist 改为 deny 类覆盖（12 只含中国三只）。本文件仍记 F 波当时的 `usage-guide-v6` / 9 模型。  
 > **现网**：OWUI 0.11.3；23 public；ST-14 = 9 个。
 
 关联：`docs/open-webui-text-web-search-plan.md`；`docs/SPEC.md` UX-3 / ST-14。
