@@ -61,6 +61,16 @@ class W0InjectTests(unittest.TestCase):
         self.assertNotIn("stop_server_tools_when", marked_meta["openrouter_pipe"])
         self.assertEqual(marked_meta["openrouter_pipe"]["w0_probe"]["engine"], "native")
 
+        astra_pro = f"{PIPE}.openai.gpt-6-astra-pro"
+        astra_marked, astra_meta = _run(
+            cls,
+            astra_pro,
+            f"{FILTER_MARKER} Search ten independent topics separately.",
+        )
+        self.assertEqual(astra_meta["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
+        self.assertEqual(astra_marked.get("max_tool_calls"), MAX_TOOL_CALLS)
+        self.assertNotIn("stop_server_tools_when", astra_meta["openrouter_pipe"])
+
         opus = f"{PIPE}.anthropic.claude-opus-5"
         opus_body, opus_meta = _run(
             cls,

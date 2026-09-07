@@ -3,7 +3,7 @@
 > **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 / W4 / W5 已过门**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
-> **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
+> **W6**：已确认进入。先做 Astra Pro 硬顶探针（消息级 native + `max_tool_calls=3`），**生产 OpenAI 仍 Exa**。Sol 刹住不是绿灯。
 
 关联：`docs/open-webui-search-cost-plan.md`（`$19` / T1）；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-plan.md`。
 
@@ -199,7 +199,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W0 / W1 / W2 / W3 / W4 / W5 已过门**（§10–§11、§13–§14、§16、§19）。**不要自行开 W6。** W6 仍关。
+**W0 / W1 / W2 / W3 / W4 / W5 已过门**（§10–§11、§13–§14、§16、§19）。**W6 已确认**：先跑 Astra Pro 硬顶探针（`scripts/run_search_quality_w6.py`），过门才把生产 OpenAI 改 native。未过门保持 Exa。
 
 
 ---

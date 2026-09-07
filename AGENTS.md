@@ -81,6 +81,7 @@
 | `scripts/verify_x_recent_search.py` | ST-17：Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Token |
 | `scripts/run_x_recent_search_smoke.py` | ST-17：Flash 须调 X 工具；Grok 回归；网页对照；有 Token 后加 `X_EXPECT_LIVE=1` |
 | `scripts/rollback_x_recent_search.py` | ST-17：从模型剥 `x_recent_search`，不删 Tool |
+| `scripts/run_search_quality_w6.py` | W6：Astra Pro native + `max_tool_calls=3` 消息级探针；跑完还原；**不**改生产 OpenAI Exa |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |
