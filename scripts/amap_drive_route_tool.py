@@ -384,6 +384,17 @@ def place_search(
     return name, location, hint
 
 
+def is_admin_city_match(query: str, formatted: str, city_field: str) -> bool:
+    q = (query or "").replace("市", "").strip()
+    if not q:
+        return False
+    city = (city_field or "").replace("市", "").strip()
+    if city and city == q:
+        return True
+    text = formatted or ""
+    return text.endswith(q + "市") or f"{q}市" in text
+
+
 def resolve_stop(
     key: str,
     place: str,
@@ -392,14 +403,19 @@ def resolve_stop(
     prev_city: str = "",
     http: HttpFn | None = None,
 ) -> tuple[str, tuple[float, float], str] | None:
-    geo = geocode_place(key, place, http, city=prev_city)
+    geo = geocode_place(key, place, http, city="")
     if geo is None and prev_city:
         return place_search(key, place, prev_city, http)
     if geo is None:
         return None
     name, xy, city = geo
-    if prev_xy is not None and haversine_m(prev_xy, xy) > JUMP_M:
-        poi = place_search(key, place, prev_city or city, http)
+    if (
+        prev_xy is not None
+        and prev_city
+        and haversine_m(prev_xy, xy) > JUMP_M
+        and not is_admin_city_match(place, name, city)
+    ):
+        poi = place_search(key, place, prev_city, http)
         if poi is not None and haversine_m(prev_xy, poi[1]) < haversine_m(prev_xy, xy):
             return poi
     return name, xy, city or prev_city

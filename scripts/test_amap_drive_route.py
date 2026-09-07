@@ -292,6 +292,42 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertTrue(any("place/text" in url for url in seen))
         self.assertNotIn("rating", json.dumps(data))
 
+    def test_next_city_geocode_is_not_biased(self) -> None:
+        seen: list[tuple[str, str]] = []
+
+        def http(url: str, params: dict[str, str]) -> dict:
+            if "geocode" in url:
+                seen.append((params["address"], params.get("city") or ""))
+                locs = {"西安": "108.94,34.26", "西宁": "101.78,36.62"}
+                place = params["address"]
+                city = "西安市" if place == "西安" else "西宁市"
+                return {
+                    "status": "1",
+                    "geocodes": [
+                        {"formatted_address": f"{place}市", "location": locs[place], "city": city}
+                    ],
+                }
+            return {
+                "status": "1",
+                "route": {
+                    "paths": [
+                        {
+                            "distance": "700000",
+                            "cost": {"duration": "28800"},
+                            "polyline": f"{params['origin']};{params['destination']}",
+                            "tmcs": [{"tmc_status": "畅通", "tmc_distance": "700000"}],
+                            "steps": [{"road_name": "G6"}],
+                        }
+                    ]
+                },
+            }
+
+        raw = lookup_drive("k", "西安", "西宁", max_via=8, http=http)
+        data = json.loads(raw)
+        self.assertTrue(data["ok"])
+        self.assertGreater(data["km"], 400)
+        self.assertEqual(seen, [("西安", ""), ("西宁", "")])
+
 
 if __name__ == "__main__":
     unittest.main()
