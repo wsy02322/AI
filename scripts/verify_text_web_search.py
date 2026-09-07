@@ -59,6 +59,10 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
         report.err("thin filter missing marker")
     else:
         report.ok("thin filter marker present")
+    if "TEXT_WEB_SEARCH_OPENAI_EXA_V1" not in content:
+        report.err("thin filter missing OpenAI Exa marker")
+    else:
+        report.ok("thin filter OpenAI class uses Exa")
     if function.get("is_global"):
         report.err("thin filter is global")
     else:

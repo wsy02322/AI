@@ -1,8 +1,8 @@
 # 搜索长对话费用护栏（保证顶级质量）
 
-> **状态**：**按最推荐执行中**（2026-09-07：用户授权选档）。已锁 C0 + **T−** + **D1 跑 T0**。  
-> **白话**：先看清旧网页怎么回放，再只压旧页；先不改谁能搜索，不加跨轮预算。  
-> **本步**：T0 **已跑**（Flash；Pipe 未改，sha 仍 `f797e92d6d3f`）。结论见 §6.1。  
+> **状态**：**T1 落地中**（2026-09-07：用户「好的 下一步」）。已锁 C0 + **T−**；T0 见 §6.1；本步 = 出站压旧页 + OpenAI 类 Search/Fetch 走 Exa。  
+> **白话**：旧整页出门前压成摘录；Astra/Sol 原厂连搜改走 OpenRouter 能计数的 Exa，现有 `$0.05` / 8 步才能刹车。  
+> **本步**：T1 脚本与 Filter 已写；现网 Pipe / Filter 以落地后的 sha / marker 为准。  
 > **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  
 > **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；ST-14 薄 Filter 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **证据**：`/tmp/chat_23d8488c.json` → `/opt/cursor/artifacts/search-cost-northwest-drive.json`。
@@ -314,7 +314,11 @@ T1 是主杠杆。没有 T1，只做 T2，模型仍把已经在手里的 30 万�
 
 因此 T1 若只改「下一轮用户消息里的可见正文」，**挡不住**「你继续」那一轮。要挡 `$19`，必须在 **这一次上游请求的工具循环** 里压页或让刹车对 Astra 原厂搜生效。T− 仍然值得做（挡住 15 万→30 万那种跨轮滚），但不是 `$19` 的主药。
 
-下一刀（仍按最推荐，未做）：Pipe 出站压大工具页（无模型名单）+ 查清 Astra 原厂循环为什么无视 `$0.05`（必要时 `engine` 或别的硬门；先不关默认搜索）。
+本刀（2026-09-07）：
+
+1. Pipe content-only：`SEARCH_PAGE_COMPACT_V1`，在 `apply_replay_tool_output_budget` 之后压 **最后一条 user 之前** 的大 `function_call_output`。无模型名单。不压 reasoning / 助手正文。
+2. 薄 Filter：OpenAI **类**（`openai.` / `openai/`，过 deny 之后）Search+Fetch `engine=exa`，让 `max_uses` / `stop_server_tools_when` 对 Astra / Sol 计数。Grok / Gemini / Claude 仍 `auto`。不是 Astra 两只 id。
+3. **先不做 T2**、不改 Banner、不给中国三只挂搜。
 
 ### D2 通过后：T1 + T3（T− 在这里就可以收口）
 

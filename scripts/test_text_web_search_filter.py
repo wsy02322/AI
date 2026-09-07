@@ -9,7 +9,14 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import IMAGE_MODEL_IDS, PIPE, SONAR_MODEL_IDS, TEXT_WEB_SEARCH_MODEL_IDS
-from text_web_search_filter import Filter
+from text_web_search_filter import Filter, TEXT_WEB_SEARCH_OPENAI_EXA_V1
+
+
+def _expected_engine(model_id: str) -> str:
+    lowered = model_id.lower()
+    if "openai." in lowered or "openai/" in lowered:
+        return "exa"
+    return "auto"
 
 
 def _run(
@@ -43,7 +50,9 @@ class TextWebSearchFilterTests(unittest.TestCase):
             body, metadata = _run(model_id)
             tools = metadata["openrouter_pipe"]["server_tools"]
             self.assertEqual(set(tools), {"web_search", "web_fetch"}, model_id)
-            self.assertEqual(tools["web_search"]["engine"], "auto")
+            engine = _expected_engine(model_id)
+            self.assertEqual(tools["web_search"]["engine"], engine, model_id)
+            self.assertEqual(tools["web_fetch"]["engine"], engine, model_id)
             self.assertEqual(tools["web_search"]["max_uses"], 3)
             self.assertEqual(tools["web_fetch"]["max_uses"], 5)
             self.assertEqual(
@@ -91,6 +100,22 @@ class TextWebSearchFilterTests(unittest.TestCase):
             __metadata__=metadata,
         )
         self.assertNotIn("server_tools", (metadata.get("openrouter_pipe") or {}))
+
+    def test_openai_class_uses_exa_not_astra_ids(self) -> None:
+        from pathlib import Path
+
+        import text_web_search_filter as filt_mod
+
+        source = Path(filt_mod.__file__).read_text(encoding="utf-8")
+        self.assertIn(TEXT_WEB_SEARCH_OPENAI_EXA_V1, source)
+        _, astra = _run(f"{PIPE}.openai.gpt-6-astra-pro")
+        _, sol = _run(f"{PIPE}.openai.gpt-5.6-sol")
+        _, grok = _run(f"{PIPE}.x-ai.grok-4.6")
+        _, flash = _run(f"{PIPE}.google.gemini-3.8-flash")
+        self.assertEqual(astra["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
+        self.assertEqual(sol["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
+        self.assertEqual(grok["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
+        self.assertEqual(flash["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
 
     def test_merges_existing_foreign_tools(self) -> None:
         _, metadata = _run(

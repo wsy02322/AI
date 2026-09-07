@@ -1,6 +1,6 @@
 # 指定文本模型联网搜索（Agentic Search）
 
-> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05）：见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller、不加 Filter 指引。2026-09-06 public 23；**ST-14 allowlist = 9**（原 7 + Astra / Astra Pro；F 波见 `docs/open-webui-astra-search-plan.md` §7.8）。挂载后必须 refresh runtime catalog。长对话账单（Astra Pro「你继续」`$19`）见 **`docs/open-webui-search-cost-plan.md`（未确认，不改实例）**。  
+> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05）：见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller、不加 Filter 指引。2026-09-06 public 23；**ST-14 allowlist = 9**（原 7 + Astra / Astra Pro；F 波见 `docs/open-webui-astra-search-plan.md` §7.8）。挂载后必须 refresh runtime catalog。长对话账单（Astra Pro「你继续」`$19`）见 **`docs/open-webui-search-cost-plan.md`（T1 按最推荐落地：压旧页 + OpenAI 类 Exa）**。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `f797e92d6d3f`；OWUI Web Search 关闭；`openrouter_web_tools` 停用。  
 > **确认档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。

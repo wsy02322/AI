@@ -13,6 +13,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 TEXT_WEB_SEARCH_FILTER_V1 = "TEXT_WEB_SEARCH_FILTER_V1"
+TEXT_WEB_SEARCH_OPENAI_EXA_V1 = "TEXT_WEB_SEARCH_OPENAI_EXA_V1"
 
 ALLOWLIST_SUFFIXES = (
     "x-ai.grok-4.6",
@@ -116,6 +117,21 @@ class Filter:
         lowered = self._refs(body, __model__)
         return any(suffix in lowered for suffix in ALLOWLIST_SUFFIXES)
 
+    def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
+        """OpenAI native search ignores max_uses / stop_server_tools_when.
+
+        TEXT_WEB_SEARCH_OPENAI_EXA_V1: route the OpenAI *class* (not two Astra
+        ids) through Exa so OpenRouter can count steps and the $0.05 brake.
+        Image / video OpenAI ids are denied before this runs.
+        """
+        refs = self._refs(body, __model__)
+        return "openai." in refs or "openai/" in refs
+
+    def _tool_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None, default: str) -> str:
+        if self._uses_counted_search_engine(body, __model__):
+            return "exa"
+        return default
+
     def _user_valves(self, __user__: dict[str, Any] | None) -> UserValves:
         raw = (__user__ or {}).get("valves") if isinstance(__user__, dict) else None
         if isinstance(raw, dict):
@@ -150,7 +166,7 @@ class Filter:
 
         if user_valves.WEB_SEARCH:
             search: dict[str, Any] = {
-                "engine": self.valves.WEB_SEARCH_ENGINE,
+                "engine": self._tool_engine(body, __model__, self.valves.WEB_SEARCH_ENGINE),
                 "max_results": self.valves.WEB_SEARCH_MAX_RESULTS,
                 "search_context_size": self.valves.WEB_SEARCH_CONTEXT_SIZE,
             }
@@ -163,7 +179,9 @@ class Filter:
             server_tools.pop("web_search", None)
 
         if user_valves.WEB_FETCH:
-            fetch: dict[str, Any] = {"engine": self.valves.WEB_FETCH_ENGINE}
+            fetch: dict[str, Any] = {
+                "engine": self._tool_engine(body, __model__, self.valves.WEB_FETCH_ENGINE)
+            }
             if self.valves.WEB_FETCH_MAX_USES > 0:
                 fetch["max_uses"] = self.valves.WEB_FETCH_MAX_USES
             if self.valves.WEB_FETCH_MAX_CONTENT_TOKENS > 0:
