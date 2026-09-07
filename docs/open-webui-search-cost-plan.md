@@ -1,10 +1,9 @@
 # 搜索长对话费用护栏（保证顶级质量）
 
-> **状态**：**T1 落地中**（2026-09-07：用户「好的 下一步」）。已锁 C0 + **T−**；T0 见 §6.1；本步 = 出站压旧页 + OpenAI 类 Search/Fetch 走 Exa。  
+> **状态**：**T1 已落地**（2026-09-07）。已锁 C0 + **T−**；T0 见 §6.1；T1 见 §6.2。  
 > **白话**：旧整页出门前压成摘录；Astra/Sol 原厂连搜改走 OpenRouter 能计数的 Exa，现有 `$0.05` / 8 步才能刹车。  
-> **本步**：T1 脚本与 Filter 已写；现网 Pipe / Filter 以落地后的 sha / marker 为准。  
+> **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_OPENAI_EXA_V1`；ST-14 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  
-> **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；ST-14 薄 Filter 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **证据**：`/tmp/chat_23d8488c.json` → `/opt/cursor/artifacts/search-cost-northwest-drive.json`。
 
 关联：`docs/open-webui-text-web-search-plan.md` §4；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-eval-b-results.md`（质量已收口）；**覆盖原则** `docs/open-webui-default-coverage-plan.md`（压缩无名单；「所有模型」= 合格类 + 未来同类，不是图像/Sonar/OR 全库）。
@@ -319,6 +318,24 @@ T1 是主杠杆。没有 T1，只做 T2，模型仍把已经在手里的 30 万�
 1. Pipe content-only：`SEARCH_PAGE_COMPACT_V1`，在 `apply_replay_tool_output_budget` 之后压 **最后一条 user 之前** 的大 `function_call_output`。无模型名单。不压 reasoning / 助手正文。
 2. 薄 Filter：OpenAI **类**（`openai.` / `openai/`，过 deny 之后）Search+Fetch `engine=exa`，让 `max_uses` / `stop_server_tools_when` 对 Astra / Sol 计数。Grok / Gemini / Claude 仍 `auto`。不是 Astra 两只 id。
 3. **先不做 T2**、不改 Banner、不给中国三只挂搜。
+
+### 6.2 T1 结果（2026-09-07）
+
+脚本：`scripts/run_search_cost_t1.py`。证据：`/opt/cursor/artifacts/search-cost-t1.json`。`verify_stack` 24 ok。Pipe **`9c4836ace251`**。`verify_text_web_search --mode final` 12 ok。ST-10 5 ok；ST-11 7 ok。无 F1/P2 debug marker。
+
+| 探针 | 搜索 | 上游 $ | 备注 |
+|------|------|--------|------|
+| Sol Search | 4 | `$0.063` | 有本周产品新闻 |
+| Sol Fetch | 0 | `$0.017` | 引用 `:online` deprecated |
+| Astra Search | 5 | `$0.67` | 有日期与来源 |
+| Astra Fetch | 0 | `$0.087` | 同上引用 |
+| Astra Pro Search | 2 | `$0.26` | 有日期与来源 |
+| Astra Pro Fetch | 0 | `$0.12` | 同上引用 |
+| Astra Pro「你继续」 | **1** | **`$0.23`** | input **28,806**（对照 `$19` 轮：46 次搜 / 495 万 token） |
+
+单测：`test_search_page_compact.py`、`test_patch_pipe_search_page_compact.py`、`test_text_web_search_filter.py` 全绿。压页不改助手正文；OpenAI 类 engine=exa，Grok/Flash 仍 auto。
+
+T2 仍不做。若以后「继续」又出现 8 步打满但仍贵，再开 D3。
 
 ### D2 通过后：T1 + T3（T− 在这里就可以收口）
 

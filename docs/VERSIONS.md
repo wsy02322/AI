@@ -5,16 +5,16 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-09-06**（23 public；Astra 一对挂 ST-14） |
+| 记录日期 | **2026-09-07**（T1：压旧页 + OpenAI 类 Exa） |
 | OWUI | **0.11.3**（`GET /api/version`）。image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`（旧钉 `e97bf9531916` / 0.11.0） |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
-| Pipe content SHA256（前 12） | `f797e92d6d3f`（更早：`7415c2e4347a` → `a0b95c2cf90d` → S2′ 前 `081c3773444c`） |
-| Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`IMAGE_DATA_URI_PERSIST_V1` **均应存在** |
+| Pipe content SHA256（前 12） | `9c4836ace251`（更早：`f797e92d6d3f` → `7415c2e4347a` → `a0b95c2cf90d` → S2′ 前 `081c3773444c`） |
+| Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`IMAGE_DATA_URI_PERSIST_V1`、`SEARCH_PAGE_COMPACT_V1` **均应存在** |
 | Banner | **一条** `usage-guide-v6`（不可 dismiss；🌐 地球、第一句含 Astra、同一段、无粗体） |
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
-| 上次 `verify_stack.py` | **2026-09-06 F 波后全绿**（24 ok / 0 err，`VERIFY_SMOKE=0`）：Banner v6、ST-14 9 文本 default-on（含 Astra / Astra Pro）、chips=0、Follow-up 关、**23 public** = picker。Astra / Pro / Sol Search+Fetch 烟雾 6/6 绿（见 astra-search-plan §7.8） |
+| 上次 `verify_stack.py` | **2026-09-07 T1 后全绿**（24 ok / 0 err，`VERIFY_SMOKE=0`）：Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_OPENAI_EXA_V1`；Banner v6、ST-14 9 文本 default-on、chips=0、Follow-up 关、**23 public**。Sol / Astra / Astra Pro Search+Fetch 7/7；Astra Pro「你继续」`web_search_requests=1`（`$0.23`，input 28k）。ST-10 5 ok、ST-11 7 ok |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
@@ -22,7 +22,7 @@
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关**；Follow-up **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |
 | ST-11 Fable | Pipe marker `FABLE_UNSIGNED_SUMMARY_V1`（sha `f797e92d6d3f`；0.11.3 上 `verify_fable_thinking_replay.py` 7 ok，2026-09-05 复验） |
-| ST-14 文本联网 | 薄 Filter `openrouter_text_web_search`；**9** 模型 attached + default-on（含 Astra / Astra Pro）；挂载后 `GET /api/models?refresh=true`。Flash canary 有 `web_search`/`web_fetch` 事件；图像三条路由无 tool-use 404。`verify_text_web_search.py --mode final` 11 ok |
+| ST-14 文本联网 | 薄 Filter `openrouter_text_web_search`；**9** 模型 attached + default-on（含 Astra / Astra Pro）；挂载后 `GET /api/models?refresh=true`。OpenAI 类 Search/Fetch **`engine=exa`**（`TEXT_WEB_SEARCH_OPENAI_EXA_V1`）。`verify_text_web_search.py --mode final` 12 ok |
 | ST-14 质量基线 | **2026-09-05 已收口**。EVAL-B v2：隐含 42/42；误搜 0/21；精确 Fetch 10/14。Anthropic：HTML 能读，`api.github.com` 不能；指引无效。不上 Controller / 指引。见 `docs/open-webui-text-web-search-eval-b-results.md` |
 | HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；5× OpenRouter slot **全 `enable=false`** |
 | ST-1 Sonar | **2026-08-21**：两档 Sonar `builtin_tools=false`（堵住 UI native FC 注入 `get_current_timestamp`） |
@@ -32,4 +32,4 @@
 
 ## Pipe 更新后
 
-见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`。重放 ST-11：`python3 scripts/patch_pipe_fable_thinking_replay.py`（marker 已在则 no-op）。
+见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`。重放 ST-11：`python3 scripts/patch_pipe_fable_thinking_replay.py`（marker 已在则 no-op）。重放 T1 压页：`python3 scripts/patch_pipe_search_page_compact.py`（已有 `SEARCH_PAGE_COMPACT_V1` 则 no-op）。
