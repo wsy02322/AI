@@ -86,6 +86,7 @@
 | `scripts/run_search_quality_w6.py` | W6：Astra Pro native + `max_tool_calls=3` 消息级探针；跑完还原 |
 | `scripts/apply_search_quality_w6.py` | W6：OpenAI Search+Fetch → native，并常驻 `max_tool_calls=3`（不碰 valves） |
 | `scripts/patch_pipe_max_tool_calls.py` | W6：Pipe content-only 转发 `max_tool_calls`（已有 `MAX_TOOL_CALLS_FORWARD_V1` 则 no-op） |
+| `scripts/patch_pipe_server_tool_fail.py` | ST-14：OpenAI 400 `Server tool request failed` 先剥回放图再关 server tools（已有 `SERVER_TOOL_FAIL_RETRY_V1` 则 no-op） |
 | `scripts/run_search_quality_w6_smoke.py` | W6：Sol/Astra Pro 短问须搜；中国路线仍高德 |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
@@ -102,6 +103,7 @@
 7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
 8. 若 Pipe 丢了压页 marker：`python3 scripts/patch_pipe_search_page_compact.py`（已有 `SEARCH_PAGE_COMPACT_V1` 则 no-op）  
 8b. 若 Pipe 丢了次数顶转发：`python3 scripts/patch_pipe_max_tool_calls.py`（已有 `MAX_TOOL_CALLS_FORWARD_V1` 则 no-op）  
+8c. 若 Pipe 丢了 Sol 400 重试：`python3 scripts/patch_pipe_server_tool_fail.py`（已有 `SERVER_TOOL_FAIL_RETRY_V1` 则 no-op）  
 9. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 public 文本 default-on 则只校验；挂载后会 `GET /api/models?refresh=true`）  
 10. `python3 scripts/verify_stack.py` 全绿  
 11. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  

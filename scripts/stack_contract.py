@@ -151,6 +151,7 @@ PIPE_PATCH_MARKERS = [
     "FABLE_UNSIGNED_SUMMARY_V1",
     "SEARCH_PAGE_COMPACT_V1",
     "MAX_TOOL_CALLS_FORWARD_V1",
+    "SERVER_TOOL_FAIL_RETRY_V1",
 ]
 
 # Live UX (2026-09-05): one banner, no empty-chat chips, reply Follow-up off.

@@ -126,7 +126,7 @@
 |----|------|
 | Pipe id | `open_webui_openrouter_integration`，active |
 | `content` SHA256 前 12 | 以 `verify_stack` INFO / `VERSIONS.md` 为准（2026-09-01 探针 `7415c2e4347a`；现网若已 ST-13 则为 `f797e92d6d3f`） |
-| 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1` **均应在** |
+| 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`SEARCH_PAGE_COMPACT_V1`、`MAX_TOOL_CALLS_FORWARD_V1`、`SERVER_TOOL_FAIL_RETRY_V1` **均应在** |
 | `API_KEY` | 已配置；API 读出为 `encrypted:`（catalog 正常即可） |
 | valves（API 返回的覆盖项） | 下列 **全 false**：`AUTO_ATTACH_WEB_TOOLS_FILTER`、`AUTO_ATTACH_IMAGE_GEN_FILTER`、`AUTO_INSTALL_WEB_TOOLS_FILTER`、`AUTO_INSTALL_IMAGE_GEN_FILTER`、`AUTO_DEFAULT_WEB_TOOLS_FILTER`、`ENABLE_DATETIME`、`ENABLE_WEB_SEARCH`、`UPDATE_MODEL_CAPABILITIES` |
 
@@ -210,7 +210,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 10e. `python3 scripts/apply_search_quality_w6.py`（OpenAI native + `max_tool_calls=3`；会打 Pipe `MAX_TOOL_CALLS_FORWARD_V1`）。  
 10f. `python3 scripts/apply_search_quality_m1a.py`（ST-16 M1a + MAP_LITE：`via` + `legs[]` + 导航链接 / 中国多站一张沿路网的高德静态图；merge Valves，不覆盖 Key）。  
 11. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
-12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
+12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable / 压页 / 次数顶 / Sol 400 重试：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py` / `patch_pipe_search_page_compact.py` / `patch_pipe_max_tool_calls.py` / `patch_pipe_server_tool_fail.py`（已有 marker 则 no-op）。  
 13. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_text_web_search.py --mode final`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  
 14. 更新 `docs/VERSIONS.md`（日期、Pipe sha、Banner id）。通知用户 **重登**。
 
