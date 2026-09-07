@@ -1,0 +1,290 @@
+{
+  "started_at": "2026-09-07T15:33:20Z",
+  "original": {
+    "filter_sha12": "f2fe14388726",
+    "pipe_sha12": "9c4836ace251",
+    "snapshot": {
+      "filter_id": "openrouter_text_web_search",
+      "content_sha12": "f2fe14388726",
+      "marker_present": true,
+      "is_active": true,
+      "is_global": false,
+      "priority": 0
+    }
+  },
+  "probe": {
+    "budget_usd": 10.0,
+    "spent_usd": 0.335727,
+    "abort_reason": null,
+    "max_tool_calls": 3,
+    "gates": {
+      "google_native_max_tool_calls": "pass",
+      "xai_native_max_tool_calls": "fail",
+      "openai_native_max_tool_calls": "pass"
+    },
+    "w6_openai_native_allowed": true,
+    "product_w6_openai_native_allowed": false,
+    "w6_blocker": "Sol capped both turns, but the $19 spike was Astra Pro continue (not probed). Grok continue leaked to 11 with mtc=3 stamped.",
+    "rows": {
+      "flash.search": {
+        "status": 200,
+        "verdict": "capped",
+        "web_search_requests": 4,
+        "tool_calls_executed": 4,
+        "tool_calls_requested": 4,
+        "search_called": true,
+        "cost_usd": 0.035504999999999995,
+        "cost_details": {
+          "upstream_inference_cost": 0.014505,
+          "upstream_inference_input_cost": 0.01099875,
+          "upstream_inference_output_cost": 0.0035062500000000003
+        },
+        "input_tokens": 14665,
+        "output_tokens": 935,
+        "turn_count": 1,
+        "server_tool_use_details": {
+          "web_search_requests": 4,
+          "tool_calls_requested": 4,
+          "tool_calls_executed": 4
+        },
+        "usage_keys": [
+          "cost",
+          "cost_details",
+          "function_call_count",
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "server_tool_use_details",
+          "total_tokens",
+          "turn_count"
+        ],
+        "probe_stamps": [
+          "W0_MAX_TOOL_CALLS_PIPE_V1 eng=native mtc=3 stop=False probe={'r': 1, 'max_tool_calls': 3, 'engine': 'native'}"
+        ],
+        "text_chars": 1741,
+        "text_head": "1) The Shanghai Composite Index closed at approximately 3,942.09 points in its latest trading session.2) The Federal Open Market Committee's most recent statement was issued following its policy meeting on July 29, 2026.3) SpaceX completed its thirteenth Starship flight test (Flight 13) from Starbase on July 24, 2026, ",
+        "error": "",
+        "spent_usd": 0.035505
+      },
+      "flash.continue": {
+        "status": 200,
+        "verdict": "capped",
+        "web_search_requests": 4,
+        "tool_calls_executed": 4,
+        "tool_calls_requested": 4,
+        "search_called": true,
+        "cost_usd": 0.053926125000000005,
+        "cost_details": {
+          "upstream_inference_cost": 0.032926125,
+          "upstream_inference_input_cost": 0.030274875,
+          "upstream_inference_output_cost": 0.00265125
+        },
+        "input_tokens": 51153,
+        "output_tokens": 707,
+        "turn_count": 1,
+        "server_tool_use_details": {
+          "web_search_requests": 4,
+          "tool_calls_requested": 4,
+          "tool_calls_executed": 4
+        },
+        "usage_keys": [
+          "cost",
+          "cost_details",
+          "function_call_count",
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "server_tool_use_details",
+          "total_tokens",
+          "turn_count"
+        ],
+        "probe_stamps": [
+          "W0_MAX_TOOL_CALLS_PIPE_V1 eng=native mtc=3 stop=False probe={'r': 1, 'max_tool_calls': 3, 'engine': 'native'}"
+        ],
+        "text_chars": 1335,
+        "text_head": "Based on the retrieved search results for each topic searched:\n\n1) The Shanghai Composite Index closed at approximately 3,942.09 points in its latest trading session.\n2) The Federal Open Market Committee's most recent policy statement was issued following its meeting on July 29, 2026.\n3) SpaceX completed its Flight 13 ",
+        "error": "",
+        "spent_usd": 0.089431
+      },
+      "grok.search": {
+        "status": 200,
+        "verdict": "capped",
+        "web_search_requests": 4,
+        "tool_calls_executed": 4,
+        "tool_calls_requested": 4,
+        "search_called": true,
+        "cost_usd": 0.067398,
+        "cost_details": {
+          "upstream_inference_cost": 0.046397999999999995,
+          "upstream_inference_input_cost": 0.03519,
+          "upstream_inference_output_cost": 0.011208
+        },
+        "input_tokens": 23547,
+        "output_tokens": 1868,
+        "turn_count": 1,
+        "server_tool_use_details": {
+          "web_search_requests": 4,
+          "tool_calls_requested": 4,
+          "tool_calls_executed": 4
+        },
+        "usage_keys": [
+          "cost",
+          "cost_details",
+          "function_call_count",
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "server_tool_use_details",
+          "total_tokens",
+          "turn_count"
+        ],
+        "probe_stamps": [
+          "W0_MAX_TOOL_CALLS_PIPE_V1 eng=native mtc=3 stop=False probe={'r': 1, 'max_tool_calls': 3, 'engine': 'native'}"
+        ],
+        "text_chars": 820,
+        "text_head": "I'll search each of the 10 topics with its own query and not merge them.The Shanghai Composite closed slightly higher at 3,932.70 points.The latest FOMC statement was issued on July 29, 2026.SpaceX’s most recent Starship test was Flight 13 on July 24, 2026.The Shanghai Composite closed slightly higher at 3,932.70 point",
+        "error": "",
+        "spent_usd": 0.156829
+      },
+      "grok.continue": {
+        "status": 200,
+        "verdict": "uncapped",
+        "web_search_requests": 11,
+        "tool_calls_executed": 11,
+        "tool_calls_requested": 11,
+        "search_called": true,
+        "cost_usd": 0.063794,
+        "cost_details": {
+          "upstream_inference_cost": 0.042794,
+          "upstream_inference_input_cost": 0.036062000000000004,
+          "upstream_inference_output_cost": 0.006732
+        },
+        "input_tokens": 30127,
+        "output_tokens": 1122,
+        "turn_count": 1,
+        "server_tool_use_details": {
+          "web_search_requests": 11,
+          "tool_calls_requested": 11,
+          "tool_calls_executed": 11
+        },
+        "usage_keys": [
+          "cost",
+          "cost_details",
+          "function_call_count",
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "server_tool_use_details",
+          "total_tokens",
+          "turn_count"
+        ],
+        "probe_stamps": [
+          "W0_MAX_TOOL_CALLS_PIPE_V1 eng=native mtc=3 stop=False probe={'r': 1, 'max_tool_calls': 3, 'engine': 'native'}"
+        ],
+        "text_chars": 964,
+        "text_head": "I'll run one distinct `web_search` for each remaining topic (4–10).OpenAI this week announced the phased rollout of GPT-6 Astra, its first model to hit a Critical cybersecurity threshold under its Preparedness Framework.  \nAmap driving/traffic APIs expose fields such as `tmcs`/`tmc_status`, `lcode`/`lcodes`, `status`, ",
+        "error": "",
+        "spent_usd": 0.220623
+      },
+      "sol.search": {
+        "status": 200,
+        "verdict": "capped",
+        "web_search_requests": 4,
+        "tool_calls_executed": 4,
+        "tool_calls_requested": 4,
+        "search_called": true,
+        "cost_usd": 0.0463252,
+        "cost_details": {
+          "upstream_inference_cost": 0.025325200000000003,
+          "upstream_inference_input_cost": 0.0170952,
+          "upstream_inference_output_cost": 0.00823
+        },
+        "input_tokens": 15535,
+        "output_tokens": 823,
+        "turn_count": 1,
+        "server_tool_use_details": {
+          "web_search_requests": 4,
+          "tool_calls_requested": 4,
+          "tool_calls_executed": 4
+        },
+        "usage_keys": [
+          "cost",
+          "cost_details",
+          "function_call_count",
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "server_tool_use_details",
+          "total_tokens",
+          "turn_count"
+        ],
+        "probe_stamps": [
+          "W0_MAX_TOOL_CALLS_PIPE_V1 eng=native mtc=3 stop=False probe={'r': 1, 'max_tool_calls': 3, 'engine': 'native'}"
+        ],
+        "text_chars": 1090,
+        "text_head": "1) The Shanghai Composite closed today, March 27, 2026, at **3,913.72**, up **0.63%**.2) As of March 27, 2026, the latest FOMC statement was issued on **March 18, 2026**.1) **Shanghai Composite close (March 27, 2026):** 3,913.72, up 0.63%.  \n2) **Latest FOMC statement date:** March 18, 2026.  \n3) **SpaceX Starship most",
+        "error": "",
+        "spent_usd": 0.266948
+      },
+      "sol.continue": {
+        "status": 200,
+        "verdict": "capped",
+        "web_search_requests": 4,
+        "tool_calls_executed": 4,
+        "tool_calls_requested": 4,
+        "search_called": true,
+        "cost_usd": 0.0687785,
+        "cost_details": {
+          "upstream_inference_cost": 0.0477785,
+          "upstream_inference_input_cost": 0.03852849999999999,
+          "upstream_inference_output_cost": 0.00925
+        },
+        "input_tokens": 36217,
+        "output_tokens": 925,
+        "turn_count": 1,
+        "server_tool_use_details": {
+          "web_search_requests": 4,
+          "tool_calls_requested": 4,
+          "tool_calls_executed": 4
+        },
+        "usage_keys": [
+          "cost",
+          "cost_details",
+          "function_call_count",
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "server_tool_use_details",
+          "total_tokens",
+          "turn_count"
+        ],
+        "probe_stamps": [
+          "W0_MAX_TOOL_CALLS_PIPE_V1 eng=native mtc=3 stop=False probe={'r': 1, 'max_tool_calls': 3, 'engine': 'native'}"
+        ],
+        "text_chars": 1903,
+        "text_head": "3) Search results identify **Starship Flight 13 on July 24, 2026** as the most recent test, though that future-dated result conflicts with the earlier assumed March 2026 date and should be treated cautiously.4) The latest OpenAI product announcement found for that week is **GPT‑5.4 mini and nano**, announced March 17, ",
+        "error": "",
+        "spent_usd": 0.335727
+      }
+    },
+    "errors": [
+      "grok uncapped on continue searches=11 executed=11"
+    ]
+  },
+  "restore": {
+    "filter_sha12": "f2fe14388726",
+    "pipe_sha12": "9c4836ace251",
+    "filter_probe_gone": true,
+    "pipe_probe_gone": true,
+    "counted_exa": true,
+    "filter_matches": true,
+    "pipe_matches": true
+  },
+  "finished_at": "2026-09-07T15:35:45Z"
+}

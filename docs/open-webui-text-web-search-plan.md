@@ -147,7 +147,7 @@ C2 不改变 picker/public，只改变合格文本的 `filterIds` / `defaultFilt
 ]
 ```
 
-**现网（2026-09-07 C 档）**：上表 `engine=auto` 只对 Anthropic 仍成立。OpenAI / Google / xAI 类 Search+Fetch 强制 `exa`，否则 `max_uses` / `$0.05` 不计原厂内循环。见 `docs/open-webui-search-cost-plan.md` §6.3。
+**现网（2026-09-07 W2）**：Anthropic / 中国三只仍 `auto`。OpenAI 类仍 `exa`（W6 关）。Google / xAI 类 Search+Fetch 已是 `native`。见 `docs/open-webui-search-quality-top-plan.md`。
 
 两个条件按 OR 生效；触发后由 OpenRouter 关闭工具并完成最终自然语言回答。
 

@@ -307,6 +307,7 @@ def chat_with_optional_search(
     *,
     enable_search: bool,
     timeout: int = 240,
+    tool_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "model": model_id,
@@ -316,6 +317,8 @@ def chat_with_optional_search(
     }
     if enable_search:
         payload["filter_ids"] = [TEXT_WEB_SEARCH_FILTER]
+    if tool_ids:
+        payload["tool_ids"] = list(tool_ids)
     return collect_stream(h, payload, timeout=timeout)
 
 

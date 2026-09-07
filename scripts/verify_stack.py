@@ -13,6 +13,12 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import (
     ACTIVE_MODEL_IDS,
+    AMAP_DRIVE_ROUTE_MODEL_IDS,
+    AMAP_DRIVE_ROUTE_TOOL,
+    GOOGLE_DRIVE_ROUTE_MODEL_IDS,
+    GOOGLE_DRIVE_ROUTE_TOOL,
+    X_RECENT_SEARCH_MODEL_IDS,
+    X_RECENT_SEARCH_TOOL,
     BANNER_IDS,
     CHAT_KEEP_CODE_INTERPRETER,
     DEFAULT_MODEL_PRIMARY,
@@ -260,6 +266,10 @@ def verify(h: dict[str, str]) -> int:
             r.err(f"{mid} still has {bad}")
         has_thin = TEXT_WEB_SEARCH_FILTER in filters
         has_thin_default = TEXT_WEB_SEARCH_FILTER in defaults
+        tool_ids = meta.get("toolIds") or []
+        has_amap = AMAP_DRIVE_ROUTE_TOOL in tool_ids
+        has_google_route = GOOGLE_DRIVE_ROUTE_TOOL in tool_ids
+        has_x_search = X_RECENT_SEARCH_TOOL in tool_ids
         if mid in TEXT_WEB_SEARCH_MODEL_IDS:
             if not has_thin:
                 r.err(f"{mid} missing thin web search attachment")
@@ -267,6 +277,21 @@ def verify(h: dict[str, str]) -> int:
                 r.err(f"{mid} missing thin web search default-on")
         elif has_thin or has_thin_default:
             r.err(f"{mid} unexpectedly has thin web search")
+        if mid in AMAP_DRIVE_ROUTE_MODEL_IDS:
+            if not has_amap:
+                r.err(f"{mid} missing amap drive-route tool")
+        elif has_amap:
+            r.err(f"{mid} unexpectedly has amap drive-route tool")
+        if mid in GOOGLE_DRIVE_ROUTE_MODEL_IDS:
+            if not has_google_route:
+                r.err(f"{mid} missing google drive-route tool")
+        elif has_google_route:
+            r.err(f"{mid} unexpectedly has google drive-route tool")
+        if mid in X_RECENT_SEARCH_MODEL_IDS:
+            if not has_x_search:
+                r.err(f"{mid} missing x recent-search tool")
+        elif has_x_search:
+            r.err(f"{mid} unexpectedly has x recent-search tool")
         caps = meta.get("capabilities") or {}
         if mid in SONAR_MODEL_IDS or mid in IMAGE_MODEL_IDS:
             if caps.get("code_interpreter"):

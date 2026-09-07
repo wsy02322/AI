@@ -17,7 +17,7 @@
 3. `docs/SPEC.md`（UX / ST / P0 / Later / Don't）  
 4. `docs/VERSIONS.md`（指纹）  
 5. `docs/open-webui-secret-key-persist-plan.md` §2（容器重建 SOP）  
-6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**（`docs/open-webui-upgrade-0113-plan.md`）、搜索账单（`docs/open-webui-search-cost-plan.md`）、可计数检索硬约束（`docs/open-webui-search-metered-quality-plan.md`，仅 plan）  
+6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**（`docs/open-webui-upgrade-0113-plan.md`）、搜索账单（`docs/open-webui-search-cost-plan.md`）、即时搜顶级档（`docs/open-webui-search-quality-top-plan.md`：W0 已测、**W1 高德已过门**、**W2 Gemini native 已过门**、**W3 Grok native 已过门**、**W4 Google Routes 已过门**、**W5 官方 X 按次已过门**、**W6 OpenAI native 已过门**）  
 
 独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**与本 OWUI 重建无关**。
 
@@ -63,7 +63,7 @@
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.x-ai.grok-4.6`（不默认双栏 compare） |
 | 置顶四格 | Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
-| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14，deny 类；含 Astra 与中国三只）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
+| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14）：OpenAI **native + max_tool_calls=3**（W6），**Google native**（W2），**xAI native**（ST-17），Anthropic/中国三只 `auto`。Tool `amap_drive_route` + `google_drive_route`（ST-16；中国高德 / 海外 Google Routes；**M1a** `via`+`legs`；**MAP_LITE** 表+官方导航+中国多站一张沿路网的高德静态图）+ `x_recent_search`（ST-17 / W5；官方 X 近 7 天，已过门）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
 | Notebook | **N1**：Knowledge「YouTube Notebook」+ OpenRouter embedding。N2+ Studio **未做** |
 | Follow-up 芯片 | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）。Autocomplete / Title **仍开** |
@@ -186,7 +186,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 验 Banner v7、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（23）、ST-14 薄 Web Search（12 个 public 文本，含 Astra 与中国三只）。不要为了绿把 Banner 改回 v6/v5/v4/v3/v2。
+`verify_stack.py` 验 Banner v7、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（23）、ST-14 薄 Web Search + ST-16 `amap_drive_route` / `google_drive_route` + ST-17 `x_recent_search`（12 个 public 文本，含 Astra 与中国三只）。不要为了绿把 Banner 改回 v6/v5/v4/v3/v2。
 
 ---
 
@@ -204,6 +204,11 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v7` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. `python3 scripts/apply_text_web_search.py --mode final`（薄 Web Search 按类挂 public 文本并 default-on，现网 12 只含中国三只；脚本会 refresh catalog）。  
+10b. `python3 scripts/apply_amap_drive_route.py --mode attach`（ST-16 高德路线；Key 在 Valves/env，不进 git）。  
+10c. `python3 scripts/apply_google_drive_route.py --mode attach`（ST-16 海外 Routes；Key 在 Valves，不进 git）。  
+10d. `python3 scripts/apply_x_recent_search.py --mode attach`（ST-17 / W5 官方 X 近 7 天；Bearer 在 Valves，不进 git）。  
+10e. `python3 scripts/apply_search_quality_w6.py`（OpenAI native + `max_tool_calls=3`；会打 Pipe `MAX_TOOL_CALLS_FORWARD_V1`）。  
+10f. `python3 scripts/apply_search_quality_m1a.py`（ST-16 M1a + MAP_LITE：`via` + `legs[]` + 导航链接 / 中国多站一张沿路网的高德静态图；merge Valves，不覆盖 Key）。  
 11. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
 12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
 13. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_text_web_search.py --mode final`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  

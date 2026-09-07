@@ -47,6 +47,14 @@ def _defaults(model: dict[str, Any]) -> list[str]:
     return list((model.get("meta") or {}).get("defaultFilterIds") or [])
 
 
+def _openai_native_block(content: str) -> str:
+    start = content.find("OPENAI_NATIVE_MARKERS")
+    if start < 0:
+        return ""
+    end = content.find(")", start)
+    return content[start : end + 1] if end > start else ""
+
+
 def verify_mode(h: dict[str, str], mode: str) -> int:
     report = Report()
     status, function = get_function(h, TEXT_WEB_SEARCH_FILTER)
@@ -63,14 +71,27 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
         report.err("thin filter missing deny-class marker")
     else:
         report.ok("thin filter uses deny class, not an allowlist")
-    if "TEXT_WEB_SEARCH_COUNTED_EXA_V1" not in content:
-        report.err("thin filter missing counted-Exa marker")
+    if "TEXT_WEB_SEARCH_OPENAI_NATIVE_V1" not in content:
+        report.err("thin filter missing OpenAI native marker")
     else:
-        report.ok("thin filter unmetered native classes use Exa")
-    if "TEXT_WEB_SEARCH_OPENAI_EXA_V1" not in content:
-        report.err("thin filter missing OpenAI Exa marker")
+        report.ok("thin filter OpenAI class uses native")
+    if "TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1" not in content:
+        report.err("thin filter missing OpenAI max_tool_calls marker")
     else:
-        report.ok("thin filter OpenAI class uses Exa")
+        report.ok("thin filter OpenAI max_tool_calls=3")
+    if "TEXT_WEB_SEARCH_XAI_NATIVE_V1" not in content:
+        report.err("thin filter missing xAI native marker")
+    else:
+        report.ok("thin filter xAI class uses native")
+    if "TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1" not in content:
+        report.err("thin filter missing Google native marker")
+    else:
+        report.ok("thin filter Google class uses native")
+    openai_block = _openai_native_block(content)
+    if "openai." in openai_block and "google." not in openai_block:
+        report.ok("OpenAI native markers are OpenAI-only")
+    else:
+        report.err("OpenAI native markers still include Google or dropped OpenAI")
     if function.get("is_global"):
         report.err("thin filter is global")
     else:

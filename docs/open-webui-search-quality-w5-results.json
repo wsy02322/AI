@@ -1,0 +1,56 @@
+{
+  "date": "2026-09-07",
+  "gate": "W5",
+  "status": "passed",
+  "tool_id": "x_recent_search",
+  "display_name": "X Recent Posts",
+  "marker": "X_RECENT_SEARCH_V1",
+  "attached_public_text": 12,
+  "key_set": true,
+  "max_results": 10,
+  "max_calls_per_turn": 3,
+  "api_min_results": 10,
+  "omits_public_metrics": true,
+  "pipe_sha12": "9c4836ace251",
+  "verify_x_recent_search_require_key_ok": 17,
+  "verify_stack_ok": 24,
+  "upstream_tesla_spacex": {
+    "ok": true,
+    "posts": 10,
+    "first_url": "https://x.com/KayoteWyley420/status/2097037068740518329"
+  },
+  "flash_x": {
+    "status": 200,
+    "function_call_count": 1,
+    "has_x_url": true,
+    "url": "https://x.com/SpaceX/status/2096625304009597207",
+    "lookup_ok": true,
+    "author": "SpaceX",
+    "created_at": "2026-09-06T15:43:20.000Z",
+    "has_unavailable": false,
+    "cost_usd": 0.0022
+  },
+  "grok_x": {
+    "status": 200,
+    "web_search_requests": 4,
+    "has_x_url": true,
+    "url": "https://x.com/elonmusk/status/2093794675660378441",
+    "lookup_ok": true,
+    "author": "elonmusk",
+    "created_at": "2026-08-29T20:15:26.000Z",
+    "prompt": "w3_style",
+    "cost_usd": 0.092
+  },
+  "flash_web": {
+    "status": 200,
+    "web_search_requests": 4,
+    "used_x_tool": false,
+    "has_x_url": false,
+    "cost_usd": 0.0438
+  },
+  "engines_unchanged": {
+    "openai": "exa",
+    "google": "native",
+    "xai": "native"
+  }
+}

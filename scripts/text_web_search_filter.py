@@ -13,22 +13,33 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 TEXT_WEB_SEARCH_FILTER_V1 = "TEXT_WEB_SEARCH_FILTER_V1"
-TEXT_WEB_SEARCH_OPENAI_EXA_V1 = "TEXT_WEB_SEARCH_OPENAI_EXA_V1"
-TEXT_WEB_SEARCH_COUNTED_EXA_V1 = "TEXT_WEB_SEARCH_COUNTED_EXA_V1"
+TEXT_WEB_SEARCH_OPENAI_NATIVE_V1 = "TEXT_WEB_SEARCH_OPENAI_NATIVE_V1"
+TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1 = "TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1"
+TEXT_WEB_SEARCH_XAI_NATIVE_V1 = "TEXT_WEB_SEARCH_XAI_NATIVE_V1"
+TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1 = "TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1"
 TEXT_WEB_SEARCH_DENY_CLASS_V1 = "TEXT_WEB_SEARCH_DENY_CLASS_V1"
+OPENAI_MAX_TOOL_CALLS = 3
 
-# Native search ignores max_uses except Anthropic. Route those classes through
-# Exa so OpenRouter can count steps / $0.05. Not a model-id allowlist.
-UNMETERED_NATIVE_MARKERS = (
+# Native search ignores max_uses except Anthropic. OpenAI is native (W6) with
+# max_tool_calls=3; stop_server_tools_when is popped so it cannot override the
+# cap (W6 Astra Pro probe). Google native (W2). xAI native (W3: web + X).
+# Not a model-id allowlist. Image ids are denied before this runs.
+OPENAI_NATIVE_MARKERS = (
     "openai.",
     "openai/",
+)
+COUNTED_EXA_MARKERS = OPENAI_NATIVE_MARKERS
+GOOGLE_NATIVE_MARKERS = (
     "google.",
     "google/",
+)
+XAI_NATIVE_MARKERS = (
     "x-ai.",
     "x-ai/",
     "xai.",
     "xai/",
 )
+UNMETERED_NATIVE_MARKERS = GOOGLE_NATIVE_MARKERS + XAI_NATIVE_MARKERS
 
 DENY_MARKERS = (
     "sonar",
@@ -116,19 +127,28 @@ class Filter:
         caps = self._caps(body, __model__, __metadata__)
         return bool(caps.get("image_output") or caps.get("video_generation"))
 
-    def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
-        """Native search ignores max_uses except Anthropic.
-
-        TEXT_WEB_SEARCH_COUNTED_EXA_V1: OpenAI / Google / xAI classes go through
-        Exa so stop_server_tools_when and max_uses count. Anthropic stays auto.
-        Image / video ids are denied before this runs.
-        """
+    def _is_xai(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
         refs = self._refs(body, __model__)
-        return any(marker in refs for marker in UNMETERED_NATIVE_MARKERS)
+        return any(marker in refs for marker in XAI_NATIVE_MARKERS)
+
+    def _is_google(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
+        refs = self._refs(body, __model__)
+        return any(marker in refs for marker in GOOGLE_NATIVE_MARKERS)
+
+    def _is_openai(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
+        refs = self._refs(body, __model__)
+        return any(marker in refs for marker in OPENAI_NATIVE_MARKERS)
+
+    def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
+        """OpenAI class (W0 probe still keys off this). Production engine is native."""
+        if self._is_xai(body, __model__) or self._is_google(body, __model__):
+            return False
+        return self._is_openai(body, __model__)
 
     def _tool_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None, default: str) -> str:
-        if self._uses_counted_search_engine(body, __model__):
-            return "exa"
+        # TEXT_WEB_SEARCH_OPENAI_NATIVE_V1 / XAI / GOOGLE
+        if self._is_xai(body, __model__) or self._is_google(body, __model__) or self._is_openai(body, __model__):
+            return "native"
         return default
 
     def _user_valves(self, __user__: dict[str, Any] | None) -> UserValves:
@@ -201,6 +221,13 @@ class Filter:
                 features = {}
                 body["features"] = features
             features["web_search"] = False
+            # TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1: stop_when overrides
+            # max_tool_calls on OpenRouter. W6 Astra Pro probe only capped
+            # after popping stop and sending mtc=3.
+            if self._is_openai(body, __model__):
+                body["max_tool_calls"] = OPENAI_MAX_TOOL_CALLS
+                pipe_meta["max_tool_calls"] = OPENAI_MAX_TOOL_CALLS
+                pipe_meta.pop("stop_server_tools_when", None)
         elif not server_tools:
             pipe_meta.pop("server_tools", None)
             if pipe_meta.get("stop_server_tools_when"):

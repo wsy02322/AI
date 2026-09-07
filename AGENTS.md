@@ -2,9 +2,9 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。**`$19` 不得再发 + 可计数检索追官网答案**（仅 plan）见 **`docs/open-webui-search-metered-quality-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`、**不把 OpenAI/Google/xAI 改回原厂搜**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（**W0–W6 已过门**；W7 未确认）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 已落地：`max_tool_calls=3`（Astra Pro 续轮已刹）。Grok 续轮仍可越过次数顶。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-15**（plan 中）= 可计数检索硬约束 / `$19` 不得再发。不要把这些写成同一个号。
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-16** = 出行路线工具（W1 高德 / W4 Google Routes / **M1a via+legs** / **MAP_LITE 表+导航+一张沿路网的高德静态图**）；**ST-17** = Grok native / X（W3 已过门；W5 官方 X 按次已过门）。不要把这些写成同一个号。
 
 ## 宪法（所有动作）
 
@@ -61,7 +61,32 @@
 | `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
 | `scripts/run_text_web_search_canary.py` | ST-14 W2：Gemini Flash 真实工具事件 + 图像零回归 |
 | `scripts/run_text_web_search_smoke.py` | ST-14：public 文本 Search + Fetch |
-| `scripts/run_text_web_search_eval.py` | ST-14 质量评测（**已收口**）：复验 / `--rescore` / `--suite fetch-diag`；只读，不改实例 |
+| `scripts/apply_search_quality_w2.py` | W2：薄 Filter content-only，Google → native（不碰 valves / 挂载；OpenAI 仍 Exa） |
+| `scripts/run_search_quality_w2.py` | W2：Flash 短问须搜；中国路线须走高德 |
+| `scripts/apply_search_quality_w3.py` | ST-17 / W3：薄 Filter content-only，xAI → native（不碰 valves / 挂载） |
+| `scripts/run_search_quality_w3.py` | ST-17：Grok 引 X + 网页搜 |
+| `scripts/apply_amap_drive_route.py` | ST-16：安装/挂载高德驾车 Tool（`--mode install|attach|detach`）；merge Valves，不覆盖已有 `AMAP_KEY` |
+| `scripts/inject_amap_key.py` | ST-16：探针高德上游 + merge Tool Valves `AMAP_KEY`（不打印 Key） |
+| `scripts/inject_amap_key_vps.sh` | ST-16：VPS 本机注入（`127.0.0.1:8080`，不重启容器） |
+| `scripts/verify_amap_drive_route.py` | ST-16：Tool marker + 12 文本挂载 + Sonar/图像未挂；`--require-key` 才要求 Valves 有 Key |
+| `scripts/run_amap_drive_route_smoke.py` | ST-16：Flash 中国路线题 + 导数控制题；有 Key 后加 `AMAP_EXPECT_LIVE=1` |
+| `scripts/rollback_amap_drive_route.py` | ST-16：从模型剥 `toolIds`，不删 Tool |
+| `scripts/apply_search_quality_w4.py` | ST-16 / W4：安装挂载 Google Routes 海外 Tool（merge Valves，不覆盖已有 Key） |
+| `scripts/apply_google_drive_route.py` | ST-16：`--mode install\|attach\|detach` |
+| `scripts/verify_google_drive_route.py` | ST-16：海外 Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Key |
+| `scripts/run_google_drive_route_smoke.py` | ST-16：Flash 海外题 + 中国仍高德；有 Key 后加 `GOOGLE_EXPECT_LIVE=1` |
+| `scripts/rollback_google_drive_route.py` | ST-16：从模型剥 `google_drive_route`，不删 Tool |
+| `scripts/apply_search_quality_m1a.py` | ST-16 / M1a + MAP_LITE：upsert 两把路线工具（via + legs + 导航链接 / 中国多站静态图）；merge Valves，不覆盖 Key |
+| `scripts/run_drive_route_m1a_smoke.py` | ST-16 / M1a + MAP_LITE：直接多站须有 `nav_url`+`map_data_uri`；Flash 单段/多站/海外；有 Key 后加 `M1A_EXPECT_LIVE=1` |
+| `scripts/apply_search_quality_w5.py` | ST-17 / W5：安装挂载官方 X Recent Search（merge Valves，不覆盖已有 Token） |
+| `scripts/apply_x_recent_search.py` | ST-17：`--mode install\|attach\|detach` |
+| `scripts/verify_x_recent_search.py` | ST-17：Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Token |
+| `scripts/run_x_recent_search_smoke.py` | ST-17：Flash 须调 X 工具；Grok 回归；网页对照；有 Token 后加 `X_EXPECT_LIVE=1` |
+| `scripts/rollback_x_recent_search.py` | ST-17：从模型剥 `x_recent_search`，不删 Tool |
+| `scripts/run_search_quality_w6.py` | W6：Astra Pro native + `max_tool_calls=3` 消息级探针；跑完还原 |
+| `scripts/apply_search_quality_w6.py` | W6：OpenAI Search+Fetch → native，并常驻 `max_tool_calls=3`（不碰 valves） |
+| `scripts/patch_pipe_max_tool_calls.py` | W6：Pipe content-only 转发 `max_tool_calls`（已有 `MAX_TOOL_CALLS_FORWARD_V1` 则 no-op） |
+| `scripts/run_search_quality_w6_smoke.py` | W6：Sol/Astra Pro 短问须搜；中国路线仍高德 |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |
@@ -76,6 +101,7 @@
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
 8. 若 Pipe 丢了压页 marker：`python3 scripts/patch_pipe_search_page_compact.py`（已有 `SEARCH_PAGE_COMPACT_V1` 则 no-op）  
+8b. 若 Pipe 丢了次数顶转发：`python3 scripts/patch_pipe_max_tool_calls.py`（已有 `MAX_TOOL_CALLS_FORWARD_V1` 则 no-op）  
 9. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 public 文本 default-on 则只校验；挂载后会 `GET /api/models?refresh=true`）  
 10. `python3 scripts/verify_stack.py` 全绿  
 11. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
@@ -116,6 +142,7 @@
 - 把新家族塞进 picker / public；留下的家族升到 catalog 最新 id，且全部 public
 - 把 Follow-up 关（ST-12）、Fable 续聊（ST-11）和文本联网（ST-14）写成同一个 ST 号
 - 激活 broad `openrouter_web_tools` / OWUI native Web Search 来冒充 ST-14
+- 未确认就把 OpenAI Search+Fetch 改 `native`，或把已过门的 Google/xAI native 改回 `exa`
 - 未确认上 Search Controller，或加薄 Filter 指引来修 Anthropic 读不了 `api.github.com`
 - 把 `$0.05` 工具停止条件当成最终账单上限去调高
 - 把截屏 / 录屏当验收，或把演示媒体塞进 GitHub
