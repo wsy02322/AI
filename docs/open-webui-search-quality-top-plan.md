@@ -1,6 +1,6 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 已跑**。**W1 未完成**：Tool 已挂，**高德 Web Key 未注入**，实时路况过门未过。**停在 W1**，不进入 W2/W3。  
+> **状态**：用户已选 **顶级档**。**W0 已跑**。**W1 过门已过**（2026-09-07）：高德 Key 已注入 Tool Valves；Flash 中国路线题给出 36.7km / ~44 分钟 / 畅通为主。W2+ 未点头不执行。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
 > **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
@@ -75,7 +75,7 @@
 - OpenAI / Google / xAI：**Exa**；Anthropic：`auto`；中国三只：`auto`→Exa。  
 - T1 `SEARCH_PAGE_COMPACT_V1`；`$0.05` / `step_count=8`；OpenRouter 写明 `max_uses` **只转 Anthropic**。  
 - 无 X 原厂、无 T2、无单发 token 顶。  
-- **ST-16**：`amap_drive_route` 已挂 12 个 public 文本；高德 Key **未**注入。  
+- **ST-16**：`amap_drive_route` 已挂 12 个 public 文本；高德 Key **已注入** Valves（不进 git）。  
 - 钥匙：不入库；**不** `enable` `openai.api_configs`；不写新的非空 `WEBUI_SECRET_KEY`。
 
 ---
@@ -130,7 +130,7 @@
 | 步 | 做什么 | 过门 | 回滚 |
 |----|--------|------|------|
 | **W0** 只读探针 | **已做**。脚本 `scripts/run_search_quality_w0.py`：带标记的消息才 native + `max_tool_calls=3` 且去掉 `stop_server_tools_when`；未标记生产流量仍 Exa。Flash / Grok / Sol 各 1 条十主题诱搜 +「你继续」。预算 ≤ `$10` | 见 **§10**：转发成功；Flash/Sol 刹在 4；Grok 续轮 11。生产已还原 | 已还原 |
-| **W1** 高德路线 | Tool `amap_drive_route` **已挂** 12 个 public 文本。压缩 JSON、次数顶=3、无 UI。**Key 未注入，过门未过**。在网站 Valves 填 Key 见 **§12.2** | 有 Key 后：上游探针 `status=1` 且有 km/分钟/路况；Flash 正文有距离/时长/路况大意，无「路线接口不可用」、无电话/评分 | `scripts/rollback_amap_drive_route.py` |
+| **W1** 高德路线 | **已过门**。Tool `amap_drive_route` 挂 12 个 public 文本；Key 在 Valves。压缩 JSON、次数顶=3、无 UI。见 **§11** | Flash 正文有距离/时长/路况大意，无「路线接口不可用」、无电话/评分 | `scripts/rollback_amap_drive_route.py` |
 | **W2** Gemini native | Google 类 Search+Fetch `engine=native` | 短问仍会搜；单发 `$` 与次数可接受；中国路况仍走高德不是 Google | 改回 `exa` |
 | **W3** Grok native | xAI 类 `native` | 能引用 X；网页即时搜不差于现网 Exa 烟雾；Grok「继续」超额符合 §1.1 | 改回 `exa` |
 | **W4** Google Routes | 海外路线，同上压缩 | 海外题有路网级时长；国内仍高德 | 卸海外分支 |
@@ -198,8 +198,8 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W1 未完成，停在高德 Key。** 不要进入 W3 / W2。  
-在网站填 Key：见 **§12.2**（不要 SSH）。填完回 `W1 Key 已注入`（**不要**把 Key 贴进聊天）。
+**W0 / W1 已过门**（§10–§11）。**不要自行开 W2/W3。** 下一默认步是 W3（Grok native / X）；回 `W3：同意` 才改搜索引擎。  
+Key 仍只在 Tool Valves，不进 git。补钥或重建见 **§12.2**。
 
 
 ---
@@ -232,13 +232,13 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 11. W1 结果（2026-09-07）
 
-落地：OWUI Tool `amap_drive_route`（`AMAP_DRIVE_ROUTE_V1`），public `*` read；挂在与 ST-14 相同的 **12** 个 public 文本；Sonar / 图像未挂。返回压缩 JSON（`km` / `minutes` / `traffic` / `via` 约 1km，最长 24 点）。每 chat 120s 窗口最多 3 次。无地图 UI。Pipe / 搜索引擎 **未改**。
+落地：OWUI Tool `amap_drive_route`（`AMAP_DRIVE_ROUTE_V1`），public `*` read；挂在与 ST-14 相同的 **12** 个 public 文本；Sonar / 图像未挂。返回压缩 JSON（`km` / `minutes` / `traffic` / `via` 约 1km，最长 24 点）。每 chat 120s 窗口最多 3 次。无地图 UI。Pipe / 搜索引擎 **未改**。Key 在 Tool Valves，不进 git。
 
-钥匙：Cloud Agent 与 Tool Valves 里都 **没有** 高德 Web 服务 Key。不进 git。
+上游（北京南站 → 首都机场）：`status=1`，36.7 km / 45 分钟，路况「畅通为主，局部缓行」，24 个途经点，无电话。
 
-烟雾（Gemini Flash，`$0.003`）：`function_call_count=1`，正文出现 **「路线接口不可用」**，无电话/评分。导数控制题 0 次工具。`verify_amap_drive_route.py` 15 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。
+Flash 烟雾（`AMAP_EXPECT_LIVE=1`，`$0.003`）：`function_call_count=1`，正文 **36.7 公里 / 约 44 分钟 / 畅通为主**，途经南二环、东三环、机场高速等。无「路线接口不可用」，无电话/评分。导数控制题 0 次工具。`verify_amap_drive_route.py --require-key` 16 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。
 
-**未完成的过门**：没有 Key，不算 W1 完成。在网站填 Key 见 **§12.2**。有 key 之后跑 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`。
+**过门通过。** JSON：`docs/open-webui-search-quality-w1-results.json`。W2/W3 未确认不执行。
 
 ---
 

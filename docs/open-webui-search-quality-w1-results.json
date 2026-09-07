@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-07",
+  "gate": "W1",
+  "require_key": true,
+  "verify_amap_ok": 16,
+  "verify_stack_ok": 24,
+  "upstream": {
+    "origin": "北京南站",
+    "destination": "北京首都国际机场",
+    "km": 36.7,
+    "minutes": 45,
+    "traffic": "畅通为主，局部缓行",
+    "via_n": 24
+  },
+  "flash_smoke": {
+    "status": 200,
+    "cost_usd": 0.00264,
+    "function_call_count": 1,
+    "has_unavailable": false,
+    "has_phone": false,
+    "has_rating": false,
+    "text_head": "根据实时路况查询结果：全程距离约 36.7 公里；预计耗时约 44 分钟；整体以畅通为主，局部缓行；途经南二环、东三环、机场高速等。"
+  },
+  "control": {
+    "status": 200,
+    "function_call_count": 0,
+    "cost_usd": 0.00063675
+  },
+  "pipe_sha12": "9c4836ace251",
+  "search_engine": "unchanged-exa"
+}

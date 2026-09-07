@@ -93,6 +93,13 @@ def probe_amap(key: str) -> dict[str, Any]:
             minutes = None
         tmcs = path.get("tmcs")
         has_tmc = isinstance(tmcs, list) and bool(tmcs)
+        if not has_tmc:
+            steps = path.get("steps")
+            if isinstance(steps, list):
+                has_tmc = any(
+                    isinstance(step, dict) and isinstance(step.get("tmcs"), list) and step.get("tmcs")
+                    for step in steps
+                )
     ok = geo_status == "1" and drive_status == "1" and km is not None
     return {
         "ok": ok,
