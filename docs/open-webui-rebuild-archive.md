@@ -207,6 +207,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 10b. `python3 scripts/apply_amap_drive_route.py --mode attach`（ST-16 高德路线；Key 在 Valves/env，不进 git）。  
 10c. `python3 scripts/apply_google_drive_route.py --mode attach`（ST-16 海外 Routes；Key 在 Valves，不进 git）。  
 10d. `python3 scripts/apply_x_recent_search.py --mode attach`（ST-17 / W5 官方 X 近 7 天；Bearer 在 Valves，不进 git）。  
+10e. `python3 scripts/apply_search_quality_w6.py`（OpenAI native + `max_tool_calls=3`；会打 Pipe `MAX_TOOL_CALLS_FORWARD_V1`）。  
 11. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
 12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
 13. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_text_web_search.py --mode final`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  
