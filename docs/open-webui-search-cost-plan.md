@@ -1,8 +1,8 @@
 # 搜索长对话费用护栏（保证顶级质量）
 
-> **状态**：**C 档已落地**（2026-09-07）。压页全员；引擎按「原厂搜能否计数」分流：OpenAI / Google / xAI → Exa，Anthropic 留 `auto`。  
-> **白话**：能刹的用原厂搜；刹不住的换 Exa。  
-> **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_COUNTED_EXA_V1`；ST-14 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
+> **状态**：**C2 已落地**（2026-09-07）。压页全员；引擎 C；搜索按 public 文本 + deny（12 个含中国三只）。  
+> **白话**：能刹的用原厂搜；刹不住的换 Exa；合格文本默认会搜。  
+> **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_DENY_CLASS_V1`；ST-14 **12** 模型 default-on；Banner `usage-guide-v7`；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  
 > **证据**：`/tmp/chat_23d8488c.json` → `/opt/cursor/artifacts/search-cost-northwest-drive.json`。
 
@@ -353,14 +353,28 @@ T1 是主杠杆。没有 T1，只做 T2，模型仍把已经在手里的 30 万�
 | Opus Fetch | 0 | `$0.035` | 同上引用 |
 | Grok「你继续」 | **2** | **`$0.042`** | 低于 8 步门 |
 
-T2 仍不做。若以后「继续」又出现 8 步打满但仍贵，再开 D3。
+### 6.4 C2 结果（2026-09-07）
+
+用户确认中国三只要搜。Filter 去掉 allowlist（`TEXT_WEB_SEARCH_DENY_CLASS_V1`）。挂载 = public − 图像 − Sonar = **12**。Banner `usage-guide-v7`。脚本：`scripts/run_search_cost_china.py`。证据：`/opt/cursor/artifacts/search-cost-china.json`。`verify_stack` 24 ok。`verify_text_web_search --mode final` 14 ok。
+
+| 探针 | 搜索 | 上游 $ | 备注 |
+|------|------|--------|------|
+| DeepSeek Search | 1 | `$0.014` | auto→Exa |
+| DeepSeek Fetch | 0 | `$0.009` | 引用 `:online` deprecated |
+| Kimi Search | 2 | `$0.058` | auto→Exa |
+| Kimi Fetch | 0 | `$0.026` | 同上引用 |
+| Qwen Search | 1 | `$0.022` | auto→Exa |
+| Qwen Fetch | 0 | `$0.016` | 同上引用 |
+| Kimi「你继续」 | **0** | **`$0.008`** | 未再开搜；低于 8 步门 |
+
+T2 仍不做。
 
 ### D2 通过后：T1 + T3（T− 在这里就可以收口）
 
 | 动作 | 过门 |
 |------|------|
 | Pipe **content-only** 压缩旧 Search/Fetch；本轮整页保留；超 ~200k 先压。**无模型 allowlist**。不碰 valves / `API_KEY`。单测用假 tool item + 「非 ST-14 模型带着旧页」夹具 | 续聊 prompt 少一个数量级；可见答案仍有 URL 和关键数字；Sol + Astra Pro 烟雾仍绿；无工具页的模型空转不 400；ST-10/ST-11 不回退 |
-| `verify_stack`；`verify_text_web_search --mode final` | 9 模型、Banner v6、三 Guard 不变 |
+| `verify_stack`；`verify_text_web_search --mode final` | 12 模型、Banner v7、三 Guard 不变 |
 
 回滚：去掉压缩 marker，回到 `f797e92d6d3f`；Filter / 挂载不动。
 
@@ -386,7 +400,7 @@ T2 仍不做。若以后「继续」又出现 8 步打满但仍贵，再开 D3�
 
 ## 7. 明确不做（本 plan 范围）
 
-- 未确认改实例 / Pipe / Filter / Banner。D0-cover 不等于批准 T0，也不等于批准中国三只挂搜索。
+- 未确认改实例 / Pipe / Filter / Banner（T1 / 引擎 C / C2 **已确认并落地**；T2 仍须另轮）。
 - 为省钱上弱模型、关 ST-14、关默认搜索、或用 Sonar 冒充旗舰写作终态。
 - 全局拧 `max_uses` / Fetch / `step_count` 当唯一方案。
 - 把 `$0.05` 抬高，或把它解释成「整段对话最多 5 美分」。
@@ -398,9 +412,9 @@ T2 仍不做。若以后「继续」又出现 8 步打满但仍贵，再开 D3�
 
 ---
 
-## 8. 纸面债（本波可顺手，须点头）
+## 8. 纸面债
 
-SPEC **UX-3** 仍写「指定 7 个文本」；现网 ST-14 已是 **9** 个。与费用无关，改契约时不要再写成 7。不在未确认的费用波里偷偷改 Banner / public。
+SPEC UX-3 / ST-14 **已改成 12 个 public 文本**（deny 类，含中国三只）。Banner `usage-guide-v7`。EVAL-B 仍只覆盖原 7 个西方旗舰。T2 跨轮预算另轮确认。
 
 ---
 
@@ -409,8 +423,8 @@ SPEC **UX-3** 仍写「指定 7 个文本」；现网 ST-14 已是 **9** 个。�
 说服人的标准：
 
 1. **复现对照**：同类「搜过几轮 → 你继续」的 prompt，压缩后比压缩前 **少一个数量级**；可见答案仍有可点来源和关键数字/日期。
-2. **EVAL-B 形态不回退**：9 个模型默认仍会搜；误搜仍≈0；Search+Fetch 烟雾绿。
+2. **EVAL-B 形态不回退**：原 7 个西方旗舰默认仍会搜；误搜仍≈0；12 只 Search+Fetch 烟雾绿。
 3. **ST-10 / ST-11 不回退**。
 4. **272k / 200k**：出站 prompt 不再长期停在 30 万以上还继续叠整页。
-5. **现网契约**：23 public、Banner v6、三 Guard、Pipe 无旧 debug marker、`verify_stack` 绿。
+5. **现网契约**：23 public、Banner v7、三 Guard、Pipe 无旧 debug marker、`verify_stack` 绿。
 6. 若走了 T2：单次用户消息不再出现 9 轮 × 40+ 次搜索，且首轮调研次数仍够用。

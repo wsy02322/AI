@@ -1,12 +1,12 @@
 # 默认覆盖：能力 / 拒绝类，不是死名单
 
-> **状态**：**按最推荐执行中**（2026-09-07：用户看不懂决策点，授权执行者选档）。  
-> **已锁**：C0 原则 + C1（压缩无名单）+ **T−**（先压旧页，先不做跨轮预算）+ **D1 跑 T0**。  
-> **先不做**：C2 改搜索名单、T2 跨轮预算、关默认搜索。  
-> **白话**：先看清旧网页怎么回放，再只压旧页；谁能搜索先不动。  
-> **T0**：已跑。`$19` 主因是一次发送里的原厂连搜，不是聊天 JSON 回放。见费用 plan §6.1。
+> **状态**：**C2 已落地**（2026-09-07）。搜索 = public 文本 + deny（12 个，含中国三只）；无 allowlist。  
+> **已锁并执行**：C0 / C1 / T− / 引擎 C / **C2**。  
+> **先不做**：T2 跨轮预算。  
+> **白话**：合格文本默认会搜；图像 / Sonar 不搜。  
+> **现网**：薄 Filter `TEXT_WEB_SEARCH_DENY_CLASS_V1`；Banner `usage-guide-v7`。
 
-关联：`docs/open-webui-search-cost-plan.md`（压缩无名单）；`docs/SPEC.md` UX-3 / UX-4 / ST-1 / ST-14；`scripts/text_web_search_filter.py`（现网 = **allowlist 9 个** + deny markers）。
+关联：`docs/open-webui-search-cost-plan.md`（压缩无名单）；`docs/SPEC.md` UX-3 / UX-4 / ST-1 / ST-14；`scripts/text_web_search_filter.py`（现网 = **deny 类**，挂载 = public 文本 12 个）。
 
 ---
 
@@ -68,7 +68,7 @@ S1 关默认搜索、Filter 改 `is_global=true`（图像聊天也出现 Web Sea
 **A 里所有合格模型 + 以后新进 A 的合格模型。**  
 不合格类永远拒绝。名单可以变（新图像家族加 deny / 靠 `image_output`），但规则是类，不是「Grok、Sol、Opus…」这种写死 id。
 
-现网 public 文本里 **还没挂 Search** 的：DeepSeek V4 Pro、Kimi K3、Qwen 3.8 Max。按本原则，它们应被覆盖（另轮确认，先烟雾）。Ling / Muse / GLM 等 **未确认不 active**，不因为本原则偷偷 public。
+C2 已把 public 文本 **12** 只全部挂 Search（含 DeepSeek V4 Pro、Kimi K3、Qwen 3.8 Max）。Ling / Muse / GLM 等 **未确认不 active**，不因为本原则偷偷 public。
 
 ---
 
@@ -76,14 +76,14 @@ S1 关默认搜索、Filter 改 `is_global=true`（图像聊天也出现 Web Sea
 
 | 功能 | 现在 | 漏新模型？ | 不明显加复杂就能改成类？ |
 |------|------|------------|--------------------------|
-| ST-14 薄 Search | Filter **allowlist 9 id** + 每模型 `filterIds` | **会。** Astra 已漏过一次 | 能。inlet 已有 deny；再删 allowlist + apply 时按类挂 |
-| 费用压缩 T1（未做） | 若写成 9 个 id 就会再漏 | 会 | **应一开始就无名单**（有旧 Search/Fetch 页就压） |
+| ST-14 薄 Search | Filter **deny 类覆盖**（PUBLIC − IMAGE − SONAR）+ 每模型 `filterIds` | **已按类挂 12 只。** 新 public 文本仍须跑 apply | 已落地。inlet deny Sonar/图像/视频；apply 按类挂 |
+| 费用压缩 T1 | Pipe 见旧 Search/Fetch 页就压 | **已落地，无名单** | 新文本挂搜后自动吃压缩 |
 | 跨轮预算 T2（未做） | 若按模型开 | 会 | 有 `server_tools` 就记账 |
 | 图像 / Sonar Guard | global + 类 / capability | 新图像靠 marker + `image_output` | 已是类；新家族名要进 deny 或靠 capability |
 | ST-10 跨模型密文重试 | Pipe 按错误文案 | 否 | 保持全请求 |
 | `middle-out` | `/chat/completions` 全路径 | 否 | 保持 |
 | ST-11 Fable thinking | Anthropic 形态 | 故意只打这一家 | **保持特化**，不是名单病 |
-| Banner v6 | 点名 Grok/Sol/Claude/Gemini/Astra | 新文本不在句子里 | 改成 “Text models can search…” |
+| Banner v7 | 类描述：Text chat models can search | 新文本不必改 Banner 文案 | 已落地 |
 | picker / public | `PUBLIC_MODEL_IDS` | 这是 **选品**，不是功能开关 | 保持名单。新家族仍要确认才 active |
 | Code Interpreter 只留 Sol Pro / Opus | 产品选择 | 是 | **不要**自动给所有文本（Sonar/图像必须关） |
 
@@ -141,11 +141,11 @@ S1 关默认搜索、Filter 改 `is_global=true`（图像聊天也出现 Web Sea
 |----|------|----------|--------|
 | **C0** | 原则：覆盖 = **合格类 + 未来同类**；压缩无名单；「所有」≠ 图像/Sonar/OR 全库；选品名单保留 | **按最推荐锁定 2026-09-07** | — |
 | **C1** | T1 是否按「全请求、无名单」设计 | **随 C0 锁定：是** | — |
-| **C2** | 搜索是否本波从 allowlist → **deny + apply 按类挂**（含 DeepSeek/Kimi/Qwen） | 另开 Filter 改动；中国三只先烟雾 | 搜索仍 9 个；只保证压缩全覆盖 |
-| **C3** | Banner 是否改成类描述（不点名家族） | v7 文案另确认 | Banner 可暂留 v6 |
-| **C4** | 是否写进 SPEC / `AGENTS.md` 作以后功能默认 | 改契约条文 | 只留本 plan |
+| **C2** | 搜索是否本波从 allowlist → **deny + apply 按类挂**（含 DeepSeek/Kimi/Qwen） | **已落地**（2026-09-07） | — |
+| **C3** | Banner 是否改成类描述（不点名家族） | **已落地** `usage-guide-v7` | — |
+| **C4** | 是否写进 SPEC / `AGENTS.md` 作以后功能默认 | **已写** ST-14 / UX-3 / AGENTS | — |
 
-C0 **不等于** C2，也不等于费用 T0。下一问见费用 plan **D1**。中国三只未排除，仍等 C2。
+C0–C4 **已锁定并落地**。费用下一问是 **T2**（跨轮预算），不是再扩搜。
 
 ---
 
@@ -157,14 +157,14 @@ C0 **不等于** C2，也不等于费用 T0。下一问见费用 plan **D1**。�
 - 图像 / Sonar 无此类 item → no-op。
 - 新文本以后若挂上 Search，自动吃压缩。
 
-### 搜索改类覆盖（C2）
+### 搜索改类覆盖（C2，已落地）
 
-1. Filter inlet：删 `ALLOWLIST_SUFFIXES` 判断；deny 保留并补测。
-2. `attach_models` 的 wanted = 现网 public 里非 deny 的文本（含中国三只，除非 C0 声明排除）。
-3. 必 `GET /api/models?refresh=true`。
-4. 中国三只 + 任一新合格模型：各 1 条 Search、1 条 Fetch 烟雾；红则那只 default-off。
-5. `TEXT_WEB_SEARCH_MODEL_IDS` 改成「推导合格集」或 verify 时现场算，不再手写 9 个当唯一真相。
-6. 不改 Filter `is_global`。不重开 `openrouter_web_tools`。
+1. Filter inlet：已删 `ALLOWLIST_SUFFIXES`；deny Sonar / `image_output` / `video_generation`。
+2. `attach_models` 的 wanted = 现网 public 里非 deny 的文本（含中国三只）。
+3. 已 `GET /api/models?refresh=true`。
+4. 中国三只 Search+Fetch 烟雾全绿（见费用 plan §6.4）。
+5. `TEXT_WEB_SEARCH_MODEL_IDS` 从 PUBLIC − IMAGE − SONAR 推导。
+6. 未改 Filter `is_global`。未重开 `openrouter_web_tools`。
 
 回滚：allowlist 加回；挂载回到 9 个；中国三只剥 Filter。
 

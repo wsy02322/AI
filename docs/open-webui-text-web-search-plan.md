@@ -1,9 +1,9 @@
-# 指定文本模型联网搜索（Agentic Search）
+# 文本模型联网搜索（Agentic Search）
 
-> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05）：见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller、不加 Filter 指引。2026-09-06 public 23；**ST-14 allowlist = 9**（原 7 + Astra / Astra Pro；F 波见 `docs/open-webui-astra-search-plan.md` §7.8）。挂载后必须 refresh runtime catalog。长对话账单（Astra Pro「你继续」`$19`）见 **`docs/open-webui-search-cost-plan.md`（T1 压旧页 + C 档：不认刹车的原厂搜走 Exa，Anthropic 留 auto）**。  
+> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05，原 7 个）。2026-09-07 **C2**：ST-14 = **public 文本 12**（deny 类，含 DeepSeek / Kimi / Qwen）；Banner `usage-guide-v7`。挂载后必须 refresh runtime catalog。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `9c4836ace251`；OWUI Web Search 关闭；`openrouter_web_tools` 停用。  
-> **确认档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。
+> **确认档位**：WS-A 已落地；C2 把挂载从指定名单改成 public 文本 deny 类。Sonar Deep Research 保留。
 
 关联：`docs/SPEC.md` UX-1/UX-3、ST-1/ST-2；`docs/open-webui-rebuild-archive.md` §3.4/§8；图像错误模式见 `docs/open-webui-openrouter-image-continuity-plan.md`。
 
@@ -96,9 +96,11 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 
 ---
 
-## 3. 首波模型 allowlist
+## 3. 首波模型 allowlist（历史）
 
-首波只挂 OpenRouter `engine=auto` 可优先走厂商原生搜索的文本模型：
+**C2（2026-09-07）已取代本表。** 现网 = public 文本 − 图像 − Sonar = **12** 只（含下表 7 只 + Astra 一对 + DeepSeek / Kimi / Qwen）。Filter inlet 是 deny 类，不再读 suffix allowlist。中国三只引擎 `auto`（无原厂搜 → Exa）。
+
+首波当时只挂 OpenRouter `engine=auto` 可优先走厂商原生搜索的文本模型：
 
 | 用户模型 | 完整 OWUI id |
 |----------|--------------|
@@ -110,13 +112,13 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
 | Gemini 3.1 Pro Preview | `open_webui_openrouter_integration.google.gemini-3.1-pro-preview` |
 | Gemini 3.8 Flash | `open_webui_openrouter_integration.google.gemini-3.8-flash` |
 
-首波不挂：
+首波当时不挂（**C2 已改**）：
 
-- DeepSeek V4 Pro、Kimi K3、Qwen 3.8 Max：OpenRouter `auto` 会回落到 Exa；等首波稳定后可单独做兼容波，不影响它们普通聊天。
-- 两档 Sonar：自身即搜索模型，额外 tools 会重复并曾 404。
-- 9 个纯图像模型和全部视频模型：硬禁止。
+- DeepSeek V4 Pro、Kimi K3、Qwen 3.8 Max：**C2 已挂**；OpenRouter 无原厂搜，`auto` 回落 Exa。
+- 两档 Sonar：自身即搜索模型，额外 tools 会重复并曾 404。**仍不挂。**
+- 纯图像模型和全部视频模型：硬禁止。**仍不挂。**
 
-这不改变 picker/public，只改变 7 个现有文本模型的 `filterIds` / `defaultFilterIds`。
+C2 不改变 picker/public，只改变合格文本的 `filterIds` / `defaultFilterIds`（现网 12）。
 
 ---
 

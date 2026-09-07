@@ -63,7 +63,7 @@
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.x-ai.grok-4.6`（不默认双栏 compare） |
 | 置顶四格 | Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
-| 搜索 | 指定 9 个文本模型挂薄 `Web Search`（ST-14，**质量已收口**；含 Astra / Astra Pro）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
+| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14，deny 类；含 Astra 与中国三只）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
 | Notebook | **N1**：Knowledge「YouTube Notebook」+ OpenRouter embedding。N2+ Studio **未做** |
 | Follow-up 芯片 | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）。Autocomplete / Title **仍开** |
@@ -110,7 +110,7 @@
 
 | id | 内容（HTML） |
 |----|----------------|
-| `usage-guide-v6` | `🌐 Grok, Sol, Claude, Gemini, and Astra can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.` ；同一段、无粗体、无 `<br>`；`dismissible: false` |
+| `usage-guide-v7` | `🌐 Text chat models can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images only on an image model. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.` ；同一段、无粗体、无 `<br>`；`dismissible: false` |
 
 现网 `ui.prompt_suggestions` = **`[]`**。OWUI Suggested 点击即发送，空 chips 不是缺功能。Follow-up 是另一开关（ST-12）。
 
@@ -150,7 +150,7 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 搜索：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`  
 图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
 
-Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。指定 7 个文本模型另挂 `openrouter_text_web_search`（default-on）。Astra **不**挂薄 Web Search。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
+Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。**12** 个 public 文本另挂 `openrouter_text_web_search`（default-on，含 Astra 与中国三只）。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 
 ### 3.6 Picker（= 23 public；只跟已留家族的最新 id）
 
@@ -178,7 +178,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 | 项 | 仓库 / `verify_stack` | 2026-09-01 现网 | 灾后怎么做 |
 |----|----------------------|-----------------|------------|
-| Banner | 一条 `usage-guide-v6` | 一条 `usage-guide-v6` | 跑 `apply_ui_guidance_banners.py` 即可 |
+| Banner | 一条 `usage-guide-v7` | 一条 `usage-guide-v7` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
 | Picker | 23 public（`PUBLIC_MODEL_IDS`） | 按 `ACTIVE_MODEL_IDS` | `apply_model_catalog_visibility.py` + `restore_public_grants.py`（23 public + 剥额外 `*`）；未确认新家族关掉 |
@@ -186,7 +186,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
 
-`verify_stack.py` 验 Banner v6、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（23）、ST-14 薄 Web Search（9 模型，含 Astra）。不要为了绿把 Banner 改回 v5/v4/v3/v2。
+`verify_stack.py` 验 Banner v7、suggestions=0、Follow-up 关、Fable marker、picker=`ACTIVE_MODEL_IDS`（23）、ST-14 薄 Web Search（12 个 public 文本，含 Astra 与中国三只）。不要为了绿把 Banner 改回 v6/v5/v4/v3/v2。
 
 ---
 
@@ -202,8 +202,8 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
 7. `python3 scripts/apply_model_catalog_visibility.py`（23 public）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
-9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v6` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
-10. `python3 scripts/apply_text_web_search.py --mode final`（薄 Web Search 挂 9 个文本模型并 default-on；脚本会 refresh catalog）。  
+9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v7` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
+10. `python3 scripts/apply_text_web_search.py --mode final`（薄 Web Search 按类挂 public 文本并 default-on，现网 12 只含中国三只；脚本会 refresh catalog）。  
 11. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
 12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
 13. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_text_web_search.py --mode final`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  
