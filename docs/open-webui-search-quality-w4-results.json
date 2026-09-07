@@ -1,20 +1,40 @@
 {
   "date": "2026-09-07",
   "gate": "W4",
-  "status": "installed_waiting_for_key",
+  "status": "passed",
   "tool_id": "google_drive_route",
   "display_name": "Overseas Drive Route",
   "attached_public_text": 12,
-  "key_set": false,
-  "china_amap_regression": {
-    "status": 200,
-    "used_amap": true,
-    "has_km_or_minutes": true,
-    "has_traffic": true,
-    "has_unavailable": false
-  },
-  "verify_google_drive_route_ok": 17,
+  "key_set": true,
+  "pipe_sha12": "9c4836ace251",
+  "verify_google_drive_route_require_key_ok": 17,
   "verify_amap_require_key_ok": 16,
   "verify_stack_ok": 24,
-  "pipe_sha12": "9c4836ace251"
+  "upstream_jfk_times_square": {
+    "http": 200,
+    "km": 27.0,
+    "duration_s": 3394,
+    "speed_intervals": 13
+  },
+  "flash_overseas": {
+    "status": 200,
+    "function_call_count": 1,
+    "km": 27,
+    "minutes": 57,
+    "traffic": "路况一般（畅通约 75.6%，缓行 6.3%，拥堵 18.2%）",
+    "roads": ["Van Wyck Expressway", "Grand Central Parkway", "Queens-Midtown Tunnel"],
+    "has_phone": false,
+    "has_rating": false,
+    "cost_usd": 0.0029
+  },
+  "flash_china": {
+    "status": 200,
+    "function_call_count": 1,
+    "km": 36.7,
+    "minutes": 41,
+    "traffic": "畅通为主",
+    "has_phone": false,
+    "has_rating": false,
+    "cost_usd": 0.0025
+  }
 }

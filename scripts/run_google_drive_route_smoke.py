@@ -71,8 +71,20 @@ def _summarize(result: dict, prompt: str) -> dict:
     text = _text(result)
     lowered = text.lower()
     calls = _function_calls(result)
-    used_google = _mentions(result, GOOGLE_DRIVE_ROUTE_TOOL, "overseas_drive_route", "Overseas Drive")
-    used_amap = _mentions(result, AMAP_DRIVE_ROUTE_TOOL, "China Drive", "amap_drive_route")
+    used_google = _mentions(
+        result,
+        GOOGLE_DRIVE_ROUTE_TOOL,
+        "overseas_drive_route",
+        "Overseas Drive",
+        "海外路线工具",
+    )
+    used_amap = _mentions(
+        result,
+        AMAP_DRIVE_ROUTE_TOOL,
+        "China Drive",
+        "amap_drive_route",
+        "中国路线工具",
+    )
     blob = (result.get("blob") or "") + _text(result)
     if "drive_route" in blob and "overseas_drive_route" not in blob and not used_google:
         used_amap = True
