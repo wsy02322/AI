@@ -35,6 +35,7 @@ class Report:
 
 
 def main() -> int:
+    require_key = "--require-key" in sys.argv
     h = headers(signin())
     report = Report()
     response = requests.get(
@@ -61,6 +62,19 @@ def main() -> int:
         report.ok("tool public read")
     else:
         report.err("tool not public")
+    valves_resp = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/tools/id/{AMAP_DRIVE_ROUTE_TOOL}/valves",
+        headers=h,
+        timeout=30,
+    )
+    valves = valves_resp.json() if valves_resp.status_code == 200 else {}
+    key_set = bool(str((valves or {}).get("AMAP_KEY") or "").strip())
+    if require_key and not key_set:
+        report.err("AMAP_KEY not set")
+    elif key_set:
+        report.ok("AMAP_KEY set")
+    else:
+        report.ok("AMAP_KEY unset")
 
     inspect = list(dict.fromkeys([*PUBLIC_MODEL_IDS, *IMAGE_MODEL_IDS, *SONAR_MODEL_IDS]))
     for model_id in inspect:

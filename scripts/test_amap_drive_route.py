@@ -148,6 +148,14 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertTrue(capped.get("capped"))
         self.assertEqual(capped["error"], "本轮路线查询已达上限")
 
+    def test_inject_hint_maps_amap_errors(self) -> None:
+        from inject_amap_key import _hint
+
+        self.assertIn("Web服务", _hint({"geocode_info": "USERKEY_PLAT_NOMATCH", "driving_info": ""}))
+        self.assertIn("78.47.152.85", _hint({"geocode_info": "INVALID_USER_IP", "driving_info": "10005"}))
+        self.assertIn("数字签名", _hint({"geocode_info": "", "driving_info": "INVALID_USER_SIGNATURE"}))
+        self.assertEqual(_hint({"ok": True, "geocode_info": "OK", "driving_info": "OK"}), "")
+
 
 if __name__ == "__main__":
     unittest.main()

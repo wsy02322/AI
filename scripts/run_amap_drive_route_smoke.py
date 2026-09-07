@@ -111,6 +111,16 @@ def main() -> int:
         errors.append(f"control status {control_row['status']}")
     if control_row["tool_mentioned"] or control_row["has_unavailable"] or control_row.get("function_call_count"):
         errors.append("control unexpectedly used drive_route")
+    expect_live = os.environ.get("AMAP_EXPECT_LIVE", "").strip().lower() in {"1", "true", "yes"}
+    if expect_live:
+        if route_row["has_unavailable"]:
+            errors.append("expected live traffic, got 路线接口不可用")
+        if not route_row["has_km_or_minutes"]:
+            errors.append("expected km/minutes in live answer")
+        if not route_row["has_traffic"]:
+            errors.append("expected traffic wording")
+        if not route_row.get("function_call_count"):
+            errors.append("expected function_call_count>=1")
     payload["errors"] = errors
     OUT.parent.mkdir(parents=True, exist_ok=True)
     try:
