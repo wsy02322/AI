@@ -1,6 +1,6 @@
 # 指定文本模型联网搜索（Agentic Search）
 
-> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05）：见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller、不加 Filter 指引。2026-09-06 public 23；**ST-14 allowlist = 9**（原 7 + Astra / Astra Pro；F 波见 `docs/open-webui-astra-search-plan.md` §7.8）。挂载后必须 refresh runtime catalog。长对话账单（Astra Pro「你继续」`$19`）见 **`docs/open-webui-search-cost-plan.md`（T1 按最推荐落地：压旧页 + OpenAI 类 Exa）**。  
+> **状态**：**已确认并落地**（W0–W4，2026-09-05）。**质量已收口**（EVAL-B v2，2026-09-05）：见 `docs/open-webui-text-web-search-eval-b-results.md`。未确认不上 Controller、不加 Filter 指引。2026-09-06 public 23；**ST-14 allowlist = 9**（原 7 + Astra / Astra Pro；F 波见 `docs/open-webui-astra-search-plan.md` §7.8）。挂载后必须 refresh runtime catalog。长对话账单（Astra Pro「你继续」`$19`）见 **`docs/open-webui-search-cost-plan.md`（T1 压旧页 + C 档：不认刹车的原厂搜走 Exa，Anthropic 留 auto）**。  
 > **日期**：2026-09-05  
 > **现网**：OWUI 0.11.3；Pipe SHA `9c4836ace251`；OWUI Web Search 关闭；`openrouter_web_tools` 停用。  
 > **确认档位**：WS-A——复用现有 Pipe 的 OpenRouter server-tools 通道，增加一个只含 Search + Fetch 的薄 Filter，只挂指定文本模型；Sonar Deep Research 保留。
@@ -144,6 +144,8 @@ GPT Researcher 或 LangChain Open Deep Research 可做规划、并行子问题�
   {"type": "max_cost", "max_cost_in_dollars": 0.05}
 ]
 ```
+
+**现网（2026-09-07 C 档）**：上表 `engine=auto` 只对 Anthropic 仍成立。OpenAI / Google / xAI 类 Search+Fetch 强制 `exa`，否则 `max_uses` / `$0.05` 不计原厂内循环。见 `docs/open-webui-search-cost-plan.md` §6.3。
 
 两个条件按 OR 生效；触发后由 OpenRouter 关闭工具并完成最终自然语言回答。
 

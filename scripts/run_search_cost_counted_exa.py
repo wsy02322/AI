@@ -33,7 +33,8 @@ CONTINUE_LIMIT = 8
 
 
 def _short(model_id: str) -> str:
-    return model_id.rsplit(".", 1)[-1]
+    prefix = PIPE + "."
+    return model_id[len(prefix):] if model_id.startswith(prefix) else model_id
 
 
 def _search(h: dict, model_id: str) -> dict:

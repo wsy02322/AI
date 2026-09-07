@@ -1,8 +1,8 @@
 # 搜索长对话费用护栏（保证顶级质量）
 
-> **状态**：**C 档执行中**（2026-09-07：按能力分流引擎）。T1 压页已在；OpenAI 已 Exa；本步把 Google / xAI 也改 Exa，Anthropic 留原厂。  
-> **白话**：旧整页出门前压成摘录；Astra/Sol 原厂连搜改走 OpenRouter 能计数的 Exa，现有 `$0.05` / 8 步才能刹车。  
-> **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_OPENAI_EXA_V1`；ST-14 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
+> **状态**：**C 档已落地**（2026-09-07）。压页全员；引擎按「原厂搜能否计数」分流：OpenAI / Google / xAI → Exa，Anthropic 留 `auto`。  
+> **白话**：能刹的用原厂搜；刹不住的换 Exa。  
+> **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_COUNTED_EXA_V1`；ST-14 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  
 > **证据**：`/tmp/chat_23d8488c.json` → `/opt/cursor/artifacts/search-cost-northwest-drive.json`。
 
@@ -316,7 +316,7 @@ T1 是主杠杆。没有 T1，只做 T2，模型仍把已经在手里的 30 万�
 本刀（2026-09-07）：
 
 1. Pipe content-only：`SEARCH_PAGE_COMPACT_V1`，在 `apply_replay_tool_output_budget` 之后压 **最后一条 user 之前** 的大 `function_call_output`。无模型名单。不压 reasoning / 助手正文。
-2. 薄 Filter：OpenAI **类**（`openai.` / `openai/`，过 deny 之后）Search+Fetch `engine=exa`，让 `max_uses` / `stop_server_tools_when` 对 Astra / Sol 计数。Grok / Gemini / Claude 仍 `auto`。不是 Astra 两只 id。
+2. 薄 Filter 当时：OpenAI **类** Search+Fetch `engine=exa`。Grok / Gemini / Claude 仍 `auto`。**随后 C 档**把 Google / xAI 也改成 Exa，见 §6.3。
 3. **先不做 T2**、不改 Banner、不给中国三只挂搜。
 
 ### 6.2 T1 结果（2026-09-07）
@@ -333,7 +333,25 @@ T1 是主杠杆。没有 T1，只做 T2，模型仍把已经在手里的 30 万�
 | Astra Pro Fetch | 0 | `$0.12` | 同上引用 |
 | Astra Pro「你继续」 | **1** | **`$0.23`** | input **28,806**（对照 `$19` 轮：46 次搜 / 495 万 token） |
 
-单测：`test_search_page_compact.py`、`test_patch_pipe_search_page_compact.py`、`test_text_web_search_filter.py` 全绿。压页不改助手正文；OpenAI 类 engine=exa，Grok/Flash 仍 auto。
+单测：`test_search_page_compact.py`、`test_patch_pipe_search_page_compact.py`、`test_text_web_search_filter.py` 全绿。压页不改助手正文；OpenAI 类 engine=exa。
+
+### 6.3 C 档结果（2026-09-07）
+
+用户确认「按能力分流」。脚本：`scripts/run_search_cost_counted_exa.py`。证据：`/opt/cursor/artifacts/search-cost-counted-exa.json`。`verify_stack` 24 ok。`verify_text_web_search --mode final` 13 ok。Pipe 未再改（仍 `9c4836ace251`）。
+
+规则：OpenAI / Google / xAI **类** → Exa；Anthropic 留 `auto`。不是 9 个 id。
+
+| 探针 | 搜索 | 上游 $ | 备注 |
+|------|------|--------|------|
+| Grok Search | 1 | `$0.022` | Exa；有本周产品新闻 |
+| Grok Fetch | 0 | `$0.015` | 引用 `:online` deprecated |
+| Flash Search | 4 | `$0.052` | Exa |
+| Flash Fetch | 0 | `$0.006` | 同上引用 |
+| Gemini Pro Search | 1 | `$0.027` | Exa |
+| Gemini Pro Fetch | 0 | `$0.017` | 同上引用 |
+| Opus Search | 2 | `$0.079` | **仍 auto / 原厂** |
+| Opus Fetch | 0 | `$0.035` | 同上引用 |
+| Grok「你继续」 | **2** | **`$0.042`** | 低于 8 步门 |
 
 T2 仍不做。若以后「继续」又出现 8 步打满但仍贵，再开 D3。
 
