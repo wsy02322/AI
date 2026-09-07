@@ -42,7 +42,7 @@ from text_web_search_ops import (
 )
 
 OUT = Path(os.environ.get("SEARCH_QUALITY_W0_OUT", "/opt/cursor/artifacts/search-quality-w0.json"))
-BACKUP_DIR = Path(os.environ.get("SEARCH_QUALITY_W0_BACKUP", "/opt/cursor/artifacts"))
+BACKUP_DIR = Path(os.environ.get("SEARCH_QUALITY_W0_BACKUP", "/tmp/search-quality-w0"))
 BUDGET_USD = float(os.environ.get("SEARCH_QUALITY_W0_BUDGET", "10"))
 ABORT_SINGLE_USD = float(os.environ.get("SEARCH_QUALITY_W0_ABORT_SINGLE", "5"))
 ABORT_SEARCHES = int(os.environ.get("SEARCH_QUALITY_W0_ABORT_SEARCHES", "20"))
@@ -344,6 +344,19 @@ def run_probe(h: dict[str, str]) -> dict[str, Any]:
     }
 
 
+def _write_json(path: Path, payload: dict[str, Any]) -> Path:
+    text = json.dumps(payload, ensure_ascii=False, indent=2)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+    except OSError as exc:
+        fallback = Path("/tmp/search-quality-w0.json")
+        fallback.write_text(text, encoding="utf-8")
+        print(f"WARN write {path} failed ({exc}); wrote {fallback}")
+        return fallback
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
@@ -379,12 +392,15 @@ def main() -> int:
             original_pipe = pipe_backup.read_text(encoding="utf-8")
         restore_info = restore(h, original_filter, pipe_obj, original_pipe)
         payload["restore"] = restore_info
-        OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"wrote {OUT}")
+        written = _write_json(OUT, payload)
+        print(f"wrote {written}")
         return 0 if restore_info["filter_matches"] and restore_info["pipe_matches"] else 1
 
-    filter_backup.write_text(original_filter, encoding="utf-8")
-    pipe_backup.write_text(original_pipe, encoding="utf-8")
+    try:
+        filter_backup.write_text(original_filter, encoding="utf-8")
+        pipe_backup.write_text(original_pipe, encoding="utf-8")
+    except OSError as exc:
+        print(f"WARN backup write failed ({exc}); restore will use in-memory originals")
     code = 0
     try:
         if args.apply:
@@ -403,9 +419,8 @@ def main() -> int:
                 code = 1
     payload["restore"] = restore_info
     payload["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"wrote {OUT}")
+    written = _write_json(OUT, payload)
+    print(f"wrote {written}")
     if restore_info and not restore_info.get("filter_matches"):
         print("ERR filter did not restore to original")
         code = 1
