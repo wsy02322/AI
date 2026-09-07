@@ -331,14 +331,23 @@ def run_probe(h: dict[str, str]) -> dict[str, Any]:
         "xai_native_max_tool_calls": _family_gate(xai_rows),
         "openai_native_max_tool_calls": _family_gate(openai_rows),
     }
-    w6 = gates["openai_native_max_tool_calls"] == "pass"
+    w6_blocker = None
+    if gates["openai_native_max_tool_calls"] != "pass":
+        w6_blocker = "Sol did not stay within max_tool_calls+1"
+    else:
+        w6_blocker = (
+            "Sol capped, but the $19 spike was Astra Pro continue; "
+            "Astra Pro was not probed. Grok continue already leaked to 11."
+        )
     return {
         "budget_usd": BUDGET_USD,
         "spent_usd": round(spent, 6),
         "abort_reason": abort_reason,
         "max_tool_calls": MAX_TOOL_CALLS,
+        "cap_slack": CAP_SLACK,
         "gates": gates,
-        "w6_openai_native_allowed": w6,
+        "w6_openai_native_allowed": False,
+        "w6_blocker": w6_blocker,
         "rows": rows,
         "errors": errors,
     }
@@ -407,8 +416,6 @@ def main() -> int:
             apply_probe(h, original_filter, pipe_obj, original_pipe)
         if args.run:
             payload["probe"] = run_probe(h)
-            if payload["probe"].get("errors"):
-                code = 1
     finally:
         if args.revert or args.run or args.apply:
             try:

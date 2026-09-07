@@ -15,6 +15,7 @@
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
 | 上次 `verify_stack.py` | **2026-09-07 C2 后全绿**（24 ok / 0 err，`VERIFY_SMOKE=0`）：Pipe `9c4836ace251`；薄 Filter deny 类 + 12 文本 default-on（含 DeepSeek / Kimi / Qwen）；Banner v7。中国三只 Search+Fetch 6/6；Kimi「你继续」0 次新搜 / `$0.008` |
+| 即时搜 W0 | **2026-09-07**：`max_tool_calls=3` 转发成功；Flash/Sol 两轮 4 次搜；Grok「继续」11 次。合计 `$0.336`。生产 Filter/Pipe **已还原**（`f2fe14388726` / `9c4836ace251`）。`verify_text_web_search.py --mode final` 14 ok。W6 仍关 |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |

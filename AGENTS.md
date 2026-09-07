@@ -2,7 +2,7 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（仅 plan）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 须 W0 硬顶绿灯，禁止未探针就改回。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（W0 已做，W1+ 未确认）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 须 W0 **且** Astra Pro 续轮硬顶绿灯；W0 已证明 `max_tool_calls` 能转发，但 Grok 续轮可越过，Sol 刹住不等于 Astra Pro。禁止未确认就改回 native。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
 **ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-16**（plan）= 出行路线工具；**ST-17**（plan）= Grok native / X。不要把这些写成同一个号。
 
@@ -61,7 +61,7 @@
 | `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
 | `scripts/run_text_web_search_canary.py` | ST-14 W2：Gemini Flash 真实工具事件 + 图像零回归 |
 | `scripts/run_text_web_search_smoke.py` | ST-14：public 文本 Search + Fetch |
-| `scripts/run_text_web_search_eval.py` | ST-14 质量评测（**已收口**）：复验 / `--rescore` / `--suite fetch-diag`；只读，不改实例 |
+| `scripts/run_search_quality_w0.py` | 即时搜 W0：临时 native + `max_tool_calls=3`（仅带标记的消息）；跑完还原 Filter/Pipe |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
 | `image-studio/scripts/verify_studio.py` | Image Studio：登录现网 OWUI、无钥匙 generate/edit 须 503 |
 | `image-studio/scripts/probe_capabilities.py` | IS0：OpenRouter Images catalog（无需 Studio key） |

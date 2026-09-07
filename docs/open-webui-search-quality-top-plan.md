@@ -1,9 +1,9 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：**仅 plan**（2026-09-07）。用户已选 **顶级档**。未点某一步之前 **不改实例 / Pipe / Filter / Banner**。  
+> **状态**：用户已选 **顶级档**。**W0 已跑**（2026-09-07）：`max_tool_calls=3` 能转发；Flash / Sol 两轮都刹在 4 次搜；Grok「继续」漏到 11。生产 Filter/Pipe **已还原 Exa**。W1+ 未点头不执行。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
-> **未自行决断**：不把「永远不改回 OpenRouter native」写成禁令。OpenAI 是否 native 见 §4 W0/W6。
+> **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
 
 关联：`docs/open-webui-search-cost-plan.md`（`$19` / T1）；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-plan.md`。
 
@@ -128,13 +128,13 @@
 
 | 步 | 做什么 | 过门 | 回滚 |
 |----|--------|------|------|
-| **W0** 只读探针 | 隔离预算内：Astra 或 Sol、Grok、Flash 各 1 条「你继续」类短链；试 `max_tool_calls` / 文档里的 stop 是否 **拦住原厂内循环**。总花费封顶（建议 ≤ `$10`） | 写清：哪家能刹、刹在几次/多少 `$` | 不改生产 Filter |
+| **W0** 只读探针 | **已做**。脚本 `scripts/run_search_quality_w0.py`：带标记的消息才 native + `max_tool_calls=3` 且去掉 `stop_server_tools_when`；未标记生产流量仍 Exa。Flash / Grok / Sol 各 1 条十主题诱搜 +「你继续」。预算 ≤ `$10` | 见 **§10**：转发成功；Flash/Sol 刹在 4；Grok 续轮 11。生产已还原 | 已还原 |
 | **W1** 高德路线 | 工具 + 钥匙 env + 挂合格文本 + 短 JSON + 次数顶。无 UI | 中国路线题：有坐标级距离/时长/路况大意，误差目标约 1km；误搜不升；无评分/电话字段 | 卸工具、剥 filterIds |
 | **W2** Gemini native | Google 类 Search+Fetch `engine=native` | 短问仍会搜；单发 `$` 与次数可接受；中国路况仍走高德不是 Google | 改回 `exa` |
 | **W3** Grok native | xAI 类 `native` | 能引用 X；网页即时搜不差于现网 Exa 烟雾；Grok「继续」超额符合 §1.1 | 改回 `exa` |
 | **W4** Google Routes | 海外路线，同上压缩 | 海外题有路网级时长；国内仍高德 | 卸海外分支 |
 | **W5** 全模型 X | 可计数 X 工具 | 非 Grok 也能引帖；配额不打穿；次数能刹 | 卸工具 |
-| **W6** OpenAI native | **仅 W0 绿灯** | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
+| **W6** OpenAI native | **W0 未开绿灯**（Sol 能刹，Astra Pro 未测；Grok 续轮已证明 native 可越过 `max_tool_calls`） | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
 | **W7** T2 | 单次用户消息内轮累计 | 「继续」叠 spike 变稀 | 去 Pipe marker |
 
 **建议执行顺序（稳、简单优先）：W0 → W1 → W3 → W2 → W4 →（W0 若绿）W6 → W5 → W7。**  
@@ -198,5 +198,32 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 ## 9. 请你确认后才执行
 
 本文件 = 已选顶级档的施工单。  
-**下一执行步默认 W0**（只读、预算封顶）。回 `W0：同意` 才动探针。  
-若跳过探针直接 W1 高德：回 `W1：同意（跳过 W0）`。
+**W0 已做**（§10）。**下一执行步默认 W1**（高德路线工具）。回 `W1：同意` 才改实例。  
+若改做 W3 Grok native：须接受「继续」可能 >4 次搜（本次 11 次 / `$0.06`），回 `W3：同意`。
+
+---
+
+## 10. W0 结果（2026-09-07）
+
+探针：`scripts/run_search_quality_w0.py`。带 `W0_MAX_TOOL_CALLS_PROBE_V1` 的消息才把 OpenAI / Google / xAI 改 `engine=native`、写入 `max_tool_calls=3`、去掉 `stop_server_tools_when`。未标记流量仍走生产 Exa。跑完 Filter `f2fe14388726`、Pipe `9c4836ace251` **已还原**；`verify_text_web_search.py --mode final` 14 ok。
+
+全部 6 次请求的 Pipe 戳都是 `eng=native mtc=3 stop=False`，说明字段**确实转到了** `/responses`。诱搜题要 10 个独立 `web_search`；OpenRouter 文档允许 cap 触发后再执行 inflight 一次，所以 **3～4 次算刹住**。
+
+| 模型 | 轮 | `web_search_requests` | input tokens | `$` | 判定 |
+|------|----|----------------------|--------------|-----|------|
+| Gemini 3.8 Flash | 十主题 | 4 | 14,665 | 0.036 | 刹住 |
+| Gemini 3.8 Flash | 你继续 | 4 | 51,153 | 0.054 | 刹住 |
+| Grok 4.6 | 十主题 | 4 | 23,547 | 0.067 | 刹住 |
+| Grok 4.6 | 你继续 | **11** | 30,127 | 0.064 | **越过 cap**（戳仍是 mtc=3） |
+| GPT 5.6 Sol | 十主题 | 4 | 15,535 | 0.046 | 刹住 |
+| GPT 5.6 Sol | 你继续 | 4 | 36,217 | 0.069 | 刹住 |
+
+合计 **`$0.336`**（预算 `$10`）。没有出现 `$19` / 百万 input；最大 input 约 5.1 万。完整 JSON：`docs/open-webui-search-quality-w0-results.json`。
+
+含义：
+
+1. **Google**：Flash 两轮都停在 4。支持稍后 W2，**不是**已经改生产引擎。  
+2. **xAI**：首轮 4，续轮 11。`max_tool_calls` **不是** Grok native 的硬顶。W3 仍可做（11 次 / `$0.06` 远低于 spike 口径），但不能声称次数门牢。  
+3. **OpenAI / W6**：**仍关**。Sol 两轮 4 只证明这一只模型的外环能刹；`$19` 出在 Astra Pro 原厂内循环，本波**故意没测** Astra Pro。Grok 续轮已经证明 native 可以无视 `mtc=3`。  
+4. 生产搜索路径未变：OpenAI / Google / xAI 仍是 **Exa** + `$0.05` / 8 步。
+
