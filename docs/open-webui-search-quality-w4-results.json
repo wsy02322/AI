@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-07",
+  "gate": "W4",
+  "status": "installed_waiting_for_key",
+  "tool_id": "google_drive_route",
+  "display_name": "Overseas Drive Route",
+  "attached_public_text": 12,
+  "key_set": false,
+  "china_amap_regression": {
+    "status": 200,
+    "used_amap": true,
+    "has_km_or_minutes": true,
+    "has_traffic": true,
+    "has_unavailable": false
+  },
+  "verify_google_drive_route_ok": 17,
+  "verify_amap_require_key_ok": 16,
+  "verify_stack_ok": 24,
+  "pipe_sha12": "9c4836ace251"
+}

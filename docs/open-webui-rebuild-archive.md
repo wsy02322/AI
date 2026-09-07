@@ -17,7 +17,7 @@
 3. `docs/SPEC.md`（UX / ST / P0 / Later / Don't）  
 4. `docs/VERSIONS.md`（指纹）  
 5. `docs/open-webui-secret-key-persist-plan.md` §2（容器重建 SOP）  
-6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**（`docs/open-webui-upgrade-0113-plan.md`）、搜索账单（`docs/open-webui-search-cost-plan.md`）、即时搜顶级档（`docs/open-webui-search-quality-top-plan.md`：W0 已测、**W1 高德已过门**、**W2 Gemini native 已过门**、**W3 Grok native 已过门**）  
+6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**（`docs/open-webui-upgrade-0113-plan.md`）、搜索账单（`docs/open-webui-search-cost-plan.md`）、即时搜顶级档（`docs/open-webui-search-quality-top-plan.md`：W0 已测、**W1 高德已过门**、**W2 Gemini native 已过门**、**W3 Grok native 已过门**、**W4 Google Routes 已挂、过门等 Key**）  
 
 独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**与本 OWUI 重建无关**。
 
@@ -63,7 +63,7 @@
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.x-ai.grok-4.6`（不默认双栏 compare） |
 | 置顶四格 | Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
-| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14）：OpenAI **Exa**，**Google native**（W2），**xAI native**（ST-17），Anthropic/中国三只 `auto`。Tool `amap_drive_route`（ST-16）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
+| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14）：OpenAI **Exa**，**Google native**（W2），**xAI native**（ST-17），Anthropic/中国三只 `auto`。Tool `amap_drive_route` + `google_drive_route`（ST-16；海外 Key 未注入）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
 | Notebook | **N1**：Knowledge「YouTube Notebook」+ OpenRouter embedding。N2+ Studio **未做** |
 | Follow-up 芯片 | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）。Autocomplete / Title **仍开** |

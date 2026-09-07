@@ -1,6 +1,6 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 已过门**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
+> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 已过门**。**W4 已安装未过门**（等 Google Maps Routes Key）。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
 > **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
@@ -133,7 +133,7 @@
 | **W1** 高德路线 | **已过门**。Tool `amap_drive_route` 挂 12 个 public 文本；Key 在 Valves。压缩 JSON、次数顶=3、无 UI。见 **§11** | Flash 正文有距离/时长/路况大意，无「路线接口不可用」、无电话/评分 | `scripts/rollback_amap_drive_route.py` |
 | **W2** Gemini native | **已过门**。Google 类 Search+Fetch `engine=native`。OpenAI 仍 Exa。见 **§14** | Flash 短问 4 次搜 / `$0.056`；北京南站→首都机场走高德 36.7km / 41 分钟，0 次网页搜 | 改回 `exa` |
 | **W3** Grok native | **已过门**。xAI 类 Search+Fetch `engine=native`。见 **§13** | 能引用 X；网页即时搜仍出活链；Grok「继续」超额符合 §1.1 | 把 xAI 改回 `exa` 后 `apply_search_quality_w3.py` 的逆操作（Filter content） |
-| **W4** Google Routes | 海外路线，同上压缩 | 海外题有路网级时长；国内仍高德 | 卸海外分支 |
+| **W4** Google Routes | **已安装未过门**。Tool `google_drive_route` 挂 12 个 public 文本；Key **未注入**。见 **§15** | 海外题有路网级时长；国内仍高德 | `scripts/rollback_google_drive_route.py` |
 | **W5** 全模型 X | 可计数 X 工具 | 非 Grok 也能引帖；配额不打穿；次数能刹 | 卸工具 |
 | **W6** OpenAI native | **W0 未开绿灯**（Sol 能刹，Astra Pro 未测；Grok 续轮已证明 native 可越过 `max_tool_calls`） | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
 | **W7** T2 | 单次用户消息内轮累计 | 「继续」叠 spike 变稀 | 去 Pipe marker |
@@ -198,7 +198,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W0 / W1 / W2 / W3 已过门**（§10–§11、§13–§14）。**不要自行开 W4 / W6。** 下一默认步是 W4（Google Routes）；回 `W4：同意` 才装海外路线。W6 仍关。
+**W0 / W1 / W2 / W3 已过门**。**W4 工具已挂，过门等 Key**（§15）。回 `W4 Key 已注入` 再跑海外烟雾。**不要自行开 W5 / W6。**
 
 
 ---
@@ -299,5 +299,34 @@ Flash 3.8 烟雾（`$0.059`）：
 
 `verify_text_web_search.py --mode final` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w2-results.json`。
 
-**过门通过。** 中国路况仍走高德，不是 Google 网页搜。W4 / W5 / W6 **未做**。
+**过门通过。** 中国路况仍走高德，不是 Google 网页搜。W5 / W6 **未做**。
+
+---
+
+## 15. W4 Google Routes Key：申请 + 注入
+
+现网 Tool 调这一条（必须是 **Routes API** Key，不要用 Maps JavaScript / 静态图 Key）：
+
+- `POST https://routes.googleapis.com/directions/v2:computeRoutes`（`TRAFFIC_AWARE`，只要时长/距离/折线/路况间隔）
+
+Tool 已挂 12 个 public 文本。Valves 里 **还没有 Key**，所以海外题现在会说「路线接口不可用」。中国路线不受影响（高德 Key 仍在）。
+
+### 15.1 申请
+
+1. 打开 [Google Cloud Console](https://console.cloud.google.com/) 并登录。
+2. 选一个项目（没有就新建）。**要开通结算**，否则 Routes API 调不通。
+3. 「API 和服务」→「库」→ 搜 **Routes API** → **启用**。
+4. 「API 和服务」→「凭据」→ **创建凭据** → **API 密钥**。
+5. 复制那一**长串**（一般以 `AIza` 开头）。不要复制项目名。
+6. 可选：把密钥限制为 **Routes API**。IP 白名单可空。
+7. 不要把 Key 写进 git、聊天、Pipe `API_KEY`，也不要改 `WEBUI_SECRET_KEY`。
+
+### 15.2 注入（用网站，不要 SSH）
+
+1. 打开 [https://micropigeon.com/workspace/tools](https://micropigeon.com/workspace/tools)（Admin 登录）。
+2. 找到 **Overseas Drive Route**，鼠标放上去，点 **Valves**。
+3. 在 **Google Maps Key** 框粘贴 → **Save**。Max Calls 保持 3，Max Via Points 保持 24。
+4. 回 `W4 Key 已注入`。**不要**把 Key 贴进聊天。
+
+注入后 agent 跑 `verify_google_drive_route.py --require-key` 和 `GOOGLE_EXPECT_LIVE=1 python3 scripts/run_google_drive_route_smoke.py`。
 
