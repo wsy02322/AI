@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from google_drive_route_tool import (
     FIELD_MASK,
+    GOOGLE_DRIVE_ROUTE_M1A_V1,
     GOOGLE_DRIVE_ROUTE_V1,
     UNAVAILABLE,
     Tools,
@@ -19,11 +20,12 @@ from google_drive_route_tool import (
     compact_route,
     decode_polyline,
     lookup_drive,
+    parse_via,
     sparse_via,
     traffic_summary,
     waypoint,
 )
-from stack_contract import GOOGLE_DRIVE_ROUTE_MARKER
+from stack_contract import GOOGLE_DRIVE_ROUTE_M1A_MARKER, GOOGLE_DRIVE_ROUTE_MARKER
 
 
 class GoogleDriveRouteTests(unittest.TestCase):
@@ -32,8 +34,10 @@ class GoogleDriveRouteTests(unittest.TestCase):
 
     def test_marker_matches_contract(self) -> None:
         self.assertEqual(GOOGLE_DRIVE_ROUTE_V1, GOOGLE_DRIVE_ROUTE_MARKER)
+        self.assertEqual(GOOGLE_DRIVE_ROUTE_M1A_V1, GOOGLE_DRIVE_ROUTE_M1A_MARKER)
         source = Path(__file__).with_name("google_drive_route_tool.py").read_text(encoding="utf-8")
         self.assertIn(GOOGLE_DRIVE_ROUTE_MARKER, source)
+        self.assertIn(GOOGLE_DRIVE_ROUTE_M1A_MARKER, source)
         self.assertIn("mainland China", source)
         self.assertNotIn("Place Details", source)
 
@@ -139,12 +143,15 @@ class GoogleDriveRouteTests(unittest.TestCase):
         self.assertTrue(data["ok"])
         self.assertEqual(data["km"], 27.8)
         self.assertEqual(data["minutes"], 41)
+        self.assertEqual(len(data["legs"]), 1)
         self.assertEqual(seen["url"], "https://routes.googleapis.com/directions/v2:computeRoutes")
         self.assertEqual(seen["body"]["travelMode"], "DRIVE")
         self.assertEqual(seen["body"]["routingPreference"], "TRAFFIC_AWARE")
+        self.assertNotIn("intermediates", seen["body"])
         self.assertIn("TRAFFIC_ON_POLYLINE", seen["body"]["extraComputations"])
         self.assertNotIn("places", json.dumps(seen["body"]))
         self.assertIn("speedReadingIntervals", FIELD_MASK)
+        self.assertIn("legs.duration", FIELD_MASK)
         self.assertNotIn("formattedAddress", FIELD_MASK)
 
     def test_missing_key_and_cap(self) -> None:
@@ -173,6 +180,62 @@ class GoogleDriveRouteTests(unittest.TestCase):
             mod.routes_post = orig
         self.assertTrue(capped.get("capped"))
         self.assertEqual(capped["error"], "本轮路线查询已达上限")
+
+    def test_via_sends_intermediates_and_splits_legs(self) -> None:
+        seen: dict[str, Any] = {}
+
+        def http(_url: str, _key: str, body: dict[str, Any]) -> dict:
+            seen["body"] = body
+            return {
+                "routes": [
+                    {
+                        "distanceMeters": 40000,
+                        "duration": "3600s",
+                        "polyline": {"encodedPolyline": "_p~iF~ps|U"},
+                        "legs": [
+                            {
+                                "distanceMeters": 22000,
+                                "duration": "1800s",
+                                "startLocation": {"latLng": {"latitude": 40.6413, "longitude": -73.7781}},
+                                "endLocation": {"latLng": {"latitude": 40.75, "longitude": -73.99}},
+                                "polyline": {"encodedPolyline": "_p~iF~ps|U"},
+                            },
+                            {
+                                "distanceMeters": 18000,
+                                "duration": "1500s",
+                                "startLocation": {"latLng": {"latitude": 40.75, "longitude": -73.99}},
+                                "endLocation": {"latLng": {"latitude": 40.758, "longitude": -73.9855}},
+                                "polyline": {"encodedPolyline": "_p~iF~ps|U"},
+                            },
+                        ],
+                    }
+                ]
+            }
+
+        raw = lookup_drive(
+            "test-key",
+            "JFK Airport",
+            "Times Square",
+            via="Midtown Manhattan",
+            max_via=24,
+            http=http,
+        )
+        data = json.loads(raw)
+        self.assertTrue(data["ok"])
+        self.assertEqual(len(seen["body"]["intermediates"]), 1)
+        self.assertEqual(len(data["legs"]), 2)
+        self.assertEqual(data["legs"][0]["minutes"], 30)
+        self.assertEqual(data["legs"][1]["minutes"], 25)
+        self.assertEqual(data["totals"]["minutes"], 55)
+        self.assertEqual(parse_via("Philadelphia; Boston"), ["Philadelphia", "Boston"])
+
+    def test_mainland_coord_and_too_many_via_fail(self) -> None:
+        mixed = json.loads(lookup_drive("k", "116.40,39.90", "Times Square", max_via=8))
+        self.assertFalse(mixed["ok"])
+        self.assertTrue(mixed.get("mix"))
+        too_many = json.loads(lookup_drive("k", "JFK", "Boston", via="a,b,c,d,e,f,g", max_via=8))
+        self.assertFalse(too_many["ok"])
+        self.assertTrue(too_many.get("too_many"))
 
 
 if __name__ == "__main__":

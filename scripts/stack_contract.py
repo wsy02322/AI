@@ -114,11 +114,13 @@ TEXT_WEB_SEARCH_MODEL_IDS = [
 # ST-16 China driving route (Amap). Same attach set as ST-14 text.
 AMAP_DRIVE_ROUTE_TOOL = "amap_drive_route"
 AMAP_DRIVE_ROUTE_MARKER = "AMAP_DRIVE_ROUTE_V1"
+AMAP_DRIVE_ROUTE_M1A_MARKER = "AMAP_DRIVE_ROUTE_M1A_V1"
 AMAP_DRIVE_ROUTE_MODEL_IDS = TEXT_WEB_SEARCH_MODEL_IDS
 
 # ST-16 overseas driving route (Google Routes). Same attach set. China stays Amap.
 GOOGLE_DRIVE_ROUTE_TOOL = "google_drive_route"
 GOOGLE_DRIVE_ROUTE_MARKER = "GOOGLE_DRIVE_ROUTE_V1"
+GOOGLE_DRIVE_ROUTE_M1A_MARKER = "GOOGLE_DRIVE_ROUTE_M1A_V1"
 GOOGLE_DRIVE_ROUTE_MODEL_IDS = TEXT_WEB_SEARCH_MODEL_IDS
 
 # ST-17 countable X recent search. Same attach set. Grok still has native too.

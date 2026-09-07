@@ -65,7 +65,7 @@ def upsert_tool(h: dict[str, str]) -> dict[str, Any]:
         "id": GOOGLE_DRIVE_ROUTE_TOOL,
         "name": TOOL_NAME,
         "meta": {
-            "description": "Google Routes driving time and traffic outside mainland China. Compact JSON, no map UI."
+            "description": "Google Routes driving time and traffic outside mainland China. Compact JSON, optional via stops, no map UI."
         },
         "content": content,
         "access_grants": [PUBLIC_GRANT],

@@ -11,6 +11,7 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import (
     AMAP_DRIVE_ROUTE_TOOL,
+    GOOGLE_DRIVE_ROUTE_M1A_MARKER,
     GOOGLE_DRIVE_ROUTE_MARKER,
     GOOGLE_DRIVE_ROUTE_MODEL_IDS,
     GOOGLE_DRIVE_ROUTE_TOOL,
@@ -54,6 +55,10 @@ def main() -> int:
         report.err("tool missing marker")
     else:
         report.ok("tool marker present")
+    if GOOGLE_DRIVE_ROUTE_M1A_MARKER not in content:
+        report.err("tool missing M1a marker")
+    else:
+        report.ok("tool M1a marker")
     if tool.get("name") != "Overseas Drive Route":
         report.err(f"tool name={tool.get('name')}")
     else:

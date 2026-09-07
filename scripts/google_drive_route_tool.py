@@ -2,8 +2,8 @@
 title: Overseas Drive Route
 author: micropigeon
 id: google_drive_route
-description: Google Routes driving time and traffic outside mainland China. Compact JSON, no map UI.
-version: 1.0.0
+description: Google Routes driving time and traffic outside mainland China. Compact JSON, optional via stops, no map UI.
+version: 1.1.0
 """
 
 from __future__ import annotations
@@ -20,7 +20,21 @@ from typing import Any, Callable
 from pydantic import BaseModel, Field
 
 GOOGLE_DRIVE_ROUTE_V1 = "GOOGLE_DRIVE_ROUTE_V1"
+GOOGLE_DRIVE_ROUTE_M1A_V1 = "GOOGLE_DRIVE_ROUTE_M1A_V1"
 UNAVAILABLE = "路线接口不可用"
+NOTE = "分钟数是路网估算；实时路况只代表现在"
+MAX_STOPS = 8
+MAX_VIA_STOPS = 6
+LEG_VIA_CAP = 8
+MIX_HINT = "海外与中国大陆站点请拆开，大陆用 China Drive Route"
+FIELD_MASK = (
+    "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,"
+    "routes.legs.duration,routes.legs.distanceMeters,"
+    "routes.legs.startLocation,routes.legs.endLocation,"
+    "routes.legs.polyline.encodedPolyline,"
+    "routes.legs.travelAdvisory.speedReadingIntervals,"
+    "routes.travelAdvisory.speedReadingIntervals"
+)
 COORD_RE = re.compile(
     r"^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$"
 )
@@ -31,14 +45,53 @@ SPEED_LABELS = {
     "SPEED_UNSPECIFIED": "未知",
 }
 ROUTES_URL = "https://routes.googleapis.com/directions/v2:computeRoutes"
-FIELD_MASK = (
-    "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,"
-    "routes.legs.startLocation,routes.legs.endLocation,"
-    "routes.travelAdvisory.speedReadingIntervals"
-)
 
 _CALLS: dict[str, tuple[float, int]] = {}
 HttpFn = Callable[[str, str, dict[str, Any]], dict[str, Any]]
+
+
+def parse_via(via: Any) -> list[str]:
+    if via is None:
+        return []
+    if isinstance(via, (list, tuple)):
+        parts = [str(item).strip() for item in via]
+    else:
+        text = str(via).strip()
+        if not text:
+            return []
+        if text.startswith("["):
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                parsed = None
+            if isinstance(parsed, list):
+                parts = [str(item).strip() for item in parsed]
+            else:
+                parts = re.split(r"[;|，,、/]+", text)
+        else:
+            parts = re.split(r"[;|，,、/]+", text)
+    return [part.strip() for part in parts if part and part.strip()]
+
+
+def stop_region(lng: float, lat: float) -> str:
+    if 113.75 <= lng <= 114.5 and 22.13 <= lat <= 22.58:
+        return "overseas"
+    if 113.52 <= lng <= 113.63 and 22.10 <= lat <= 22.22:
+        return "overseas"
+    if 119.3 <= lng <= 122.1 and 21.8 <= lat <= 25.4:
+        return "overseas"
+    if 73.0 <= lng <= 135.1 and 18.0 <= lat <= 53.7:
+        return "cn"
+    return "overseas"
+
+
+def attach_itinerary(compact: dict[str, Any], legs: list[dict[str, Any]], stops: list[str]) -> dict[str, Any]:
+    compact["traffic_as_of"] = "now"
+    compact["note"] = NOTE
+    compact["stops"] = stops
+    compact["legs"] = legs
+    compact["totals"] = {"km": compact["km"], "minutes": compact["minutes"]}
+    return compact
 
 
 def fail(message: str = UNAVAILABLE, **extra: Any) -> str:
@@ -304,15 +357,52 @@ def routes_post(key: str, body: dict[str, Any], http: HttpFn | None = None) -> d
     return data if isinstance(data, dict) else {}
 
 
+def compact_leg(
+    *,
+    from_name: str,
+    to_name: str,
+    meters: float,
+    seconds: float,
+    points: list[tuple[float, float]],
+    traffic: str,
+    max_via: int,
+) -> dict[str, Any]:
+    cap = max(4, min(int(max_via), LEG_VIA_CAP))
+    return {
+        "from": from_name,
+        "to": to_name,
+        "km": round(meters / 1000.0, 1),
+        "minutes": int(round(seconds / 60.0)) if seconds else 0,
+        "traffic": traffic,
+        "roads": [],
+        "via": sparse_via(points, total_m=meters, max_points=cap),
+    }
+
+
+def regions_from_points(points: list[tuple[float, float]]) -> set[str]:
+    return {stop_region(lng, lat) for lng, lat in points if abs(lng) > 0 or abs(lat) > 0}
+
+
 def lookup_drive(
     key: str,
     origin: str,
     destination: str,
     *,
     max_via: int,
+    via: Any = "",
     http: HttpFn | None = None,
 ) -> str:
-    body = {
+    via_stops = parse_via(via)
+    if len(via_stops) > MAX_VIA_STOPS:
+        return fail(UNAVAILABLE, too_many=True)
+    labels = [origin, *via_stops, destination]
+    if len(labels) > MAX_STOPS:
+        return fail(UNAVAILABLE, too_many=True)
+    for label in labels:
+        parsed = parse_coord(label)
+        if parsed and stop_region(*parsed) == "cn":
+            return fail(UNAVAILABLE, mix=True, hint=MIX_HINT)
+    body: dict[str, Any] = {
         "origin": waypoint(origin),
         "destination": waypoint(destination),
         "travelMode": "DRIVE",
@@ -323,20 +413,90 @@ def lookup_drive(
         "units": "METRIC",
         "extraComputations": ["TRAFFIC_ON_POLYLINE"],
     }
+    if via_stops:
+        body["intermediates"] = [waypoint(stop) for stop in via_stops]
     data = routes_post(key, body, http)
     if data.get("error"):
         return fail()
     routes = data.get("routes")
     if not isinstance(routes, list) or not routes or not isinstance(routes[0], dict):
         return fail()
+    route = routes[0]
     compact = compact_route(
         origin_name=origin,
         dest_name=destination,
-        route=routes[0],
-        max_via=max_via,
+        route=route,
+        max_via=max_via if not via_stops else min(int(max_via), LEG_VIA_CAP),
     )
     if compact["km"] <= 0 and compact["minutes"] <= 0:
         return fail()
+    route_legs = route.get("legs") if isinstance(route.get("legs"), list) else []
+    names = [origin, *via_stops, destination]
+    check_points = [
+        (compact["origin"]["lng"], compact["origin"]["lat"]),
+        (compact["destination"]["lng"], compact["destination"]["lat"]),
+    ]
+    for item in route_legs:
+        if isinstance(item, dict):
+            start = latlng_pair(item.get("startLocation"))
+            end = latlng_pair(item.get("endLocation"))
+            if start:
+                check_points.append(start)
+            if end:
+                check_points.append(end)
+    regions = regions_from_points(check_points)
+    if "cn" in regions:
+        return fail(UNAVAILABLE, mix=True, hint=MIX_HINT)
+    legs_out: list[dict[str, Any]] = []
+    if via_stops and len(route_legs) == len(names) - 1:
+        overall_traffic = compact["traffic"]
+        for index, item in enumerate(route_legs):
+            if not isinstance(item, dict):
+                return fail()
+            try:
+                meters = float(item.get("distanceMeters") or 0)
+            except (TypeError, ValueError):
+                meters = 0.0
+            seconds = parse_duration_seconds(item.get("duration"))
+            encoded = ""
+            poly = item.get("polyline")
+            if isinstance(poly, dict):
+                encoded = str(poly.get("encodedPolyline") or "")
+            points = decode_polyline(encoded)
+            advisory = item.get("travelAdvisory") if isinstance(item.get("travelAdvisory"), dict) else {}
+            intervals = advisory.get("speedReadingIntervals")
+            if isinstance(intervals, list) and intervals:
+                traffic, _share = traffic_summary(intervals, points)
+            else:
+                traffic = overall_traffic
+            legs_out.append(
+                compact_leg(
+                    from_name=names[index],
+                    to_name=names[index + 1],
+                    meters=meters,
+                    seconds=seconds,
+                    points=points,
+                    traffic=traffic,
+                    max_via=min(int(max_via), LEG_VIA_CAP),
+                )
+            )
+        compact["km"] = round(sum(leg["km"] for leg in legs_out), 1)
+        compact["minutes"] = int(sum(leg["minutes"] for leg in legs_out))
+        compact["traffic"] = "分段见 legs"
+        compact["via"] = []
+    else:
+        legs_out = [
+            {
+                "from": compact["origin"]["name"],
+                "to": compact["destination"]["name"],
+                "km": compact["km"],
+                "minutes": compact["minutes"],
+                "traffic": compact["traffic"],
+                "roads": [],
+                "via": compact.get("via") or [],
+            }
+        ]
+    attach_itinerary(compact, legs_out, names)
     return json.dumps(compact, ensure_ascii=False, separators=(",", ":"))
 
 
@@ -377,17 +537,20 @@ class Tools:
         self,
         origin: str,
         destination: str,
+        via: str = "",
         __metadata__: dict | None = None,
     ) -> str:
-        """Must-use tool for driving time, traffic, or how to go by car OUTSIDE mainland China.
+        """Must-use tool for driving time, traffic, or a multi-stop road trip OUTSIDE mainland China.
 
-        Use this for the US, Europe, and other overseas cities. Do not use for
+        Use this for the US, Europe, Hong Kong, Macau, Taiwan. Call once. Put
+        middle cities in via (comma or semicolon, max 6). Do not use for
         mainland China — that is China Drive Route. origin/destination: place
         name or 'lng,lat' (WGS84). Returns compact JSON: km, minutes, traffic,
-        sparse ~1km via points. No phone, rating, or map UI. If ok is false,
-        say 路线接口不可用 and do not invent exact minutes.
+        legs[], totals. No phone, rating, or map UI. If ok is false, say
+        路线接口不可用 and do not invent exact minutes.
         """
         # GOOGLE_DRIVE_ROUTE_V1
+        # GOOGLE_DRIVE_ROUTE_M1A_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:
@@ -404,5 +567,6 @@ class Tools:
             key,
             origin,
             destination,
+            via=via,
             max_via=int(self.valves.MAX_VIA_POINTS),
         )

@@ -2,8 +2,8 @@
 title: China Drive Route
 author: micropigeon
 id: amap_drive_route
-description: Amap driving route and traffic for China. Compact JSON, no map UI.
-version: 1.0.0
+description: Amap driving route and traffic for China. Compact JSON, optional via stops, no map UI.
+version: 1.1.0
 """
 
 from __future__ import annotations
@@ -20,7 +20,13 @@ from typing import Any, Callable
 from pydantic import BaseModel, Field
 
 AMAP_DRIVE_ROUTE_V1 = "AMAP_DRIVE_ROUTE_V1"
+AMAP_DRIVE_ROUTE_M1A_V1 = "AMAP_DRIVE_ROUTE_M1A_V1"
 UNAVAILABLE = "路线接口不可用"
+NOTE = "分钟数是路网估算；实时路况只代表现在"
+MAX_STOPS = 8
+MAX_VIA_STOPS = 6
+LEG_VIA_CAP = 8
+MIX_HINT = "中国大陆与海外站点请拆开，海外用 Overseas Drive Route"
 COORD_RE = re.compile(
     r"^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$"
 )
@@ -30,6 +36,66 @@ DRIVING_URL = "https://restapi.amap.com/v5/direction/driving"
 
 _CALLS: dict[str, tuple[float, int]] = {}
 HttpFn = Callable[[str, dict[str, str]], dict[str, Any]]
+
+
+def parse_via(via: Any) -> list[str]:
+    if via is None:
+        return []
+    if isinstance(via, (list, tuple)):
+        parts = [str(item).strip() for item in via]
+    else:
+        text = str(via).strip()
+        if not text:
+            return []
+        if text.startswith("["):
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                parsed = None
+            if isinstance(parsed, list):
+                parts = [str(item).strip() for item in parsed]
+            else:
+                parts = re.split(r"[;|，,、/]+", text)
+        else:
+            parts = re.split(r"[;|，,、/]+", text)
+    return [part.strip() for part in parts if part and part.strip()]
+
+
+def stop_region(lng: float, lat: float) -> str:
+    if 113.75 <= lng <= 114.5 and 22.13 <= lat <= 22.58:
+        return "overseas"
+    if 113.52 <= lng <= 113.63 and 22.10 <= lat <= 22.22:
+        return "overseas"
+    if 119.3 <= lng <= 122.1 and 21.8 <= lat <= 25.4:
+        return "overseas"
+    if 73.0 <= lng <= 135.1 and 18.0 <= lat <= 53.7:
+        return "cn"
+    return "overseas"
+
+
+def attach_itinerary(compact: dict[str, Any], legs: list[dict[str, Any]], stops: list[str]) -> dict[str, Any]:
+    compact["traffic_as_of"] = "now"
+    compact["note"] = NOTE
+    compact["stops"] = stops
+    compact["legs"] = legs
+    compact["totals"] = {"km": compact["km"], "minutes": compact["minutes"]}
+    return compact
+
+
+def leg_from_compact(compact: dict[str, Any], *, max_via: int) -> dict[str, Any]:
+    via = compact.get("via") or []
+    cap = max(4, min(int(max_via), LEG_VIA_CAP))
+    if len(via) > cap:
+        via = via[: cap - 1] + via[-1:]
+    return {
+        "from": compact["origin"]["name"],
+        "to": compact["destination"]["name"],
+        "km": compact["km"],
+        "minutes": compact["minutes"],
+        "traffic": compact["traffic"],
+        "roads": compact.get("roads") or [],
+        "via": via,
+    }
 
 
 def fail(message: str = UNAVAILABLE, **extra: Any) -> str:
@@ -273,20 +339,16 @@ def geocode_place(key: str, place: str, http: HttpFn | None = None) -> tuple[str
     return name, location
 
 
-def lookup_drive(
+def drive_one(
     key: str,
-    origin: str,
-    destination: str,
+    origin_name: str,
+    dest_name: str,
+    origin_xy: tuple[float, float],
+    dest_xy: tuple[float, float],
     *,
     max_via: int,
     http: HttpFn | None = None,
-) -> str:
-    start = geocode_place(key, origin, http)
-    end = geocode_place(key, destination, http)
-    if not start or not end:
-        return fail()
-    origin_name, origin_xy = start
-    dest_name, dest_xy = end
+) -> dict[str, Any] | None:
     data = amap_get(
         DRIVING_URL,
         {
@@ -300,12 +362,12 @@ def lookup_drive(
         http,
     )
     if str(data.get("status")) != "1":
-        return fail()
+        return None
     route = data.get("route") if isinstance(data.get("route"), dict) else {}
     paths = route.get("paths")
     if not isinstance(paths, list) or not paths or not isinstance(paths[0], dict):
-        return fail()
-    compact = compact_route(
+        return None
+    return compact_route(
         origin_name=origin_name,
         dest_name=dest_name,
         origin=origin_xy,
@@ -313,7 +375,74 @@ def lookup_drive(
         path=paths[0],
         max_via=max_via,
     )
-    return json.dumps(compact, ensure_ascii=False, separators=(",", ":"))
+
+
+def lookup_drive(
+    key: str,
+    origin: str,
+    destination: str,
+    *,
+    max_via: int,
+    via: Any = "",
+    http: HttpFn | None = None,
+) -> str:
+    via_stops = parse_via(via)
+    if len(via_stops) > MAX_VIA_STOPS:
+        return fail(UNAVAILABLE, too_many=True)
+    labels = [origin, *via_stops, destination]
+    if len(labels) > MAX_STOPS:
+        return fail(UNAVAILABLE, too_many=True)
+    resolved: list[tuple[str, tuple[float, float]]] = []
+    for label in labels:
+        place = geocode_place(key, label, http)
+        if not place:
+            return fail()
+        name, xy = place
+        if stop_region(*xy) != "cn":
+            return fail(UNAVAILABLE, mix=True, hint=MIX_HINT)
+        resolved.append((name, xy))
+    leg_max = min(int(max_via), LEG_VIA_CAP) if len(resolved) > 2 else int(max_via)
+    compacts: list[dict[str, Any]] = []
+    for index in range(len(resolved) - 1):
+        start_name, start_xy = resolved[index]
+        end_name, end_xy = resolved[index + 1]
+        compact = drive_one(
+            key,
+            start_name,
+            end_name,
+            start_xy,
+            end_xy,
+            max_via=leg_max,
+            http=http,
+        )
+        if compact is None:
+            return fail()
+        compacts.append(compact)
+    first = compacts[0]
+    last = compacts[-1]
+    totals_km = round(sum(item["km"] for item in compacts), 1)
+    totals_min = int(sum(item["minutes"] for item in compacts))
+    legs = [leg_from_compact(item, max_via=leg_max) for item in compacts]
+    payload = {
+        "ok": True,
+        "provider": "amap",
+        "crs": "GCJ-02",
+        "origin": first["origin"],
+        "destination": last["destination"],
+        "km": totals_km,
+        "minutes": totals_min,
+        "traffic": first["traffic"] if len(compacts) == 1 else "分段见 legs",
+        "traffic_share": first.get("traffic_share") if len(compacts) == 1 else {},
+        "roads": first.get("roads") or [],
+        "via": first.get("via") or [],
+    }
+    if len(compacts) == 1:
+        payload["traffic"] = first["traffic"]
+        payload["traffic_share"] = first.get("traffic_share") or {}
+        payload["roads"] = first.get("roads") or []
+        payload["via"] = first.get("via") or []
+    attach_itinerary(payload, legs, [name for name, _xy in resolved])
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
 
 def allow_call(chat_id: str, limit: int, now: float | None = None) -> bool:
@@ -348,16 +477,20 @@ class Tools:
         self,
         origin: str,
         destination: str,
+        via: str = "",
         __metadata__: dict | None = None,
     ) -> str:
-        """Must-use tool for mainland China driving time, traffic, or how to go by car.
+        """Must-use tool for mainland China driving time, traffic, or a multi-day road trip.
 
-        Call this instead of guessing live minutes. Do not use for overseas cities.
-        origin/destination: place name or 'lng,lat' (GCJ-02). Returns compact JSON:
-        km, minutes, traffic, sparse ~1km via points. No phone, rating, or map UI.
-        If ok is false, say 路线接口不可用 and do not invent exact minutes.
+        Call once. For 西安→西宁→青海湖→张掖 put middle cities in via (comma or
+        semicolon, max 6). Do not call once per city. Hong Kong / Macau / Taiwan
+        and overseas cities: use Overseas Drive Route instead. origin/destination:
+        place name or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes,
+        traffic, legs[], totals. No phone, rating, or map UI. If ok is false,
+        say 路线接口不可用 and do not invent exact minutes.
         """
         # AMAP_DRIVE_ROUTE_V1
+        # AMAP_DRIVE_ROUTE_M1A_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:
@@ -374,5 +507,6 @@ class Tools:
             key,
             origin,
             destination,
+            via=via,
             max_via=int(self.valves.MAX_VIA_POINTS),
         )

@@ -11,6 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from amap_drive_route_tool import (
+    AMAP_DRIVE_ROUTE_M1A_V1,
     AMAP_DRIVE_ROUTE_V1,
     UNAVAILABLE,
     Tools,
@@ -18,10 +19,12 @@ from amap_drive_route_tool import (
     compact_route,
     lookup_drive,
     parse_polyline,
+    parse_via,
     sparse_via,
+    stop_region,
     traffic_summary,
 )
-from stack_contract import AMAP_DRIVE_ROUTE_MARKER
+from stack_contract import AMAP_DRIVE_ROUTE_M1A_MARKER, AMAP_DRIVE_ROUTE_MARKER
 
 
 class AmapDriveRouteTests(unittest.TestCase):
@@ -30,8 +33,10 @@ class AmapDriveRouteTests(unittest.TestCase):
 
     def test_marker_matches_contract(self) -> None:
         self.assertEqual(AMAP_DRIVE_ROUTE_V1, AMAP_DRIVE_ROUTE_MARKER)
+        self.assertEqual(AMAP_DRIVE_ROUTE_M1A_V1, AMAP_DRIVE_ROUTE_M1A_MARKER)
         source = Path(__file__).with_name("amap_drive_route_tool.py").read_text(encoding="utf-8")
         self.assertIn(AMAP_DRIVE_ROUTE_MARKER, source)
+        self.assertIn(AMAP_DRIVE_ROUTE_M1A_MARKER, source)
 
     def test_sparse_via_about_one_km(self) -> None:
         points = [(116.0 + i * 0.01, 39.9) for i in range(20)]
@@ -119,6 +124,8 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertTrue(data["ok"])
         self.assertEqual(data["km"], 28.5)
         self.assertEqual(data["minutes"], 41)
+        self.assertEqual(len(data["legs"]), 1)
+        self.assertEqual(data["totals"]["km"], 28.5)
         self.assertEqual(len(calls), 3)
 
     def test_missing_key_and_cap(self) -> None:
@@ -155,6 +162,87 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertIn("78.47.152.85", _hint({"geocode_info": "INVALID_USER_IP", "driving_info": "10005"}))
         self.assertIn("数字签名", _hint({"geocode_info": "", "driving_info": "INVALID_USER_SIGNATURE"}))
         self.assertEqual(_hint({"ok": True, "geocode_info": "OK", "driving_info": "OK"}), "")
+
+    def test_parse_via_and_regions(self) -> None:
+        self.assertEqual(parse_via("西宁;青海湖"), ["西宁", "青海湖"])
+        self.assertEqual(parse_via("西宁, 青海湖"), ["西宁", "青海湖"])
+        self.assertEqual(parse_via('["西宁","青海湖"]'), ["西宁", "青海湖"])
+        self.assertEqual(stop_region(116.4, 39.9), "cn")
+        self.assertEqual(stop_region(139.69, 35.68), "overseas")
+        self.assertEqual(stop_region(114.17, 22.32), "overseas")
+
+    def test_via_fans_out_one_tool_call(self) -> None:
+        calls: list[str] = []
+
+        def http(url: str, params: dict[str, str]) -> dict:
+            calls.append(url)
+            if "geocode" in url:
+                locs = {
+                    "西安": "108.94,34.26",
+                    "西宁": "101.78,36.62",
+                    "青海湖": "100.14,36.87",
+                    "张掖": "100.45,38.93",
+                }
+                place = params["address"]
+                return {
+                    "status": "1",
+                    "geocodes": [{"formatted_address": place, "location": locs[place]}],
+                }
+            return {
+                "status": "1",
+                "route": {
+                    "paths": [
+                        {
+                            "distance": "100000",
+                            "cost": {"duration": "7200"},
+                            "polyline": f"{params['origin']};{params['destination']}",
+                            "tmcs": [{"tmc_status": "畅通", "tmc_distance": "100000"}],
+                            "steps": [{"road_name": "G30"}],
+                        }
+                    ]
+                },
+            }
+
+        raw = lookup_drive(
+            "test-key",
+            "西安",
+            "张掖",
+            via="西宁,青海湖",
+            max_via=24,
+            http=http,
+        )
+        data = json.loads(raw)
+        self.assertTrue(data["ok"])
+        self.assertEqual(len(data["legs"]), 3)
+        self.assertEqual(data["stops"], ["西安", "西宁", "青海湖", "张掖"])
+        self.assertEqual(data["totals"]["km"], 300.0)
+        self.assertEqual(data["totals"]["minutes"], 360)
+        self.assertEqual(sum(1 for url in calls if "geocode" in url), 4)
+        self.assertEqual(sum(1 for url in calls if "driving" in url), 3)
+
+    def test_mix_and_too_many_via_fail(self) -> None:
+        def tokyo_http(url: str, params: dict[str, str]) -> dict:
+            if "geocode" in url:
+                place = params["address"]
+                loc = "139.69,35.68" if "东京" in place else "108.94,34.26"
+                return {"status": "1", "geocodes": [{"formatted_address": place, "location": loc}]}
+            return {"status": "0"}
+
+        mixed = json.loads(lookup_drive("k", "西安", "东京", max_via=8, http=tokyo_http))
+        self.assertFalse(mixed["ok"])
+        self.assertTrue(mixed.get("mix"))
+        too_many = json.loads(
+            lookup_drive(
+                "k",
+                "西安",
+                "敦煌",
+                via="a,b,c,d,e,f,g",
+                max_via=8,
+                http=lambda *_args, **_kwargs: {},
+            )
+        )
+        self.assertFalse(too_many["ok"])
+        self.assertTrue(too_many.get("too_many"))
 
 
 if __name__ == "__main__":
