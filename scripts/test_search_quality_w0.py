@@ -18,6 +18,7 @@ from search_quality_w0 import (
     inject_pipe,
     load_filter_class,
 )
+from run_search_quality_w0 import CAP_SLACK, _verdict
 from stack_contract import PIPE
 from text_web_search_ops import filter_source
 
@@ -85,6 +86,15 @@ class W0InjectTests(unittest.TestCase):
         self.assertEqual(inject_pipe(patched), patched)
         self.assertEqual(patched.count(PIPE_STOP_ANCHOR), 1)
         self.assertEqual(patched.count(PIPE_CALL_ANCHOR), 1)
+
+    def test_verdict_allows_one_pending_call(self) -> None:
+        self.assertEqual(CAP_SLACK, 1)
+        self.assertEqual(_verdict(200, 3, 3), "capped")
+        self.assertEqual(_verdict(200, 4, 4), "capped")
+        self.assertEqual(_verdict(200, 2, 2), "maybe_capped")
+        self.assertEqual(_verdict(200, 5, 5), "uncapped")
+        self.assertEqual(_verdict(200, 0, 0), "no_search")
+        self.assertEqual(_verdict(500, 4, 4), "error")
 
 
 if __name__ == "__main__":

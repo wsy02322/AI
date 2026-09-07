@@ -48,6 +48,8 @@ ABORT_SINGLE_USD = float(os.environ.get("SEARCH_QUALITY_W0_ABORT_SINGLE", "5"))
 ABORT_SEARCHES = int(os.environ.get("SEARCH_QUALITY_W0_ABORT_SEARCHES", "20"))
 ABORT_INPUT_TOKENS = int(os.environ.get("SEARCH_QUALITY_W0_ABORT_TOKENS", "400000"))
 CHAT_TIMEOUT = int(os.environ.get("SEARCH_QUALITY_W0_TIMEOUT", "180"))
+# OpenRouter may execute in-flight tool calls after the budget fires (3 → 4).
+CAP_SLACK = int(os.environ.get("SEARCH_QUALITY_W0_CAP_SLACK", "1"))
 
 FLASH = f"{PIPE}.google.gemini-3.8-flash"
 GROK = f"{PIPE}.x-ai.grok-4.6"
@@ -113,6 +115,20 @@ def _probe_stamps(events: list[dict[str, Any]]) -> list[str]:
     return out
 
 
+def _verdict(status: int, searches: int, executed: int) -> str:
+    if status != 200:
+        return "error"
+    steps = max(searches, executed)
+    ceiling = MAX_TOOL_CALLS + CAP_SLACK
+    if steps >= 1 and MAX_TOOL_CALLS <= steps <= ceiling:
+        return "capped"
+    if 1 <= steps < MAX_TOOL_CALLS:
+        return "maybe_capped"
+    if steps > ceiling:
+        return "uncapped"
+    return "no_search"
+
+
 def _summarize(result: dict[str, Any]) -> dict[str, Any]:
     usage = result.get("usage") or {}
     searches = web_search_requests(usage)
@@ -120,25 +136,20 @@ def _summarize(result: dict[str, Any]) -> dict[str, Any]:
     requested = tool_calls_requested(usage)
     cost = usage_cost_usd(usage)
     stamps = _probe_stamps(result.get("events") or [])
-    steps = max(searches, executed)
-    if steps <= MAX_TOOL_CALLS and searches >= 1:
-        verdict = "capped" if steps == MAX_TOOL_CALLS or searches == MAX_TOOL_CALLS else "maybe_capped"
-    elif steps > MAX_TOOL_CALLS:
-        verdict = "uncapped"
-    elif result.get("status") != 200:
-        verdict = "error"
-    else:
-        verdict = "no_search"
+    details = usage.get("server_tool_use_details") or usage.get("server_tool_use") or {}
     return {
         "status": result.get("status"),
-        "verdict": verdict,
+        "verdict": _verdict(int(result.get("status") or 0), searches, executed),
         "web_search_requests": searches,
         "tool_calls_executed": executed,
         "tool_calls_requested": requested,
         "search_called": search_called(result),
         "cost_usd": cost,
+        "cost_details": usage.get("cost_details") if isinstance(usage.get("cost_details"), dict) else None,
         "input_tokens": _input_tokens(usage),
         "output_tokens": usage.get("completion_tokens") or usage.get("output_tokens"),
+        "turn_count": usage.get("turn_count"),
+        "server_tool_use_details": details if isinstance(details, dict) else {},
         "usage_keys": sorted(str(key) for key in usage.keys()),
         "probe_stamps": stamps,
         "text_chars": len(result.get("text") or ""),
@@ -267,9 +278,11 @@ def run_probe(h: dict[str, str]) -> dict[str, Any]:
             errors.append(f"{label} abort: {abort_reason}")
             continue
         if first_row["verdict"] == "uncapped":
-            errors.append(f"{label} uncapped on first turn")
-            abort_reason = f"{label} uncapped"
-            continue
+            errors.append(
+                f"{label} uncapped on first turn "
+                f"searches={first_row['web_search_requests']} executed={first_row['tool_calls_executed']}"
+            )
+            # Keep measuring other families unless this already blew the budget.
         cont = _chat(
             h,
             model_id,
@@ -293,8 +306,10 @@ def run_probe(h: dict[str, str]) -> dict[str, Any]:
         if abort_reason:
             errors.append(f"{label} continue abort: {abort_reason}")
         elif cont_row["verdict"] == "uncapped":
-            errors.append(f"{label} uncapped on continue")
-            abort_reason = f"{label} continue uncapped"
+            errors.append(
+                f"{label} uncapped on continue "
+                f"searches={cont_row['web_search_requests']} executed={cont_row['tool_calls_executed']}"
+            )
     openai_rows = [rows.get("sol.search") or {}, rows.get("sol.continue") or {}]
     google_rows = [rows.get("flash.search") or {}, rows.get("flash.continue") or {}]
     xai_rows = [rows.get("grok.search") or {}, rows.get("grok.continue") or {}]
