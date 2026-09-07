@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 TEXT_WEB_SEARCH_FILTER_V1 = "TEXT_WEB_SEARCH_FILTER_V1"
 TEXT_WEB_SEARCH_OPENAI_EXA_V1 = "TEXT_WEB_SEARCH_OPENAI_EXA_V1"
 TEXT_WEB_SEARCH_COUNTED_EXA_V1 = "TEXT_WEB_SEARCH_COUNTED_EXA_V1"
+TEXT_WEB_SEARCH_DENY_CLASS_V1 = "TEXT_WEB_SEARCH_DENY_CLASS_V1"
 
 # Native search ignores max_uses except Anthropic. Route those classes through
 # Exa so OpenRouter can count steps / $0.05. Not a model-id allowlist.
@@ -27,18 +28,6 @@ UNMETERED_NATIVE_MARKERS = (
     "x-ai/",
     "xai.",
     "xai/",
-)
-
-ALLOWLIST_SUFFIXES = (
-    "x-ai.grok-4.6",
-    "openai.gpt-5.6-sol-pro",
-    "openai.gpt-5.6-sol",
-    "anthropic.claude-opus-5",
-    "anthropic.claude-fable-5.1",
-    "google.gemini-3.1-pro-preview",
-    "google.gemini-3.8-flash",
-    "openai.gpt-6-astra-pro",
-    "openai.gpt-6-astra",
 )
 
 DENY_MARKERS = (
@@ -127,10 +116,6 @@ class Filter:
         caps = self._caps(body, __model__, __metadata__)
         return bool(caps.get("image_output") or caps.get("video_generation"))
 
-    def _is_allowlisted(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
-        lowered = self._refs(body, __model__)
-        return any(suffix in lowered for suffix in ALLOWLIST_SUFFIXES)
-
     def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
         """Native search ignores max_uses except Anthropic.
 
@@ -163,7 +148,9 @@ class Filter:
     ) -> dict[str, Any]:
         if not isinstance(body, dict):
             return body
-        if self._is_denied(body, __model__, __metadata__) or not self._is_allowlisted(body, __model__):
+        # TEXT_WEB_SEARCH_DENY_CLASS_V1: no model-id allowlist. Attachment is the
+        # picker gate; deny keeps Sonar / image / video from receiving tools.
+        if self._is_denied(body, __model__, __metadata__):
             return body
 
         user_valves = self._user_valves(__user__)

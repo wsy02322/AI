@@ -8,10 +8,17 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import IMAGE_MODEL_IDS, PIPE, SONAR_MODEL_IDS, TEXT_WEB_SEARCH_MODEL_IDS
+from stack_contract import (
+    CHINA_TEXT_MODEL_IDS,
+    IMAGE_MODEL_IDS,
+    PIPE,
+    SONAR_MODEL_IDS,
+    TEXT_WEB_SEARCH_MODEL_IDS,
+)
 from text_web_search_filter import (
     Filter,
     TEXT_WEB_SEARCH_COUNTED_EXA_V1,
+    TEXT_WEB_SEARCH_DENY_CLASS_V1,
     TEXT_WEB_SEARCH_OPENAI_EXA_V1,
 )
 
@@ -52,7 +59,11 @@ class TextWebSearchFilterTests(unittest.TestCase):
         self.assertTrue(Filter.toggle)
         self.assertTrue(Filter().toggle)
 
-    def test_allowlist_writes_only_search_and_fetch(self) -> None:
+    def test_qualified_text_writes_search_and_fetch(self) -> None:
+        self.assertGreaterEqual(len(TEXT_WEB_SEARCH_MODEL_IDS), 12)
+        self.assertTrue(set(CHINA_TEXT_MODEL_IDS) <= set(TEXT_WEB_SEARCH_MODEL_IDS))
+        self.assertTrue(set(TEXT_WEB_SEARCH_MODEL_IDS).isdisjoint(IMAGE_MODEL_IDS))
+        self.assertTrue(set(TEXT_WEB_SEARCH_MODEL_IDS).isdisjoint(SONAR_MODEL_IDS))
         for model_id in TEXT_WEB_SEARCH_MODEL_IDS:
             body, metadata = _run(model_id)
             tools = metadata["openrouter_pipe"]["server_tools"]
@@ -80,21 +91,26 @@ class TextWebSearchFilterTests(unittest.TestCase):
             self.assertEqual(metadata, {"keep": True})
             self.assertNotIn("openrouter_pipe", metadata)
 
-    def test_unknown_and_video_early_return(self) -> None:
-        for model_id, name in (
-            (f"{PIPE}.moonshotai.kimi-k3", "Kimi K3"),
-            (f"{PIPE}.unknown.not-in-allowlist", "Unknown"),
-            (f"{PIPE}.minimax.hailuo-3-max", "Hailuo video"),
-        ):
-            metadata = {"openrouter_pipe": {"server_tools": {"advisor": {}}}}
-            Filter().inlet(
-                {"model": model_id},
-                __model__={"id": model_id, "name": name, "meta": {"capabilities": {"video_generation": True}}}
-                if "hailuo" in model_id
-                else {"id": model_id, "name": name},
-                __metadata__=metadata,
-            )
-            self.assertEqual(metadata["openrouter_pipe"]["server_tools"], {"advisor": {}})
+    def test_video_early_return_unknown_text_gets_tools(self) -> None:
+        video_id = f"{PIPE}.minimax.hailuo-3-max"
+        metadata = {"openrouter_pipe": {"server_tools": {"advisor": {}}}}
+        Filter().inlet(
+            {"model": video_id},
+            __model__={
+                "id": video_id,
+                "name": "Hailuo video",
+                "meta": {"capabilities": {"video_generation": True}},
+            },
+            __metadata__=metadata,
+        )
+        self.assertEqual(metadata["openrouter_pipe"]["server_tools"], {"advisor": {}})
+
+        _, kimi = _run(f"{PIPE}.moonshotai.kimi-k3")
+        self.assertIn("web_search", kimi["openrouter_pipe"]["server_tools"])
+        self.assertEqual(kimi["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
+
+        _, unknown = _run(f"{PIPE}.unknown.not-in-allowlist")
+        self.assertIn("web_search", unknown["openrouter_pipe"]["server_tools"])
 
     def test_capability_deny_even_if_name_looks_safe(self) -> None:
         metadata = {}
@@ -116,6 +132,13 @@ class TextWebSearchFilterTests(unittest.TestCase):
         source = Path(filt_mod.__file__).read_text(encoding="utf-8")
         self.assertIn(TEXT_WEB_SEARCH_COUNTED_EXA_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_OPENAI_EXA_V1, source)
+        self.assertIn(TEXT_WEB_SEARCH_DENY_CLASS_V1, source)
+        _, deepseek = _run(f"{PIPE}.deepseek.deepseek-v4-pro-0813")
+        _, kimi = _run(f"{PIPE}.moonshotai.kimi-k3")
+        _, qwen = _run(f"{PIPE}.qwen.qwen3.8-max-0902")
+        self.assertEqual(deepseek["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
+        self.assertEqual(kimi["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
+        self.assertEqual(qwen["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
         _, astra = _run(f"{PIPE}.openai.gpt-6-astra-pro")
         _, sol = _run(f"{PIPE}.openai.gpt-5.6-sol")
         _, grok = _run(f"{PIPE}.x-ai.grok-4.6")

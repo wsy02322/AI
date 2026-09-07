@@ -92,23 +92,23 @@ GUARDS = [
 DISABLED_FILTERS = ["openrouter_web_tools", "openrouter_image_gen"]
 DETACH_FILTERS = set(DISABLED_FILTERS)
 
-# ST-14 WS-A: thin OpenRouter Search + Fetch for selected text models only.
 ASTRA_PUBLIC_MODEL_IDS = [
     f"{PIPE}.openai.gpt-6-astra",
     f"{PIPE}.openai.gpt-6-astra-pro",
 ]
+CHINA_TEXT_MODEL_IDS = [
+    f"{PIPE}.deepseek.deepseek-v4-pro-0813",
+    f"{PIPE}.moonshotai.kimi-k3",
+    f"{PIPE}.qwen.qwen3.8-max-0902",
+]
 TEXT_WEB_SEARCH_FILTER = "openrouter_text_web_search"
 TEXT_WEB_SEARCH_FILTER_MARKER = "TEXT_WEB_SEARCH_FILTER_V1"
 TEXT_WEB_SEARCH_CANARY_MODEL_ID = f"{PIPE}.google.gemini-3.8-flash"
+# Public text minus Sonar / images. Derived, not a frozen 9-id list.
 TEXT_WEB_SEARCH_MODEL_IDS = [
-    f"{PIPE}.x-ai.grok-4.6",
-    f"{PIPE}.openai.gpt-5.6-sol-pro",
-    f"{PIPE}.openai.gpt-5.6-sol",
-    f"{PIPE}.anthropic.claude-opus-5",
-    f"{PIPE}.anthropic.claude-fable-5.1",
-    f"{PIPE}.google.gemini-3.1-pro-preview",
-    TEXT_WEB_SEARCH_CANARY_MODEL_ID,
-    *ASTRA_PUBLIC_MODEL_IDS,
+    mid
+    for mid in PUBLIC_MODEL_IDS
+    if mid not in IMAGE_MODEL_IDS and mid not in SONAR_MODEL_IDS
 ]
 
 PIPE_VALVES_FALSE = [

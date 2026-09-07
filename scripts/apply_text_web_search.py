@@ -8,7 +8,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import TEXT_WEB_SEARCH_CANARY_MODEL_ID, TEXT_WEB_SEARCH_MODEL_IDS
+from stack_contract import PUBLIC_MODEL_IDS, TEXT_WEB_SEARCH_CANARY_MODEL_ID, TEXT_WEB_SEARCH_MODEL_IDS
 from text_web_search_ops import (
     attach_models,
     headers,
@@ -36,16 +36,16 @@ def main() -> int:
     set_valves(h)
     if args.mode == "install":
         set_active(h, "openrouter_text_web_search", False)
-        attach_models(h, [], default_on=False)
+        attach_models(h, [], default_on=False, inspect_extra=list(PUBLIC_MODEL_IDS))
     elif args.mode == "canary":
         set_active(h, "openrouter_text_web_search", True)
-        attach_models(h, [TEXT_WEB_SEARCH_CANARY_MODEL_ID], default_on=False)
+        attach_models(h, [TEXT_WEB_SEARCH_CANARY_MODEL_ID], default_on=False, inspect_extra=list(PUBLIC_MODEL_IDS))
     elif args.mode == "attach":
         set_active(h, "openrouter_text_web_search", True)
-        attach_models(h, TEXT_WEB_SEARCH_MODEL_IDS, default_on=False)
+        attach_models(h, TEXT_WEB_SEARCH_MODEL_IDS, default_on=False, inspect_extra=list(PUBLIC_MODEL_IDS))
     else:
         set_active(h, "openrouter_text_web_search", True)
-        attach_models(h, TEXT_WEB_SEARCH_MODEL_IDS, default_on=True)
+        attach_models(h, TEXT_WEB_SEARCH_MODEL_IDS, default_on=True, inspect_extra=list(PUBLIC_MODEL_IDS))
     print(f"apply mode={args.mode} ok")
     return verify_mode(h, args.mode)
 

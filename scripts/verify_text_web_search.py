@@ -59,6 +59,10 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
         report.err("thin filter missing marker")
     else:
         report.ok("thin filter marker present")
+    if "TEXT_WEB_SEARCH_DENY_CLASS_V1" not in content:
+        report.err("thin filter missing deny-class marker")
+    else:
+        report.ok("thin filter uses deny class, not an allowlist")
     if "TEXT_WEB_SEARCH_COUNTED_EXA_V1" not in content:
         report.err("thin filter missing counted-Exa marker")
     else:
