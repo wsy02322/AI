@@ -130,7 +130,7 @@
 | 步 | 做什么 | 过门 | 回滚 |
 |----|--------|------|------|
 | **W0** 只读探针 | **已做**。脚本 `scripts/run_search_quality_w0.py`：带标记的消息才 native + `max_tool_calls=3` 且去掉 `stop_server_tools_when`；未标记生产流量仍 Exa。Flash / Grok / Sol 各 1 条十主题诱搜 +「你继续」。预算 ≤ `$10` | 见 **§10**：转发成功；Flash/Sol 刹在 4；Grok 续轮 11。生产已还原 | 已还原 |
-| **W1** 高德路线 | Tool `amap_drive_route` **已挂** 12 个 public 文本。压缩 JSON、次数顶=3、无 UI。**Key 未注入，过门未过**。申请与 VPS 注入见 **§12** | 有 Key 后：上游探针 `status=1` 且有 km/分钟/路况；Flash 正文有距离/时长/路况大意，无「路线接口不可用」、无电话/评分 | `scripts/rollback_amap_drive_route.py` |
+| **W1** 高德路线 | Tool `amap_drive_route` **已挂** 12 个 public 文本。压缩 JSON、次数顶=3、无 UI。**Key 未注入，过门未过**。在网站 Valves 填 Key 见 **§12.2** | 有 Key 后：上游探针 `status=1` 且有 km/分钟/路况；Flash 正文有距离/时长/路况大意，无「路线接口不可用」、无电话/评分 | `scripts/rollback_amap_drive_route.py` |
 | **W2** Gemini native | Google 类 Search+Fetch `engine=native` | 短问仍会搜；单发 `$` 与次数可接受；中国路况仍走高德不是 Google | 改回 `exa` |
 | **W3** Grok native | xAI 类 `native` | 能引用 X；网页即时搜不差于现网 Exa 烟雾；Grok「继续」超额符合 §1.1 | 改回 `exa` |
 | **W4** Google Routes | 海外路线，同上压缩 | 海外题有路网级时长；国内仍高德 | 卸海外分支 |
