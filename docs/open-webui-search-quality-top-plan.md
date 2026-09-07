@@ -6,7 +6,8 @@
 > **W6**：**已过门**。Astra Pro 两轮 4 次搜。生产 OpenAI native + `max_tool_calls=3`。  
 > **W7**：决策点见 **§21**。未确认不施工。  
 > **M1a（自驾多站）**：**已过门**。`via` + `legs[]`。见 **§22–§23**。M1b 未做。不与 W7 混号。  
-> **MAP_LITE（出图）**：用户已确认 example 档——分段表 + 官方导航链接 + **只要第一张高德静态图**。见 **§24**。海外只要 Google 链接，不上 Google Static Maps。不与 W7 / M1b 混号。
+> **MAP_LITE（出图）**：用户已确认 example 档——分段表 + 官方导航链接 + **只要第一张高德静态图**。见 **§24**。海外只要 Google 链接，不上 Google Static Maps。不与 W7 / M1b 混号。  
+> **Sol 400 重试**：用户已确认顶级档。见 **§25**。marker `SERVER_TOOL_FAIL_RETRY_V1`。不新开 ST。
 
 关联：`docs/open-webui-search-cost-plan.md`（`$19` / T1）；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-plan.md`。
 
@@ -705,4 +706,21 @@ Flash 烟雾（`M1A_EXPECT_LIVE=1`）：
 **MAP_ROAD（同日）**：用户确认顶级档。静态图改画抽稀路网（最多 100 点）。直接上游四站仍 **865.8 + 146.7 + 521.3 km**，图改走 G30 走廊（西安→兰州→西宁），PNG 约 43KB，JSON 无 Key / 无完整折线。`verify_amap --require-key` 19 ok；`verify_stack` 24 ok。
 
 **过门通过。** M1b / W7 / 查店 **未做**。
+
+---
+
+## 25. Sol 400 `Server tool request failed`（2026-09-07）
+
+用户确认：**顶级档**。不新开 ST，记在 ST-14 / 本 plan。
+
+根因不是 MAP data URI，也不是 middle-out。同线程 Sol 已成功两轮；失败轮先 `Downloaded and saved image from remote URL`（助手 markdown 远程图被落成 `input_image`），再叠加超长上下文 + OpenAI native server tools → OpenRouter 400。
+
+| 档 | 做什么 | 本波 |
+|----|--------|------|
+| **顶级** | Pipe content-only：400 且文案含 `server tool request failed` 时，**先剥回放图重试（保留 search）**，仍失败再 **关 `openrouter:` server tools 只回文本**。无图 / 无 server tools 不空打。marker `SERVER_TOOL_FAIL_RETRY_V1` | **已选，落地** |
+| 略简 | OpenAI+搜索一律不下载远程图 | 未选 |
+
+不碰 valves / `API_KEY`。不在 `$19` 那条会话里再发「下一阶段」做复现。短 Sol 搜对照证明搜索没被关死。
+
+回放：`python3 scripts/patch_pipe_server_tool_fail.py`（已有 marker 则 no-op）。
 
