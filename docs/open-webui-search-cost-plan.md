@@ -1,6 +1,6 @@
 # 搜索长对话费用护栏（保证顶级质量）
 
-> **状态**：**T1 已落地**（2026-09-07）。已锁 C0 + **T−**；T0 见 §6.1；T1 见 §6.2。  
+> **状态**：**C 档执行中**（2026-09-07：按能力分流引擎）。T1 压页已在；OpenAI 已 Exa；本步把 Google / xAI 也改 Exa，Anthropic 留原厂。  
 > **白话**：旧整页出门前压成摘录；Astra/Sol 原厂连搜改走 OpenRouter 能计数的 Exa，现有 `$0.05` / 8 步才能刹车。  
 > **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_OPENAI_EXA_V1`；ST-14 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  

@@ -14,6 +14,20 @@ from pydantic import BaseModel, Field
 
 TEXT_WEB_SEARCH_FILTER_V1 = "TEXT_WEB_SEARCH_FILTER_V1"
 TEXT_WEB_SEARCH_OPENAI_EXA_V1 = "TEXT_WEB_SEARCH_OPENAI_EXA_V1"
+TEXT_WEB_SEARCH_COUNTED_EXA_V1 = "TEXT_WEB_SEARCH_COUNTED_EXA_V1"
+
+# Native search ignores max_uses except Anthropic. Route those classes through
+# Exa so OpenRouter can count steps / $0.05. Not a model-id allowlist.
+UNMETERED_NATIVE_MARKERS = (
+    "openai.",
+    "openai/",
+    "google.",
+    "google/",
+    "x-ai.",
+    "x-ai/",
+    "xai.",
+    "xai/",
+)
 
 ALLOWLIST_SUFFIXES = (
     "x-ai.grok-4.6",
@@ -118,14 +132,14 @@ class Filter:
         return any(suffix in lowered for suffix in ALLOWLIST_SUFFIXES)
 
     def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
-        """OpenAI native search ignores max_uses / stop_server_tools_when.
+        """Native search ignores max_uses except Anthropic.
 
-        TEXT_WEB_SEARCH_OPENAI_EXA_V1: route the OpenAI *class* (not two Astra
-        ids) through Exa so OpenRouter can count steps and the $0.05 brake.
-        Image / video OpenAI ids are denied before this runs.
+        TEXT_WEB_SEARCH_COUNTED_EXA_V1: OpenAI / Google / xAI classes go through
+        Exa so stop_server_tools_when and max_uses count. Anthropic stays auto.
+        Image / video ids are denied before this runs.
         """
         refs = self._refs(body, __model__)
-        return "openai." in refs or "openai/" in refs
+        return any(marker in refs for marker in UNMETERED_NATIVE_MARKERS)
 
     def _tool_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None, default: str) -> str:
         if self._uses_counted_search_engine(body, __model__):
