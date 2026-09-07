@@ -32,7 +32,9 @@ COORD_RE = re.compile(
 )
 TMC_LABELS = ("未知", "畅通", "缓行", "拥堵", "严重拥堵")
 GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo"
+PLACE_URL = "https://restapi.amap.com/v3/place/text"
 DRIVING_URL = "https://restapi.amap.com/v5/direction/driving"
+JUMP_M = 400000.0
 
 _CALLS: dict[str, tuple[float, int]] = {}
 HttpFn = Callable[[str, dict[str, str]], dict[str, Any]]
@@ -321,11 +323,19 @@ def amap_get(url: str, params: dict[str, str], http: HttpFn | None = None) -> di
     return data if isinstance(data, dict) else {}
 
 
-def geocode_place(key: str, place: str, http: HttpFn | None = None) -> tuple[str, tuple[float, float]] | None:
+def geocode_place(
+    key: str,
+    place: str,
+    http: HttpFn | None = None,
+    city: str = "",
+) -> tuple[str, tuple[float, float], str] | None:
     parsed = parse_coord(place)
     if parsed:
-        return place.strip(), parsed
-    data = amap_get(GEOCODE_URL, {"key": key, "address": place, "output": "JSON"}, http)
+        return place.strip(), parsed, city
+    params = {"key": key, "address": place, "output": "JSON"}
+    if city:
+        params["city"] = city
+    data = amap_get(GEOCODE_URL, params, http)
     if str(data.get("status")) != "1":
         return None
     geos = data.get("geocodes")
@@ -336,7 +346,63 @@ def geocode_place(key: str, place: str, http: HttpFn | None = None) -> tuple[str
     if not location:
         return None
     name = str(first.get("formatted_address") or place).strip() or place
-    return name, location
+    hint = str(first.get("city") or first.get("province") or city).strip()
+    return name, location, hint
+
+
+def place_search(
+    key: str,
+    place: str,
+    city: str,
+    http: HttpFn | None = None,
+) -> tuple[str, tuple[float, float], str] | None:
+    if not place or not city:
+        return None
+    data = amap_get(
+        PLACE_URL,
+        {
+            "key": key,
+            "keywords": place,
+            "city": city,
+            "offset": "1",
+            "page": "1",
+            "extensions": "base",
+        },
+        http,
+    )
+    if str(data.get("status")) != "1":
+        return None
+    pois = data.get("pois")
+    if not isinstance(pois, list) or not pois or not isinstance(pois[0], dict):
+        return None
+    first = pois[0]
+    location = parse_coord(str(first.get("location") or ""))
+    if not location:
+        return None
+    name = str(first.get("name") or place).strip() or place
+    hint = str(first.get("cityname") or first.get("pname") or city).strip()
+    return name, location, hint
+
+
+def resolve_stop(
+    key: str,
+    place: str,
+    *,
+    prev_xy: tuple[float, float] | None = None,
+    prev_city: str = "",
+    http: HttpFn | None = None,
+) -> tuple[str, tuple[float, float], str] | None:
+    geo = geocode_place(key, place, http, city=prev_city)
+    if geo is None and prev_city:
+        return place_search(key, place, prev_city, http)
+    if geo is None:
+        return None
+    name, xy, city = geo
+    if prev_xy is not None and haversine_m(prev_xy, xy) > JUMP_M:
+        poi = place_search(key, place, prev_city or city, http)
+        if poi is not None and haversine_m(prev_xy, poi[1]) < haversine_m(prev_xy, xy):
+            return poi
+    return name, xy, city or prev_city
 
 
 def drive_one(
@@ -393,14 +459,18 @@ def lookup_drive(
     if len(labels) > MAX_STOPS:
         return fail(UNAVAILABLE, too_many=True)
     resolved: list[tuple[str, tuple[float, float]]] = []
+    prev_xy: tuple[float, float] | None = None
+    prev_city = ""
     for label in labels:
-        place = geocode_place(key, label, http)
+        place = resolve_stop(key, label, prev_xy=prev_xy, prev_city=prev_city, http=http)
         if not place:
             return fail()
-        name, xy = place
+        name, xy, city = place
         if stop_region(*xy) != "cn":
             return fail(UNAVAILABLE, mix=True, hint=MIX_HINT)
         resolved.append((name, xy))
+        prev_xy = xy
+        prev_city = city or prev_city
     leg_max = min(int(max_via), LEG_VIA_CAP) if len(resolved) > 2 else int(max_via)
     compacts: list[dict[str, Any]] = []
     for index in range(len(resolved) - 1):

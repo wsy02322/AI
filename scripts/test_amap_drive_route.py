@@ -244,6 +244,54 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertFalse(too_many["ok"])
         self.assertTrue(too_many.get("too_many"))
 
+    def test_poi_fallback_when_geocode_jumps(self) -> None:
+        seen: list[str] = []
+
+        def http(url: str, params: dict[str, str]) -> dict:
+            seen.append(url)
+            if "geocode" in url:
+                place = params["address"]
+                if place == "西宁":
+                    return {
+                        "status": "1",
+                        "geocodes": [
+                            {"formatted_address": "青海省西宁市", "location": "101.78,36.62", "city": "西宁市"}
+                        ],
+                    }
+                return {
+                    "status": "1",
+                    "geocodes": [
+                        {"formatted_address": "新疆某处青海湖", "location": "87.62,43.83", "city": "乌鲁木齐市"}
+                    ],
+                }
+            if "place/text" in url:
+                self.assertEqual(params.get("extensions"), "base")
+                return {
+                    "status": "1",
+                    "pois": [{"name": "青海湖", "location": "100.14,36.87", "cityname": "海南州"}],
+                }
+            return {
+                "status": "1",
+                "route": {
+                    "paths": [
+                        {
+                            "distance": "150000",
+                            "cost": {"duration": "9000"},
+                            "polyline": f"{params['origin']};{params['destination']}",
+                            "tmcs": [{"tmc_status": "畅通", "tmc_distance": "150000"}],
+                            "steps": [{"road_name": "G109"}],
+                        }
+                    ]
+                },
+            }
+
+        raw = lookup_drive("k", "西宁", "青海湖", max_via=8, http=http)
+        data = json.loads(raw)
+        self.assertTrue(data["ok"])
+        self.assertLess(data["km"], 400)
+        self.assertTrue(any("place/text" in url for url in seen))
+        self.assertNotIn("rating", json.dumps(data))
+
 
 if __name__ == "__main__":
     unittest.main()

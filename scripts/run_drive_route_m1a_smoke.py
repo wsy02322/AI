@@ -12,8 +12,16 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from amap_drive_route_tool import lookup_drive
 from stack_contract import AMAP_DRIVE_ROUTE_TOOL, GOOGLE_DRIVE_ROUTE_TOOL, PIPE
-from text_web_search_ops import chat_with_optional_search, headers, signin, usage_cost_usd
+from text_web_search_ops import (
+    OPENWEBUI_URL,
+    chat_with_optional_search,
+    headers,
+    signin,
+    usage_cost_usd,
+)
+import requests
 
 OUT = Path(os.environ.get("M1A_SMOKE_OUT", "/opt/cursor/artifacts/drive-route-m1a-smoke.json"))
 FLASH = f"{PIPE}.google.gemini-3.8-flash"
@@ -67,8 +75,33 @@ def _summarize(result: dict, prompt: str) -> dict:
     }
 
 
+def _direct_china_multi(h: dict[str, str]) -> dict:
+    valves = requests.get(
+        f"{OPENWEBUI_URL}/api/v1/tools/id/{AMAP_DRIVE_ROUTE_TOOL}/valves",
+        headers=h,
+        timeout=30,
+    )
+    key = ""
+    if valves.status_code == 200 and isinstance(valves.json(), dict):
+        key = str(valves.json().get("AMAP_KEY") or "").strip()
+    if not key:
+        return {"ok": False, "error": "no-key"}
+    raw = lookup_drive(key, "西安", "张掖", via="西宁,青海湖", max_via=8)
+    data = json.loads(raw)
+    legs = data.get("legs") or []
+    return {
+        "ok": bool(data.get("ok")),
+        "leg_count": len(legs),
+        "stops": data.get("stops") or [],
+        "leg_km": [leg.get("km") for leg in legs],
+        "xining_qinghai_km": legs[1]["km"] if len(legs) > 1 else None,
+        "error": data.get("error") or "",
+    }
+
+
 def main() -> int:
     h = headers(signin())
+    direct = _direct_china_multi(h)
     tools = [AMAP_DRIVE_ROUTE_TOOL, GOOGLE_DRIVE_ROUTE_TOOL]
     china_single = chat_with_optional_search(
         h, FLASH, [{"role": "user", "content": CHINA_SINGLE}], enable_search=True, timeout=180, tool_ids=tools
@@ -80,6 +113,7 @@ def main() -> int:
         h, FLASH, [{"role": "user", "content": OVERSEAS_SINGLE}], enable_search=True, timeout=180, tool_ids=tools
     )
     payload = {
+        "direct_china_multi": direct,
         "china_single": _summarize(china_single, CHINA_SINGLE),
         "china_multi": _summarize(china_multi, CHINA_MULTI),
         "overseas_single": _summarize(overseas, OVERSEAS_SINGLE),
@@ -93,6 +127,11 @@ def main() -> int:
             errors.append(f"{name} leaked phone/rating")
     expect_live = os.environ.get("M1A_EXPECT_LIVE", "").strip().lower() in {"1", "true", "yes"}
     if expect_live:
+        if not direct.get("ok") or direct.get("leg_count") != 3:
+            errors.append(f"direct multi not 3 legs: {direct}")
+        qh = direct.get("xining_qinghai_km")
+        if qh is None or float(qh) >= 400:
+            errors.append(f"西宁→青海湖 km={qh} want <400")
         single = payload["china_single"]
         multi = payload["china_multi"]
         overseas_row = payload["overseas_single"]
@@ -116,9 +155,9 @@ def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"wrote {OUT}")
-    for name, row in payload.items():
-        if name == "errors":
-            continue
+    print(f"direct_china_multi ok={direct.get('ok')} legs={direct.get('leg_count')} km={direct.get('leg_km')}")
+    for name in ("china_single", "china_multi", "overseas_single"):
+        row = payload[name]
         print(
             f"{name} status={row['status']} calls={row['function_call_count']} "
             f"km={row['has_km_or_minutes']} unavailable={row['has_unavailable']} "
