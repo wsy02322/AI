@@ -16,7 +16,8 @@
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
 | 上次 `verify_stack.py` | **2026-09-07 C2 后全绿**（24 ok / 0 err，`VERIFY_SMOKE=0`）：Pipe `9c4836ace251`；薄 Filter deny 类 + 12 文本 default-on（含 DeepSeek / Kimi / Qwen）；Banner v7。中国三只 Search+Fetch 6/6；Kimi「你继续」0 次新搜 / `$0.008` |
 | 即时搜 W0 | **2026-09-07**：`max_tool_calls=3` 转发成功；Flash/Sol 两轮 4 次搜；Grok「继续」11 次。合计 `$0.336`。生产 Filter/Pipe **已还原**（`f2fe14388726` / `9c4836ace251`）。`verify_text_web_search.py --mode final` 14 ok。W6 仍关 |
-| 即时搜 W1 | **已过门**（2026-09-07）：Key 在 Tool Valves；Flash 北京南站→首都机场 **36.7km / ~44 分钟 / 畅通为主**；`function_call_count=1`；无电话/评分。`verify_amap --require-key` 16 ok；`verify_stack` 24 ok。搜索引擎仍 Exa |
+| 即时搜 W1 | **已过门**（2026-09-07）：Key 在 Tool Valves；Flash 北京南站→首都机场 **36.7km / ~44 分钟 / 畅通为主**；`function_call_count=1`；无电话/评分。`verify_amap --require-key` 16 ok；`verify_stack` 24 ok |
+| 即时搜 W3 | **已过门**（2026-09-07）：xAI Search+Fetch **native**。Grok 引 `x.com/elonmusk/status/…`（4 次搜 / `$0.23`）；网页题 1 次搜；Flash Exa 回归仍搜。`verify_text_web_search --mode final` 15 ok；Pipe 仍 `9c4836ace251` |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
@@ -24,7 +25,7 @@
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关**；Follow-up **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |
 | ST-11 Fable | Pipe marker `FABLE_UNSIGNED_SUMMARY_V1`（sha `f797e92d6d3f`；0.11.3 上 `verify_fable_thinking_replay.py` 7 ok，2026-09-05 复验） |
-| ST-14 文本联网 | 薄 Filter `openrouter_text_web_search`；**public 文本 12** attached + default-on（含中国三只）；`TEXT_WEB_SEARCH_DENY_CLASS_V1`。OpenAI / Google / xAI → Exa；Anthropic / 中国三只 `auto`。`verify_text_web_search.py --mode final` 14 ok |
+| ST-14 文本联网 | 薄 Filter `openrouter_text_web_search`；**public 文本 12** attached + default-on（含中国三只）；`TEXT_WEB_SEARCH_DENY_CLASS_V1`。OpenAI / Google → Exa；**xAI native**；Anthropic / 中国三只 `auto`。`verify_text_web_search.py --mode final` 15 ok |
 | ST-14 质量基线 | **2026-09-05 已收口**。EVAL-B v2：隐含 42/42；误搜 0/21；精确 Fetch 10/14。Anthropic：HTML 能读，`api.github.com` 不能；指引无效。不上 Controller / 指引。见 `docs/open-webui-text-web-search-eval-b-results.md` |
 | HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；5× OpenRouter slot **全 `enable=false`** |
 | ST-1 Sonar | **2026-08-21**：两档 Sonar `builtin_tools=false`（堵住 UI native FC 注入 `get_current_timestamp`） |

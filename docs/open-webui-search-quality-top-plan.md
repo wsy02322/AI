@@ -1,6 +1,6 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 已跑**。**W1 过门已过**（2026-09-07）：高德 Key 已注入 Tool Valves；Flash 中国路线题给出 36.7km / ~44 分钟 / 畅通为主。W2+ 未点头不执行。  
+> **状态**：用户已选 **顶级档**。**W0 / W1 / W3 已过门**。xAI 类 Search+Fetch = `native`（网页+X）。OpenAI/Google 仍 Exa。**W2 未点头**不改 Gemini。W6 仍关。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
 > **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
@@ -72,7 +72,7 @@
 ## 2. 现网（不动也能读）
 
 - OWUI 0.11.3；薄 Filter ST-14 deny 类，12 个 public 文本 default-on。  
-- OpenAI / Google / xAI：**Exa**；Anthropic：`auto`；中国三只：`auto`→Exa。  
+- OpenAI / Google：**Exa**；**xAI：`native`**（W3）；Anthropic：`auto`；中国三只：`auto`→Exa。  
 - T1 `SEARCH_PAGE_COMPACT_V1`；`$0.05` / `step_count=8`；OpenRouter 写明 `max_uses` **只转 Anthropic**。  
 - 无 X 原厂、无 T2、无单发 token 顶。  
 - **ST-16**：`amap_drive_route` 已挂 12 个 public 文本；高德 Key **已注入** Valves（不进 git）。  
@@ -132,7 +132,7 @@
 | **W0** 只读探针 | **已做**。脚本 `scripts/run_search_quality_w0.py`：带标记的消息才 native + `max_tool_calls=3` 且去掉 `stop_server_tools_when`；未标记生产流量仍 Exa。Flash / Grok / Sol 各 1 条十主题诱搜 +「你继续」。预算 ≤ `$10` | 见 **§10**：转发成功；Flash/Sol 刹在 4；Grok 续轮 11。生产已还原 | 已还原 |
 | **W1** 高德路线 | **已过门**。Tool `amap_drive_route` 挂 12 个 public 文本；Key 在 Valves。压缩 JSON、次数顶=3、无 UI。见 **§11** | Flash 正文有距离/时长/路况大意，无「路线接口不可用」、无电话/评分 | `scripts/rollback_amap_drive_route.py` |
 | **W2** Gemini native | Google 类 Search+Fetch `engine=native` | 短问仍会搜；单发 `$` 与次数可接受；中国路况仍走高德不是 Google | 改回 `exa` |
-| **W3** Grok native | xAI 类 `native` | 能引用 X；网页即时搜不差于现网 Exa 烟雾；Grok「继续」超额符合 §1.1 | 改回 `exa` |
+| **W3** Grok native | **已过门**。xAI 类 Search+Fetch `engine=native`。OpenAI/Google 仍 Exa。见 **§13** | 能引用 X；网页即时搜仍出活链；Grok「继续」超额符合 §1.1 | 把 xAI 改回 `exa` 后 `apply_search_quality_w3.py` 的逆操作（Filter content） |
 | **W4** Google Routes | 海外路线，同上压缩 | 海外题有路网级时长；国内仍高德 | 卸海外分支 |
 | **W5** 全模型 X | 可计数 X 工具 | 非 Grok 也能引帖；配额不打穿；次数能刹 | 卸工具 |
 | **W6** OpenAI native | **W0 未开绿灯**（Sol 能刹，Astra Pro 未测；Grok 续轮已证明 native 可越过 `max_tool_calls`） | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
@@ -198,8 +198,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W0 / W1 已过门**（§10–§11）。**不要自行开 W2/W3。** 下一默认步是 W3（Grok native / X）；回 `W3：同意` 才改搜索引擎。  
-Key 仍只在 Tool Valves，不进 git。补钥或重建见 **§12.2**。
+**W0 / W1 / W3 已过门**（§10–§11、§13）。**不要自行开 W2 / W6。** 下一默认步是 W2（Gemini native）；回 `W2：同意` 才改 Google 类引擎。
 
 
 ---
@@ -238,7 +237,7 @@ Key 仍只在 Tool Valves，不进 git。补钥或重建见 **§12.2**。
 
 Flash 烟雾（`AMAP_EXPECT_LIVE=1`，`$0.003`）：`function_call_count=1`，正文 **36.7 公里 / 约 44 分钟 / 畅通为主**，途经南二环、东三环、机场高速等。无「路线接口不可用」，无电话/评分。导数控制题 0 次工具。`verify_amap_drive_route.py --require-key` 16 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。
 
-**过门通过。** JSON：`docs/open-webui-search-quality-w1-results.json`。W2/W3 未确认不执行。
+**过门通过。** JSON：`docs/open-webui-search-quality-w1-results.json`。
 
 ---
 
@@ -269,5 +268,21 @@ Flash 烟雾（`AMAP_EXPECT_LIVE=1`，`$0.003`）：`function_call_count=1`，�
 
 不需要。只有在网站填不进去时才用 `scripts/inject_amap_key_vps.sh`。不要改 `/root/open-webui.env`，不要重启容器。
 
-注入后 agent 跑 `verify_amap_drive_route.py --require-key` 和 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`。过门前 **不执行 W2/W3**。
+注入后 agent 跑 `verify_amap_drive_route.py --require-key` 和 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`。
+
+---
+
+## 13. W3 结果（2026-09-07）
+
+薄 Filter content-only：xAI 类 `web_search` / `web_fetch` **`engine=native`**（marker `TEXT_WEB_SEARCH_XAI_NATIVE_V1`）。OpenAI / Google 仍 Exa；Anthropic 仍 auto。Pipe **未改**（`9c4836ace251`）。OWUI native Web Search **仍关**。未重开 broad Web Tools。
+
+Grok 4.6 烟雾（`$0.25`）：
+
+- X 题：4 次搜，正文引用 `https://x.com/elonmusk/status/2093794565274669068`。
+- 网页题：1 次搜，仍出活链（OpenAI 本周产品新闻）。
+- Flash 回归：仍会搜（Google 仍 Exa，4 次 / `$0.04`）。
+
+`verify_text_web_search.py --mode final` 15 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w3-results.json`。
+
+W0 已接受 Grok 续轮可 >4 次搜。W5 全模型 X、W2 Gemini native、W6 OpenAI native **未做**。
 

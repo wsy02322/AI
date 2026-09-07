@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-07",
+  "gate": "W3",
+  "filter_markers": [
+    "TEXT_WEB_SEARCH_COUNTED_EXA_V1",
+    "TEXT_WEB_SEARCH_XAI_NATIVE_V1"
+  ],
+  "engines": {
+    "xai": "native",
+    "openai": "exa",
+    "google": "exa",
+    "anthropic": "auto"
+  },
+  "pipe_sha12": "9c4836ace251",
+  "verify_text_web_search_final_ok": 15,
+  "verify_stack_ok": 24,
+  "grok_x": {
+    "status": 200,
+    "web_search_requests": 4,
+    "has_x_url": true,
+    "cost_usd": 0.2277,
+    "cited": "https://x.com/elonmusk/status/2093794565274669068"
+  },
+  "grok_web": {
+    "status": 200,
+    "web_search_requests": 1,
+    "has_http_url": true,
+    "cost_usd": 0.0223
+  },
+  "flash_web_regression": {
+    "status": 200,
+    "web_search_requests": 4,
+    "cost_usd": 0.0443
+  }
+}
