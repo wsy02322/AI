@@ -1,6 +1,7 @@
 # 搜索长对话费用护栏（保证顶级质量）
 
 > **状态**：**C2 已落地**（2026-09-07）。压页全员；引擎 C；搜索按 public 文本 + deny（12 个含中国三只）。  
+> **下一份**（仅 plan）：`docs/open-webui-search-metered-quality-plan.md` — `$19` 不得再发 + 答案接近官网；生产不回原厂搜。  
 > **白话**：能刹的用原厂搜；刹不住的换 Exa；合格文本默认会搜。  
 > **现网**：OWUI 0.11.3；Pipe `9c4836ace251` + `SEARCH_PAGE_COMPACT_V1`；薄 Filter `TEXT_WEB_SEARCH_DENY_CLASS_V1`；ST-14 **12** 模型 default-on；Banner `usage-guide-v7`；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **触发**：对话 `https://micropigeon.com/c/23d8488c-be6a-4b77-8d86-6e63c61f8b66`（西北自驾游规划）单轮 UI **`$19.40707`**。  
