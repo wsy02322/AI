@@ -7,7 +7,7 @@
 > **现网**：OWUI 0.11.3；Pipe `f797e92d6d3f`；ST-14 薄 Filter 9 模型 default-on；阀门 `max_uses=3` / Fetch `5` / 每页 `12k` / `step_count=8` / `$0.05`。  
 > **证据**：`/tmp/chat_23d8488c.json` → `/opt/cursor/artifacts/search-cost-northwest-drive.json`。
 
-关联：`docs/open-webui-text-web-search-plan.md` §4；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-eval-b-results.md`（质量已收口）。
+关联：`docs/open-webui-text-web-search-plan.md` §4；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-eval-b-results.md`（质量已收口）；**覆盖原则** `docs/open-webui-default-coverage-plan.md`（压缩无名单；「所有模型」= 合格类 + 未来同类，不是图像/Sonar/OR 全库）。
 
 ---
 
@@ -141,6 +141,8 @@ OWUI 存下来的 `sources` 只有约 21k 字。4.9M 在 **Pipe 回放给 OpenRo
 Grok 还有「总 token 超 200k 加价」档（OpenRouter 页）。即使单价是 Astra 的 1/5，整页滚起来仍会到数美元。T1 把 prompt 压回十万以内，对这些模型同样值。
 
 ### 2.7 覆盖原则：默认全模型 + 后续新增，不要死名单
+
+展开（搜索改 deny、其他功能怎么套、Filter 不要 global）见 **`docs/open-webui-default-coverage-plan.md`**。本轮 **D0-cover = 该文 C0**，只点一次头。
 
 **观点成立，必须拆三类。** 「所有模型 + 以后新增」作为 **管道/护栏** 的默认，比再维护 id 名单更简单，也不会再漏一只 Astra。把它理解成「OpenRouter catalog / picker 每一只自动挂 Search、自动 public」，会违宪、会 404、会再炸账单。
 
