@@ -42,6 +42,7 @@
 | `scripts/verify_compare_cross_model.py` | 对比 ST-10：Grok 密文回放给 Opus 不得 404；同模型续聊仍成功 |
 | `scripts/patch_pipe_cross_model_reasoning.py` | S2′：扩 Pipe 重试门（content-only，不碰 valves） |
 | `scripts/patch_pipe_fable_thinking_replay.py` | ST-11：Fable / Anthropic 同模型续聊剥 unsigned thinking（content-only） |
+| `scripts/patch_pipe_search_page_compact.py` | 搜索费用 T1：出站压旧 `function_call_output` 整页（content-only，无模型名单） |
 | `scripts/verify_fable_thinking_replay.py` | ST-11 验收 |
 | `scripts/apply_wave0.py` | 重放 Wave 0：capabilities + Task 模型 + **Follow-up 关** |
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
@@ -74,9 +75,10 @@
 5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v6` + 空 chips；**不要**写回 v5 / v4 / v3 / 双条 v2）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-8. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 9 模型 default-on 则只校验；挂载后会 `GET /api/models?refresh=true`）  
-9. `python3 scripts/verify_stack.py` 全绿  
-10. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
+8. 若 Pipe 丢了压页 marker：`python3 scripts/patch_pipe_search_page_compact.py`（已有 `SEARCH_PAGE_COMPACT_V1` 则 no-op）  
+9. 若薄 Web Search 丢了：`python3 scripts/apply_text_web_search.py --mode final`（已有 `TEXT_WEB_SEARCH_FILTER_V1` 且 9 模型 default-on 则只校验；挂载后会 `GET /api/models?refresh=true`）  
+10. `python3 scripts/verify_stack.py` 全绿  
+11. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 
 若 Images API / Seedream 路由丢失：按 `docs/open-webui-openrouter-image-continuity-plan.md` **模式**补，不要盲贴旧 `content`。
 
