@@ -68,9 +68,18 @@
     "text_chars": 437
   },
   "verify": {
-    "amap_require_key_ok": 18,
+    "amap_require_key_ok": 19,
     "google_require_key_ok": 19,
     "verify_stack_ok": 24
+  },
+  "map_road": {
+    "ok": true,
+    "leg_km": [865.8, 146.7, 521.3],
+    "has_nav_url": true,
+    "has_map_data_uri": true,
+    "map_png_bytes": 43079,
+    "follows_g30_corridor": true,
+    "key_leaked": false
   },
   "errors": []
 }

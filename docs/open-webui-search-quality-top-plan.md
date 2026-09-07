@@ -702,5 +702,7 @@ Flash 烟雾（`M1A_EXPECT_LIVE=1`）：
 
 `verify_amap --require-key` 18 ok；`verify_google --require-key` 19 ok；`verify_stack` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-map-lite-results.json`。
 
+**MAP_ROAD（同日）**：用户确认顶级档。静态图改画抽稀路网（最多 100 点）。直接上游四站仍 **865.8 + 146.7 + 521.3 km**，图改走 G30 走廊（西安→兰州→西宁），PNG 约 43KB，JSON 无 Key / 无完整折线。`verify_amap --require-key` 19 ok；`verify_stack` 24 ok。
+
 **过门通过。** M1b / W7 / 查店 **未做**。
 

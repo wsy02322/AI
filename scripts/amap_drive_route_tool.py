@@ -2,7 +2,7 @@
 title: China Drive Route
 author: micropigeon
 id: amap_drive_route
-description: Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional static map.
+description: Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional road-following static map.
 version: 1.2.1
 """
 
