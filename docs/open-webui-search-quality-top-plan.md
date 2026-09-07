@@ -691,3 +691,16 @@ Flash 烟雾（`M1A_EXPECT_LIVE=1`）：
 
 **不要做**：M1b、W7、聊天嵌瓦片、作图模型画路、Google Static Maps、把 Key 放进 `img src`。
 
+活测（`M1A_EXPECT_LIVE=1`）：
+
+- 直接上游四站：3 段 / **865.8 + 146.7 + 521.3 km** / `nav_url` + `map_data_uri`（PNG 约 43KB）/ JSON 无 Key
+- 南站→机场：有高德链接，**无**静态图
+- JFK→Times Square：有 Google 链接，**无**静态图
+- Flash 四站：1 次调用，分段表 + 高德链接 + markdown 图（`$0.118`；图进上下文，字数约 31k）
+- Flash 南站→机场：1 次 / 表 + 链接 / 无图 / `$0.005`
+- Flash JFK：1 次 / 表 + Google 链接 / 无图 / `$0.004`
+
+`verify_amap --require-key` 18 ok；`verify_google --require-key` 19 ok；`verify_stack` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-map-lite-results.json`。
+
+**过门通过。** M1b / W7 / 查店 **未做**。
+
