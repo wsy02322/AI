@@ -42,10 +42,10 @@ class W0InjectTests(unittest.TestCase):
         sol = f"{PIPE}.openai.gpt-5.6-sol"
         unmarked, unmarked_meta = _run(cls, sol, "What is the weather in Tokyo?")
         tools = unmarked_meta["openrouter_pipe"]["server_tools"]
-        self.assertEqual(tools["web_search"]["engine"], "exa")
-        self.assertEqual(tools["web_fetch"]["engine"], "exa")
-        self.assertIn("stop_server_tools_when", unmarked_meta["openrouter_pipe"])
-        self.assertNotIn("max_tool_calls", unmarked)
+        self.assertEqual(tools["web_search"]["engine"], "native")
+        self.assertEqual(tools["web_fetch"]["engine"], "native")
+        self.assertEqual(unmarked.get("max_tool_calls"), MAX_TOOL_CALLS)
+        self.assertNotIn("stop_server_tools_when", unmarked_meta["openrouter_pipe"])
         self.assertNotIn("w0_probe", unmarked_meta["openrouter_pipe"])
 
         marked, marked_meta = _run(

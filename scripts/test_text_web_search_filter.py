@@ -17,10 +17,11 @@ from stack_contract import (
 )
 from text_web_search_filter import (
     Filter,
-    TEXT_WEB_SEARCH_COUNTED_EXA_V1,
+    OPENAI_MAX_TOOL_CALLS,
     TEXT_WEB_SEARCH_DENY_CLASS_V1,
     TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1,
-    TEXT_WEB_SEARCH_OPENAI_EXA_V1,
+    TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1,
+    TEXT_WEB_SEARCH_OPENAI_NATIVE_V1,
     TEXT_WEB_SEARCH_XAI_NATIVE_V1,
 )
 
@@ -30,7 +31,7 @@ def _expected_engine(model_id: str) -> str:
     if any(marker in lowered for marker in ("x-ai.", "x-ai/", "xai.", "xai/", "google.", "google/")):
         return "native"
     if any(marker in lowered for marker in ("openai.", "openai/")):
-        return "exa"
+        return "native"
     return "auto"
 
 
@@ -74,13 +75,18 @@ class TextWebSearchFilterTests(unittest.TestCase):
             self.assertEqual(tools["web_fetch"]["engine"], engine, model_id)
             self.assertEqual(tools["web_search"]["max_uses"], 3)
             self.assertEqual(tools["web_fetch"]["max_uses"], 5)
-            self.assertEqual(
-                metadata["openrouter_pipe"]["stop_server_tools_when"],
-                [
-                    {"type": "step_count_is", "step_count": 8},
-                    {"type": "max_cost", "max_cost_in_dollars": 0.05},
-                ],
-            )
+            if engine == "native" and "openai." in model_id.lower():
+                self.assertEqual(body.get("max_tool_calls"), OPENAI_MAX_TOOL_CALLS, model_id)
+                self.assertEqual(metadata["openrouter_pipe"].get("max_tool_calls"), OPENAI_MAX_TOOL_CALLS)
+                self.assertNotIn("stop_server_tools_when", metadata["openrouter_pipe"])
+            else:
+                self.assertEqual(
+                    metadata["openrouter_pipe"]["stop_server_tools_when"],
+                    [
+                        {"type": "step_count_is", "step_count": 8},
+                        {"type": "max_cost", "max_cost_in_dollars": 0.05},
+                    ],
+                )
             self.assertFalse(body["features"]["web_search"])
 
     def test_sonar_and_images_early_return(self) -> None:
@@ -125,14 +131,14 @@ class TextWebSearchFilterTests(unittest.TestCase):
         )
         self.assertNotIn("server_tools", (metadata.get("openrouter_pipe") or {}))
 
-    def test_unmetered_native_uses_exa_anthropic_stays_auto(self) -> None:
+    def test_openai_google_xai_native_anthropic_stays_auto(self) -> None:
         from pathlib import Path
 
         import text_web_search_filter as filt_mod
 
         source = Path(filt_mod.__file__).read_text(encoding="utf-8")
-        self.assertIn(TEXT_WEB_SEARCH_COUNTED_EXA_V1, source)
-        self.assertIn(TEXT_WEB_SEARCH_OPENAI_EXA_V1, source)
+        self.assertIn(TEXT_WEB_SEARCH_OPENAI_NATIVE_V1, source)
+        self.assertIn(TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_XAI_NATIVE_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_DENY_CLASS_V1, source)
@@ -149,8 +155,8 @@ class TextWebSearchFilterTests(unittest.TestCase):
         _, gemini_pro = _run(f"{PIPE}.google.gemini-3.1-pro-preview")
         _, opus = _run(f"{PIPE}.anthropic.claude-opus-5")
         _, fable = _run(f"{PIPE}.anthropic.claude-fable-5.1")
-        self.assertEqual(astra["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
-        self.assertEqual(sol["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
+        self.assertEqual(astra["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
+        self.assertEqual(sol["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
         self.assertEqual(grok["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
         self.assertEqual(grok["openrouter_pipe"]["server_tools"]["web_fetch"]["engine"], "native")
         self.assertEqual(flash["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")

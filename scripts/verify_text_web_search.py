@@ -71,14 +71,14 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
         report.err("thin filter missing deny-class marker")
     else:
         report.ok("thin filter uses deny class, not an allowlist")
-    if "TEXT_WEB_SEARCH_COUNTED_EXA_V1" not in content:
-        report.err("thin filter missing counted-Exa marker")
+    if "TEXT_WEB_SEARCH_OPENAI_NATIVE_V1" not in content:
+        report.err("thin filter missing OpenAI native marker")
     else:
-        report.ok("thin filter OpenAI class uses Exa")
-    if "TEXT_WEB_SEARCH_OPENAI_EXA_V1" not in content:
-        report.err("thin filter missing OpenAI Exa marker")
+        report.ok("thin filter OpenAI class uses native")
+    if "TEXT_WEB_SEARCH_OPENAI_MAX_TOOL_CALLS_V1" not in content:
+        report.err("thin filter missing OpenAI max_tool_calls marker")
     else:
-        report.ok("thin filter OpenAI Exa marker present")
+        report.ok("thin filter OpenAI max_tool_calls=3")
     if "TEXT_WEB_SEARCH_XAI_NATIVE_V1" not in content:
         report.err("thin filter missing xAI native marker")
     else:
@@ -89,9 +89,9 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
         report.ok("thin filter Google class uses native")
     counted_block = _counted_exa_block(content)
     if "openai." in counted_block and "google." not in counted_block:
-        report.ok("counted-Exa markers are OpenAI-only (W6 still closed)")
+        report.ok("OpenAI native markers are OpenAI-only")
     else:
-        report.err("counted-Exa markers still include Google or dropped OpenAI")
+        report.err("OpenAI native markers still include Google or dropped OpenAI")
     if function.get("is_global"):
         report.err("thin filter is global")
     else:

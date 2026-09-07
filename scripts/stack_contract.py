@@ -145,6 +145,7 @@ PIPE_PATCH_MARKERS = [
     "COMPARE_CROSS_MODEL_REASONING_V1",
     "FABLE_UNSIGNED_SUMMARY_V1",
     "SEARCH_PAGE_COMPACT_V1",
+    "MAX_TOOL_CALLS_FORWARD_V1",
 ]
 
 # Live UX (2026-09-05): one banner, no empty-chat chips, reply Follow-up off.
