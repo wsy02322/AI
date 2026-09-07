@@ -2,7 +2,7 @@
 
 **GitHub 几乎仅用于灾后重建**：规格、脚本、现网钉子。不是产品演示集，也不靠 PR 里的截屏/录屏证明现网。日常改实例仍动生产；入库是为了下次能按文档+脚本把站点救回来。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（W0/W1/W3 已过门，**W2 Gemini / W6 OpenAI 未确认**）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 须 W0 **且** Astra Pro 续轮硬顶绿灯；W0 已证明 `max_tool_calls` 能转发，但 Grok 续轮可越过，Sol 刹住不等于 Astra Pro。禁止未确认就改回 native。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（W0/W1/W2/W3 已过门，**W4 Routes / W6 OpenAI 未确认**）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 须 W0 **且** Astra Pro 续轮硬顶绿灯；W0 已证明 `max_tool_calls` 能转发，但 Grok 续轮可越过，Sol 刹住不等于 Astra Pro。禁止未确认就改 OpenAI native。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
 **ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-16** = 出行路线工具（W1 高德已过门；W4 Google Routes 未做）；**ST-17** = Grok native / X（W3 已过门；W5 全模型 X 未做）。不要把这些写成同一个号。
 
@@ -61,8 +61,10 @@
 | `scripts/verify_text_web_search.py` | ST-14：按 mode 验收 attachment / default / 排除模型 |
 | `scripts/run_text_web_search_canary.py` | ST-14 W2：Gemini Flash 真实工具事件 + 图像零回归 |
 | `scripts/run_text_web_search_smoke.py` | ST-14：public 文本 Search + Fetch |
+| `scripts/apply_search_quality_w2.py` | W2：薄 Filter content-only，Google → native（不碰 valves / 挂载；OpenAI 仍 Exa） |
+| `scripts/run_search_quality_w2.py` | W2：Flash 短问须搜；中国路线须走高德 |
 | `scripts/apply_search_quality_w3.py` | ST-17 / W3：薄 Filter content-only，xAI → native（不碰 valves / 挂载） |
-| `scripts/run_search_quality_w3.py` | ST-17：Grok 引 X + 网页搜；Flash Exa 回归 |
+| `scripts/run_search_quality_w3.py` | ST-17：Grok 引 X + 网页搜 |
 | `scripts/apply_amap_drive_route.py` | ST-16：安装/挂载高德驾车 Tool（`--mode install|attach|detach`）；merge Valves，不覆盖已有 `AMAP_KEY` |
 | `scripts/inject_amap_key.py` | ST-16：探针高德上游 + merge Tool Valves `AMAP_KEY`（不打印 Key） |
 | `scripts/inject_amap_key_vps.sh` | ST-16：VPS 本机注入（`127.0.0.1:8080`，不重启容器） |
@@ -123,6 +125,7 @@
 - 把新家族塞进 picker / public；留下的家族升到 catalog 最新 id，且全部 public
 - 把 Follow-up 关（ST-12）、Fable 续聊（ST-11）和文本联网（ST-14）写成同一个 ST 号
 - 激活 broad `openrouter_web_tools` / OWUI native Web Search 来冒充 ST-14
+- 未确认就把 OpenAI Search+Fetch 改 `native`，或把已过门的 Google/xAI native 改回 `exa`
 - 未确认上 Search Controller，或加薄 Filter 指引来修 Anthropic 读不了 `api.github.com`
 - 把 `$0.05` 工具停止条件当成最终账单上限去调高
 - 把截屏 / 录屏当验收，或把演示媒体塞进 GitHub

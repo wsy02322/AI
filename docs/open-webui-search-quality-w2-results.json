@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-07",
+  "gate": "W2",
+  "filter_markers": [
+    "TEXT_WEB_SEARCH_COUNTED_EXA_V1",
+    "TEXT_WEB_SEARCH_XAI_NATIVE_V1",
+    "TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1"
+  ],
+  "engines": {
+    "xai": "native",
+    "openai": "exa",
+    "google": "native",
+    "anthropic": "auto"
+  },
+  "pipe_sha12": "9c4836ace251",
+  "verify_text_web_search_final_ok": 17,
+  "verify_stack_ok": 24,
+  "flash_short_web": {
+    "status": 200,
+    "web_search_requests": 4,
+    "has_http_url": true,
+    "cost_usd": 0.0562
+  },
+  "flash_china_route": {
+    "status": 200,
+    "function_call_count": 1,
+    "web_search_requests": 0,
+    "km": 36.7,
+    "minutes": 41,
+    "traffic": "畅通为主",
+    "has_phone": false,
+    "has_rating": false,
+    "cost_usd": 0.0024
+  }
+}
