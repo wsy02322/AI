@@ -199,7 +199,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 ## 9. 请你确认后才执行
 
 **W1 未完成，停在高德 Key。** 不要进入 W3 / W2。  
-申请步骤与 VPS 命令见 **§12**。Key 注入后回 `W1 Key 已注入`（**不要**把 Key 贴进聊天），再跑实时路况烟雾。
+在网站填 Key：见 **§12.2**（不要 SSH）。填完回 `W1 Key 已注入`（**不要**把 Key 贴进聊天）。
 
 
 ---
@@ -238,153 +238,36 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 烟雾（Gemini Flash，`$0.003`）：`function_call_count=1`，正文出现 **「路线接口不可用」**，无电话/评分。导数控制题 0 次工具。`verify_amap_drive_route.py` 15 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。
 
-**未完成的过门**：没有 Key，不算 W1 完成。申请与 VPS 注入见 **§12**。有 key 之后跑 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`，正文应出现坐标级距离/时长/路况大意（不是「接口不可用」后的常规估算）。
+**未完成的过门**：没有 Key，不算 W1 完成。在网站填 Key 见 **§12.2**。有 key 之后跑 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`。
 
 ---
 
-## 12. W1 高德 Web 服务 Key：申请 + VPS 注入
+## 12. W1 高德 Web 服务 Key：申请 + 注入
 
-现网 Tool 调这两条（必须是 **Web 服务** Key，服务器出口调用）：
+现网 Tool 调这两条（必须是 **Web 服务** Key）：
 
-- `https://restapi.amap.com/v3/geocode/geo`（地名 → 坐标）
-- `https://restapi.amap.com/v5/direction/driving`（驾车 + 路况，`strategy=32`，`show_fields=cost,tmcs,polyline`）
+- `https://restapi.amap.com/v3/geocode/geo`
+- `https://restapi.amap.com/v5/direction/driving`（`strategy=32`，`show_fields=cost,tmcs,polyline`）
 
-### 12.1 申请
+### 12.1 申请（已完成即可跳过）
 
-1. 打开 [高德开放平台](https://lbs.amap.com/)，右上角注册 / 登录。  
-2. **实名认证**（未认证不能新增 Key）：控制台 → 账号中心 → 个人认证（支付宝）或企业认证。公告：[未认证无法新增 Key](https://lbs.amap.com/news/developer-certify)。  
-3. 控制台 → **应用管理** → **创建新应用**（名称随意，例如 `micropigeon-owui`）。  
-4. 该应用 → **添加 Key**：
-   - **服务平台必须选「Web 服务」**。不要选 Web端(JS API) / Android / iOS（会 `USERKEY_PLAT_NOMATCH`）。
-   - Key 名称例如 `owui-drive-route`。
-5. 创建后复制 **Key**。  
-6. 安全项（推荐）：
-   - **IP 白名单**：填 VPS 公网 `78.47.152.85`（容器出站就是这台）。不填也能调，但不安全。填错会 `INVALID_USER_IP` / `10005`。
-   - **数字签名：不要开**。本工具不传 `sig`，开会直接失败。
-7. 若控制台有「能力 / 服务开通」，打开 **地理编码** 和 **路径规划 2.0**（驾车）。  
-8. 不要把 Key 写进 git、不要贴进聊天、不要放进 Pipe `API_KEY`、不要改 `WEBUI_SECRET_KEY`。
+1. [高德开放平台](https://lbs.amap.com/) 注册登录并**实名认证**（未认证不能新增 Key）。
+2. 控制台 → 应用管理 → 创建应用 → **添加 Key**，服务平台选 **Web 服务**（不要选 JS API）。
+3. **数字签名关掉**。IP 白名单可空（能用，但更不安全）；若填，用 VPS `78.47.152.85`。
+4. 要复制的是 Key 列表里那一**长串**，不是名称 `micropigeon`。设置弹窗里通常看不到这串。
+5. 不要把 Key 写进 git、聊天、Pipe `API_KEY`，也不要改 `WEBUI_SECRET_KEY`。
 
-官方创建说明：[创建应用和 Key](https://lbs.amap.com/api/webservice/create-project-and-key)。路径规划 2.0：[文档](https://lbs.amap.com/api/webservice/guide/api/newroute)。
+### 12.2 注入（用网站，不要 SSH）
 
-### 12.2 VPS 注入（推荐：只写 Tool Valves，不重启容器）
+1. 高德控制台 **应用管理** → 找到 Key `micropigeon` → **复制**那一长串。
+2. 打开 [https://micropigeon.com/workspace/tools](https://micropigeon.com/workspace/tools)（Admin 登录）。
+3. 找到 **China Drive Route**，鼠标放上去，点 **Valves**（齿轮旁边）。
+4. 在 **Amap Key** 框粘贴 → **Save**。Max Calls 保持 3，Max Via Points 保持 24。
+5. 回 `W1 Key 已注入`。**不要**把 Key 贴进聊天。
 
-SSH 到 VPS 后整段粘贴。`read -s` 不回显 Key。Admin 登录用你平时进 `https://micropigeon.com` 的账号。
+### 12.3 可选：VPS 脚本
 
-```bash
-# 不要把 AMAP_KEY 写进 /root/open-webui.env，也不要改 WEBUI_SECRET_KEY
-export OPENWEBUI_URL='http://127.0.0.1:8080'
-export OPENWEBUI_USERNAME='你的Admin登录名'
-export OPENWEBUI_PASSWORD='你的Admin密码'
-read -s AMAP_KEY; echo; export AMAP_KEY
+不需要。只有在网站填不进去时才用 `scripts/inject_amap_key_vps.sh`。不要改 `/root/open-webui.env`，不要重启容器。
 
-python3 - <<'PY'
-import json, os, urllib.parse, urllib.request
-
-base = os.environ["OPENWEBUI_URL"].rstrip("/")
-user = os.environ["OPENWEBUI_USERNAME"]
-password = os.environ["OPENWEBUI_PASSWORD"]
-key = os.environ["AMAP_KEY"].strip()
-if not key:
-    raise SystemExit("AMAP_KEY empty")
-
-def http_json(method, url, payload=None, token=None, timeout=30):
-    data = None
-    headers = {}
-    if payload is not None:
-        data = json.dumps(payload).encode("utf-8")
-        headers["Content-Type"] = "application/json"
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        raw = resp.read().decode("utf-8", errors="replace")
-    return json.loads(raw) if raw else {}
-
-def amap_get(url, params):
-    q = urllib.parse.urlencode(params)
-    req = urllib.request.Request(f"{url}?{q}", method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return json.loads(resp.read().decode("utf-8", errors="replace"))
-    except Exception as exc:
-        return {"status": "0", "info": type(exc).__name__}
-
-geo = amap_get("https://restapi.amap.com/v3/geocode/geo",
-               {"key": key, "address": "北京南站", "output": "JSON"})
-geo_status = str(geo.get("status") or "")
-geo_info = str(geo.get("info") or geo.get("infocode") or "")
-geos = geo.get("geocodes")
-location = ""
-if isinstance(geos, list) and geos and isinstance(geos[0], dict):
-    location = str(geos[0].get("location") or "")
-dest = amap_get("https://restapi.amap.com/v3/geocode/geo",
-                {"key": key, "address": "北京首都国际机场", "output": "JSON"})
-dests = dest.get("geocodes")
-dest_loc = ""
-if isinstance(dests, list) and dests and isinstance(dests[0], dict):
-    dest_loc = str(dests[0].get("location") or "")
-drive = amap_get("https://restapi.amap.com/v5/direction/driving", {
-    "key": key,
-    "origin": location or "116.378319,39.865246",
-    "destination": dest_loc or "116.603928,40.080111",
-    "strategy": "32",
-    "show_fields": "cost,tmcs,polyline",
-    "output": "json",
-})
-drive_status = str(drive.get("status") or "")
-drive_info = str(drive.get("info") or drive.get("infocode") or "")
-km = minutes = None
-has_tmc = False
-route = drive.get("route") if isinstance(drive.get("route"), dict) else {}
-paths = route.get("paths") if isinstance(route, dict) else None
-if isinstance(paths, list) and paths and isinstance(paths[0], dict):
-    path = paths[0]
-    try:
-        km = round(float(path.get("distance") or 0) / 1000.0, 1)
-    except (TypeError, ValueError):
-        km = None
-    cost = path.get("cost") if isinstance(path.get("cost"), dict) else {}
-    try:
-        minutes = int(round(float(cost.get("duration") or 0) / 60.0))
-    except (TypeError, ValueError):
-        minutes = None
-    has_tmc = isinstance(path.get("tmcs"), list) and bool(path.get("tmcs"))
-print(f"amap probe geo={geo_status}/{geo_info} drive={drive_status}/{drive_info} km={km} minutes={minutes} tmc={has_tmc}")
-blob = f"{geo_info} {drive_info}".upper()
-if "USERKEY_PLAT_NOMATCH" in blob:
-    print("hint: Key 必须是 Web服务，不是 JS API")
-elif "INVALID_USER_IP" in blob or "10005" in blob:
-    print("hint: IP 白名单加上 78.47.152.85")
-elif "INVALID_USER_SIGNATURE" in blob or "INVALID_USER_SCODE" in blob:
-    print("hint: 关掉数字签名")
-elif "INVALID_USER_KEY" in blob:
-    print("hint: Key 错或过期")
-if geo_status != "1" or drive_status != "1" or km is None:
-    raise SystemExit("amap upstream probe failed; not writing OWUI valves")
-auth = http_json("POST", f"{base}/api/v1/auths/signin", {"email": user, "password": password})
-token = auth.get("token")
-if not token:
-    raise SystemExit("OWUI signin failed")
-current = http_json("GET", f"{base}/api/v1/tools/id/amap_drive_route/valves", token=token)
-if not isinstance(current, dict):
-    current = {}
-payload = {
-    "AMAP_KEY": key,
-    "MAX_CALLS_PER_TURN": int(current.get("MAX_CALLS_PER_TURN") or 3),
-    "MAX_VIA_POINTS": int(current.get("MAX_VIA_POINTS") or 24),
-}
-http_json("POST", f"{base}/api/v1/tools/id/amap_drive_route/valves/update", payload, token=token)
-print(f"owui valves key_set=True max_calls={payload['MAX_CALLS_PER_TURN']}")
-print("inject amap key ok")
-PY
-
-unset AMAP_KEY
-```
-
-成功应看到类似：`amap probe geo=1/OK drive=1/OK km=… minutes=… tmc=True` 然后 `inject amap key ok`。
-
-仓库里同等脚本：`scripts/inject_amap_key_vps.sh`（VPS 本机）、`scripts/inject_amap_key.py`（有 OPENWEBUI_* 的机器）。
-
-注入成功后回 **`W1 Key 已注入`**。agent 再跑 `verify_amap_drive_route.py --require-key` 和 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`。W1 过门通过之前 **不执行 W2/W3**。
-
+注入后 agent 跑 `verify_amap_drive_route.py --require-key` 和 `AMAP_EXPECT_LIVE=1 python3 scripts/run_amap_drive_route_smoke.py`。过门前 **不执行 W2/W3**。
 
