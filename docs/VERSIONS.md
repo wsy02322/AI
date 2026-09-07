@@ -9,18 +9,19 @@
 | OWUI | **0.11.3**（`GET /api/version`）。image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`（旧钉 `e97bf9531916` / 0.11.0） |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
-| Pipe content SHA256（前 12） | `9c4836ace251`（更早：`f797e92d6d3f` → `7415c2e4347a` → `a0b95c2cf90d` → S2′ 前 `081c3773444c`） |
-| Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`IMAGE_DATA_URI_PERSIST_V1`、`SEARCH_PAGE_COMPACT_V1` **均应存在** |
+| Pipe content SHA256（前 12） | `7242967443d4`（W6 `MAX_TOOL_CALLS_FORWARD_V1`；更早 `9c4836ace251` → `f797e92d6d3f` → `7415c2e4347a`） |
+| Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`IMAGE_DATA_URI_PERSIST_V1`、`SEARCH_PAGE_COMPACT_V1`、`MAX_TOOL_CALLS_FORWARD_V1` **均应存在** |
 | Banner | **一条** `usage-guide-v7`（不可 dismiss；🌐 Text chat models can search；同一段、无粗体） |
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
 | 上次 `verify_stack.py` | **2026-09-07 C2 后全绿**（24 ok / 0 err，`VERIFY_SMOKE=0`）：Pipe `9c4836ace251`；薄 Filter deny 类 + 12 文本 default-on（含 DeepSeek / Kimi / Qwen）；Banner v7。中国三只 Search+Fetch 6/6；Kimi「你继续」0 次新搜 / `$0.008` |
-| 即时搜 W0 | **2026-09-07**：`max_tool_calls=3` 转发成功；Flash/Sol 两轮 4 次搜；Grok「继续」11 次。合计 `$0.336`。生产 Filter/Pipe **已还原**（`f2fe14388726` / `9c4836ace251`）。`verify_text_web_search.py --mode final` 14 ok。W6 仍关 |
+| 即时搜 W0 | **2026-09-07**：`max_tool_calls=3` 转发成功；Flash/Sol 两轮 4 次搜；Grok「继续」11 次。合计 `$0.336`。当时生产已还原 |
 | 即时搜 W1 | **已过门**（2026-09-07）：Key 在 Tool Valves；Flash 北京南站→首都机场 **36.7km / ~44 分钟 / 畅通为主**；`function_call_count=1`；无电话/评分。`verify_amap --require-key` 16 ok；`verify_stack` 24 ok |
 | 即时搜 W3 | **已过门**（2026-09-07）：xAI Search+Fetch **native**。Grok 引 `x.com/elonmusk/status/…`（4 次搜 / `$0.23`）；网页题 1 次搜；当时 Flash 仍 Exa。`verify_text_web_search --mode final` 15 ok；Pipe 仍 `9c4836ace251` |
 | 即时搜 W2 | **已过门**（2026-09-07）：Google Search+Fetch **native**。Flash 短问 4 次搜 / `$0.056`；北京南站→首都机场走高德 **36.7km / ~41 分钟 / 畅通为主**，0 次网页搜。`verify_text_web_search --mode final` 17 ok；`verify_stack` 24 ok；Pipe 仍 `9c4836ace251` |
 | 即时搜 W4 | **已过门**（2026-09-07）：Key 在 Tool Valves。Flash JFK→Times Square **27km / ~57 分钟**（对上上游 27.0km / 3394s）；国内仍高德 **36.7km / ~41 分钟**。`verify_google --require-key` 17 ok；`verify_stack` 24 ok；Pipe 仍 `9c4836ace251` |
-| 即时搜 W5 | **已过门**（2026-09-07）：Key 在 Tool Valves。Flash 引 `x.com/SpaceX/status/2096625304009597207`（`function_call_count=1` / `$0.002`）；Grok 回归引 `x.com/elonmusk/status/…`（4 次搜 / `$0.092`）；网页对照未调 X。`verify_x_recent --require-key` 17 ok；`verify_stack` 24 ok；Pipe 仍 `9c4836ace251` |
+| 即时搜 W5 | **已过门**（2026-09-07）：Key 在 Tool Valves。Flash 引 `x.com/SpaceX/status/2096625304009597207`（`function_call_count=1` / `$0.002`）；Grok 回归引 `x.com/elonmusk/status/…`（4 次搜 / `$0.092`）；网页对照未调 X |
+| 即时搜 W6 | **已过门**（2026-09-07）：Astra Pro 两轮 4 次搜 / `$0.95`。生产 OpenAI **native** + `max_tool_calls=3`。Sol 短问 4 次 / `$0.053`；Astra Pro 短问 3 次 / `$0.444`；中国路线仍高德 36.7km。`verify_text_web_search --mode final` 17 ok；`verify_stack` 24 ok；Pipe `7242967443d4` |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |

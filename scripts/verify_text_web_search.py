@@ -47,8 +47,8 @@ def _defaults(model: dict[str, Any]) -> list[str]:
     return list((model.get("meta") or {}).get("defaultFilterIds") or [])
 
 
-def _counted_exa_block(content: str) -> str:
-    start = content.find("COUNTED_EXA_MARKERS")
+def _openai_native_block(content: str) -> str:
+    start = content.find("OPENAI_NATIVE_MARKERS")
     if start < 0:
         return ""
     end = content.find(")", start)
@@ -87,8 +87,8 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
         report.err("thin filter missing Google native marker")
     else:
         report.ok("thin filter Google class uses native")
-    counted_block = _counted_exa_block(content)
-    if "openai." in counted_block and "google." not in counted_block:
+    openai_block = _openai_native_block(content)
+    if "openai." in openai_block and "google." not in openai_block:
         report.ok("OpenAI native markers are OpenAI-only")
     else:
         report.err("OpenAI native markers still include Google or dropped OpenAI")

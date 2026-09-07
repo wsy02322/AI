@@ -1,0 +1,39 @@
+{
+  "date": "2026-09-07",
+  "gate": "W6",
+  "status": "passed",
+  "probe": {
+    "model": "openai.gpt-6-astra-pro",
+    "stamp": "eng=native mtc=3 stop=False",
+    "search": {
+      "verdict": "capped",
+      "web_search_requests": 4,
+      "input_tokens": 72819,
+      "cost_usd": 0.426
+    },
+    "continue": {
+      "verdict": "capped",
+      "web_search_requests": 4,
+      "input_tokens": 95046,
+      "cost_usd": 0.522
+    },
+    "spent_usd": 0.948,
+    "production_restored_before_apply": true
+  },
+  "production": {
+    "openai_engine": "native",
+    "openai_max_tool_calls": 3,
+    "pops_stop_server_tools_when": true,
+    "pipe_marker": "MAX_TOOL_CALLS_FORWARD_V1",
+    "pipe_sha12": "7242967443d4",
+    "google": "native",
+    "xai": "native"
+  },
+  "verify_text_web_search_final_ok": 17,
+  "verify_stack_ok": 24,
+  "smoke": {
+    "sol_web": {"web_search_requests": 4, "cost_usd": 0.0533},
+    "astra_pro_web": {"web_search_requests": 3, "cost_usd": 0.4439},
+    "sol_china_route": {"function_call_count": 1, "km": 36.7, "minutes": 41, "web_search_requests": 0}
+  }
+}

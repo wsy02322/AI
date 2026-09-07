@@ -1,9 +1,9 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 / W4 / W5 已过门**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
+> **状态**：用户已选 **顶级档**。**W0–W6 已过门**。OpenAI / Google / xAI 类 Search+Fetch = `native`。OpenAI 常驻 `max_tool_calls=3`。W7 未做。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
-> **W6**：已确认进入。先做 Astra Pro 硬顶探针（消息级 native + `max_tool_calls=3`），**生产 OpenAI 仍 Exa**。Sol 刹住不是绿灯。
+> **W6**：**已过门**。Astra Pro 两轮 4 次搜。生产 OpenAI native + `max_tool_calls=3`。
 
 关联：`docs/open-webui-search-cost-plan.md`（`$19` / T1）；`docs/SPEC.md` ST-14；`docs/open-webui-text-web-search-plan.md`。
 
@@ -72,7 +72,7 @@
 ## 2. 现网（不动也能读）
 
 - OWUI 0.11.3；薄 Filter ST-14 deny 类，12 个 public 文本 default-on。  
-- OpenAI：**Exa**；**Google：`native`**（W2）；**xAI：`native`**（W3）；Anthropic：`auto`；中国三只：`auto`→Exa。  
+- **OpenAI：`native`** + `max_tool_calls=3`（W6）；**Google：`native`**（W2）；**xAI：`native`**（W3）；Anthropic：`auto`；中国三只：`auto`→Exa。  
 - T1 `SEARCH_PAGE_COMPACT_V1`；`$0.05` / `step_count=8`；OpenRouter 写明 `max_uses` **只转 Anthropic**。  
 - 无 X 原厂、无 T2、无单发 token 顶。  
 - **ST-16**：`amap_drive_route` + `google_drive_route` 已挂 12 个 public 文本；高德 / Google Maps Key **已注入** Valves（不进 git）。  
@@ -90,7 +90,7 @@
 | Anthropic | `auto`（原厂） | 已是；认 `max_uses` |
 | Google | `native` | W2；W0 至少证明 Gemini 短问不会单发爆炸 |
 | xAI | `native` | W3；换 X+网页 |
-| OpenAI | **暂 `exa`** → 可能 `native` | 仅 W6 过门 |
+| OpenAI | **`native`** + `max_tool_calls=3` | W6 已过门 |
 | 中国三只 / 其他无原厂 | `auto` 或与 Q1 网页引擎一致 | 无原厂搜 |
 
 不重开 `openrouter_web_tools`。Filter 非 global。deny 图像/Sonar 不变。
@@ -136,7 +136,7 @@
 | **W3** Grok native | **已过门**。xAI 类 Search+Fetch `engine=native`。见 **§13** | 能引用 X；网页即时搜仍出活链；Grok「继续」超额符合 §1.1 | 把 xAI 改回 `exa` 后 `apply_search_quality_w3.py` 的逆操作（Filter content） |
 | **W4** Google Routes | **已过门**。Tool `google_drive_route` 挂 12 个 public 文本；Key 在 Valves。见 **§16** | Flash 海外 27km / 57 分钟；国内仍高德 36.7km / 41 分钟 | `scripts/rollback_google_drive_route.py` |
 | **W5** 全模型 X | **已过门**。官方 X API 按次 Tool `x_recent_search`；Key 在 Valves。见 **§19** | Flash 调工具并引活链；Grok 回归仍能引 X；纯网页题未狂调 X | `scripts/rollback_x_recent_search.py` |
-| **W6** OpenAI native | **W0 未开绿灯**（Sol 能刹，Astra Pro 未测；Grok 续轮已证明 native 可越过 `max_tool_calls`） | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
+| **W6** OpenAI native | **已过门**。Astra Pro 两轮 4 次搜。生产 OpenAI native + `max_tool_calls=3`（去掉会被覆盖的 stop）。见 **§20** | Astra Pro「继续」有硬顶；短问仍搜；中国路线仍高德 | 改回 `exa` |
 | **W7** T2 | 单次用户消息内轮累计 | 「继续」叠 spike 变稀 | 去 Pipe marker |
 
 **建议执行顺序（稳、简单优先）：W0 → W1 → W3 → W2 → W4 →（W0 若绿）W6 → W5 → W7。**  
@@ -199,7 +199,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W0 / W1 / W2 / W3 / W4 / W5 已过门**（§10–§11、§13–§14、§16、§19）。**W6 已确认**：先跑 Astra Pro 硬顶探针（`scripts/run_search_quality_w6.py`），过门才把生产 OpenAI 改 native。未过门保持 Exa。
+**W0–W6 已过门**。**不要自行开 W7。** W7 仍关。
 
 
 ---
@@ -452,7 +452,7 @@ Tool **已挂** 12 个 public 文本。Key **已注入**（2026-09-07），过�
 
 ## 19. W5 结果（2026-09-07）
 
-落地：OWUI Tool `x_recent_search`（`X_RECENT_SEARCH_V1`），显示名 X Recent Posts；挂在与 ST-14 相同的 **12** 个 public 文本。Sonar / 图像未挂。压缩 JSON（`author` / `time` / 短 `text` / `x.com/.../status/...`）。每 chat 120s 最多 3 次。`max_results` 默认 10（API 下限）。不请求 `public_metrics`。无嵌入 UI。Pipe / 搜索引擎 **未改**（OpenAI Exa、Google native、xAI native）。Token 在 Tool Valves，不进 git。
+落地：OWUI Tool `x_recent_search`（`X_RECENT_SEARCH_V1`），显示名 X Recent Posts；挂在与 ST-14 相同的 **12** 个 public 文本。Sonar / 图像未挂。压缩 JSON（`author` / `time` / 短 `text` / `x.com/.../status/...`）。每 chat 120s 最多 3 次。`max_results` 默认 10（API 下限）。不请求 `public_metrics`。无嵌入 UI。当时 Pipe / 搜索引擎 **未改**（OpenAI 仍 Exa）。Token 在 Tool Valves，不进 git。
 
 上游（`Tesla OR SpaceX`）：10 条，首条 `https://x.com/KayoteWyley420/status/2097037068740518329`。
 
@@ -464,5 +464,32 @@ Tool **已挂** 12 个 public 文本。Key **已注入**（2026-09-07），过�
 
 `verify_x_recent_search.py --require-key` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。Pipe 仍 `9c4836ace251`。JSON：`docs/open-webui-search-quality-w5-results.json`。
 
-**过门通过。** W6 **未做**。
+**过门通过。** **W6 已过门**（§20）。
+
+---
+
+## 20. W6 结果（2026-09-07）
+
+先探针、再生产。探针复用 W0 消息级 inject：带标记才 native + `max_tool_calls=3` 并去掉 `stop_server_tools_when`。未标记生产当时仍 Exa。跑完 Filter/Pipe **已还原**，再 apply。
+
+Astra Pro（`$19` 那只）十主题 +「你继续」：
+
+| 轮 | `web_search_requests` | input tokens | `$` | 判定 |
+|----|----------------------|--------------|-----|------|
+| 十主题 | 4 | 72,819 | 0.426 | 刹住 |
+| 你继续 | 4 | 95,046 | 0.522 | 刹住 |
+
+戳：`eng=native mtc=3 stop=False`。合计 **`$0.95`**。没有 46 次搜 / 百万 input。
+
+生产落地：OpenAI 类 Search+Fetch **`engine=native`**；OpenAI **常驻** `max_tool_calls=3`，并 **去掉** `stop_server_tools_when`（OpenRouter 的 stop 会盖掉 mtc，探针只有去掉 stop 才刹住）。Pipe content-only `MAX_TOOL_CALLS_FORWARD_V1` 把字段抄进 `/responses`。Google / xAI 仍 native（各自仍带 `$0.05` / 8 步 stop）。Anthropic / 中国三只仍 `auto`。未抬 `$0.05`。
+
+烟雾：
+
+- Sol 短问：4 次搜 / `$0.053`
+- Astra Pro 短问：3 次搜 / `$0.444`
+- Sol 中国路线：高德 36.7 km / 41 分钟，0 次网页搜
+
+`verify_text_web_search.py --mode final` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。Pipe `7242967443d4`。JSON：`docs/open-webui-search-quality-w6-results.json`。
+
+**过门通过。** W7 **未做**。
 

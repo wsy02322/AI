@@ -83,7 +83,12 @@ def main() -> int:
         h, ASTRA_PRO, [{"role": "user", "content": SHORT_PROMPT}], enable_search=True, timeout=240
     )
     route = chat_with_optional_search(
-        h, SOL, [{"role": "user", "content": ROUTE_PROMPT}], enable_search=True, timeout=180
+        h,
+        SOL,
+        [{"role": "user", "content": ROUTE_PROMPT}],
+        enable_search=True,
+        timeout=180,
+        tool_ids=[AMAP_DRIVE_ROUTE_TOOL],
     )
     payload = {
         "sol_web": _row(sol, SHORT_PROMPT),
