@@ -345,7 +345,7 @@ Flash 烟雾（`GOOGLE_EXPECT_LIVE=1`，约 `$0.005`）：
 
 `verify_google_drive_route.py --require-key` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w4-results.json`。
 
-**过门通过。** W5 / W6 **未做**。
+**过门通过。** W5 见 **§17**（未确认）。W6 **未做**。
 
 ---
 
@@ -399,5 +399,24 @@ Flash 烟雾（`GOOGLE_EXPECT_LIVE=1`，约 `$0.005`）：
 3. 对照题（纯网页新闻）：不得无故狂调 X。
 4. 次数顶有效；单发 `$` 可接受。
 
-回 `W5：官方 X` / `W5：xAI x_search` / `W5：不做`。需要数字再回 `W5：先对照`（只读：Grok vs Flash vs Opus vs Sol 同一句，不装工具）。
+回 `W5：X API 按次` / `W5：xAI 侧车` / `W5：不做`。需要数字再回 `W5：先对照`。
+
+### 17.3 非 Grok 最高性价比（2026-09-07 沟通，未施工）
+
+OpenRouter **不会**把 Grok 的 `x_search` 分给 Gemini / OpenAI / Claude。W2 Google native 仍是网页，不是 X。
+
+xAI 文档里的 `x_search` 是 **Grok 身上的 server tool**（`$5` / 1k 次 = 每次搜 `$0.005`，另加 Grok token）。不能直接挂到 Flash/Opus。要给别的模型用，只能再包一层「让 Grok 只搜 X → 压缩卡片」，多一跳、多 token，还可能触发 ToS。
+
+官方 X API 2026 新号是 **按次**（旧 Basic `$200`/月已不对新用户开）：第三方帖大约 **`$0.005` / 条返回**，按返回条数计，不是按请求。无月租底板。
+
+| 方案 | 非 Grok 拿到什么 | 大约 `$` | 复杂度 | 性价比 |
+|------|------------------|----------|--------|--------|
+| **不做**（X 题用 Grok） | 无 | `$0` | 零 | 问 X 少时最优 |
+| **官方 X API 按次 + 薄工具** | 近 7 天关键词真帖 + `x.com/status` | 每问 5～8 条 ≈ `$0.025`～`$0.04`；顶 3 次 ≈ `$0.12` | 中（和路线工具同形） | **要真帖时最优** |
+| xAI 侧车（便宜 Grok + 只 `x_search`） | 接近 Grok 同源（语义/线程） | `$0.005`/搜 + Grok token；Grok 可能连搜几次 | 高 | 质量更好，`$` 和复杂度都更差 |
+| 继续网页搜 | 新闻转述 / 旧帖 / 易编链 | 已付网页搜 | 零 | 便宜但经常不是 X |
+
+**性价比主推（若一定要非 Grok 读 X）**：官方 X 按次 + 与高德同形的薄 Tool；`max_results=5～8`；每轮最多 2～3 次；只回作者/时间/摘要/链接。不挂 Sonar/图像。失败说「X 接口不可用」。
+
+不采用：Nitter、为 X 去开 OpenAI native、把网页搜写成已接 X。
 
