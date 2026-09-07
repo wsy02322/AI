@@ -57,6 +57,7 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 | ST-11 | 同模型 Anthropic / Fable 续聊：summary-only thinking 不得回放成假 thinking 导致 `cannot be modified` 400。Pipe 请求 `include: ["reasoning.encrypted_content"]`；emit/persist 原样带密文或签名；无密文则剥 unsigned reasoning；400 文案含 ``thinking` / `redacted_thinking` `` + `cannot be modified` 时内部剥回放并重试。`PERSIST_REASONING_TOKENS` 仍为 conversation。旧线程不保证复活。 |
 | ST-12 | Task `ENABLE_FOLLOW_UP_GENERATION` = false（PersistentConfig `task.follow_up.enable`）。Wave 0 **merge** 钉死；**不**改 Autocomplete / Title。Admin 若重新打开，重跑 `apply_wave0.py` 关回。 |
 | ST-14 | **public 文本**挂非 global 薄 Filter `openrouter_text_web_search`（显示名 Web Search）：inlet **deny 类**（Sonar / `image_output` / `video_generation`），无模型 allowlist。写入 OpenRouter `server_tools` Search + Fetch，新对话 default-on，用户可关。循环停止 `step_count_is=8` 或 `$0.05`。原厂搜不认 `max_uses` 的类（OpenAI / Google / xAI）走 Exa；Anthropic 留 `auto`。中国三只 `auto`（回落 Exa）。挂载后必须 `GET /api/models?refresh=true`。**未确认**不上 Search Controller、不加 Filter 指引、不抬 `$0.05`。评测见 `docs/open-webui-text-web-search-eval-b-results.md`（原 7 个收口；中国三只以 Search+Fetch 烟雾为准）。**不要**把本条和 ST-11/ST-12 写成同一个号 |
+| ST-16 | 合格 public 文本挂 OWUI Tool `amap_drive_route`：高德驾车+路况，压缩 JSON，每轮最多 3 次。无地图 UI / 电话 / 评分。失败说「路线接口不可用」。钥匙只在 Tool Valves 或 env `AMAP_KEY`。**W4 Google Routes 未确认不上**。不要和 ST-11/12/14 混号 |
 | ST-Live-1 | Live / 屏享 / 摄像走 **OWUI Call overlay**；禁止第二套未文档化前端 |
 | ST-Live-2 | 屏享会话必须用 **vision-capable** 模型（Grok 4.6 或 Gemini vision）；禁止对 Sonar / 纯图像开 Live tool 幻觉 |
 | ST-Live-3 | STT/TTS **merge** 配置，不覆盖密钥。TTS = OpenRouter `minimax/speech-2.8-turbo`（兼容 OWUI 默认 voice `alloy` + `response_format=mp3`）；STT = `openai/whisper-large-v3-turbo`。**不要**再用 `openai/tts-1` / `tts-1-hd`（OpenRouter `/audio/speech` 无此模型 → Read Aloud 400）。真正 S2S 仍走 L2（须确认） |
@@ -103,11 +104,11 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 
 ## 明确 Later / Don't
 
-- **已落地**：聊天四格 + 路线 S；ST-14 薄 Web Search（质量**已收口**）；Live **L1**（stock overlay + Whisper/TTS + vision 指引）  
+- **已落地**：聊天四格 + 路线 S；ST-14 薄 Web Search（质量**已收口**）；Live **L1**；**ST-16 高德路线 Tool 已挂**（实时路况待 `AMAP_KEY`）  
 - **P0 进行中**：图像增强；**语音聊天（S2S / barge-in 未完成，无 Realtime 钥匙故未换镜像）**；**屏幕共享（持续屏流未完成）**；**Notebook/YouTube N1 已落地（视觉时间线可用；口播抓取受 YouTube 风控）**
 - **复杂度确认门**：语音与屏享都不得自行降级；若顶级统一方案过重，先列「顶级」与「略降级但简单稳定」两档，由用户确认。rbb Realtime 只补语音、不补持续屏享，不能作为两项均达标的终态
 - **Later（须单独确认）**：其他功能 **默认按合格类覆盖**（搜索 C2 已落地；其余见 `open-webui-default-coverage-plan.md`）；**即时搜顶级档**（`open-webui-search-quality-top-plan.md`：地图高德/Routes、Grok/Gemini native、OpenAI native 仅 W0 硬顶绿灯、全模型 X 可选；深调研只用 Sonar；spike 平均抬升 ≤ `$0.2`）；ST-14 **Search Controller**（Fetch 失败重试 / GitHub API→HTML）；Wave 1 **视频生成**（至少 1 个旗舰 public 且实测出片；聊天模型不得因 video tool 404）；Wave 2 slides（独立入口，聊天主路径无新 tool）；对比 **S3 真并行分栏**（ST-10 重试已落地，S3 未做）；Notebook N3/N4 Studio；**文件上传对标官网最高档**（见 `open-webui-file-ingest-plan.md`，T0 未确认）；关 OWUI 图像模型 / Studio A4（多参考、流式）  
-- **Don't**：ComfyUI、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S（GA-A：Pipe `/responses` 拒 `modalities.audio`）、未确认装 Tika / 扩 Direct MIME / 未确认改 Notebook 入口；**不要**把 Image Studio 绑进 OWUI 镜像或把 Studio 钥匙写入 Pipe / `api_configs`；**不要**用薄 Filter 指引冒充已补 Anthropic GitHub API；**不要**把 `$0.05` 工具门当最终账单上限去调高；**未确认不上** Search Controller；搜索费用护栏 **T1 + 引擎 C + 覆盖 C2 已落地**（压旧页；不认刹车的原厂搜走 Exa；public 文本默认搜含中国三只）；**T2 / 即时搜 W1+ 另轮确认**（W0 已做，见 `open-webui-search-quality-top-plan.md` §10：Flash/Sol 刹在 4，Grok 续轮 11；**不要**把 Sol 刹住当成 Astra Pro / W6 绿灯）；**不要**未确认就把 OpenAI / Google / xAI 改回 native 
+- **Don't**：ComfyUI、第二套 Pipe、重开 Web Search 三件套、466 全 public、同会话作图主路径、L3 三家 Live 并行、stock+realtime 双容器、把 RAG 当加分项、把 YouTube 转录当成 NotebookLM 达标、用 gpt-audio 冒充已接好的 Call S2S（GA-A：Pipe `/responses` 拒 `modalities.audio`）、未确认装 Tika / 扩 Direct MIME / 未确认改 Notebook 入口；**不要**把 Image Studio 绑进 OWUI 镜像或把 Studio 钥匙写入 Pipe / `api_configs`；**不要**用薄 Filter 指引冒充已补 Anthropic GitHub API；**不要**把 `$0.05` 工具门当最终账单上限去调高；**未确认不上** Search Controller；搜索费用护栏 **T1 + 引擎 C + 覆盖 C2 已落地**（压旧页；不认刹车的原厂搜走 Exa；public 文本默认搜含中国三只）；**T2 / 即时搜 W2+ 另轮确认**（W0/W1 已做，见 `open-webui-search-quality-top-plan.md`；W1 待 `AMAP_KEY`；**不要**把 Sol 刹住当成 Astra Pro / W6 绿灯）；**不要**未确认就把 OpenAI / Google / xAI 改回 native 
 
 ---
 

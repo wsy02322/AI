@@ -15,7 +15,6 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stack_contract import AMAP_DRIVE_ROUTE_TOOL, PIPE
 from text_web_search_ops import (
-    TEXT_WEB_SEARCH_FILTER,
     chat_with_optional_search,
     event_actions,
     headers,
@@ -26,6 +25,7 @@ from text_web_search_ops import (
 OUT = Path(os.environ.get("AMAP_SMOKE_OUT", "/opt/cursor/artifacts/amap-drive-route-smoke.json"))
 FLASH = f"{PIPE}.google.gemini-3.8-flash"
 ROUTE_PROMPT = (
+    "用路线工具查询实时路况，不要凭记忆编分钟数。"
     "开车从北京南站到北京首都国际机场，现在怎么走、大概多久、路况怎么样？"
     "只要距离、时间、路况大意和大概途经点。不要评分、不要电话、不要画地图。"
 )
@@ -47,13 +47,23 @@ def _tool_mentioned(result: dict) -> bool:
     return False
 
 
+def _function_calls(result: dict) -> int:
+    usage = result.get("usage") or {}
+    try:
+        return int(usage.get("function_call_count") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _summarize(result: dict, prompt: str) -> dict:
     text = _text(result)
     lowered = text.lower()
+    calls = _function_calls(result)
     return {
         "status": result.get("status"),
         "cost_usd": usage_cost_usd(result.get("usage") or {}),
-        "tool_mentioned": _tool_mentioned(result),
+        "function_call_count": calls,
+        "tool_mentioned": _tool_mentioned(result) or calls >= 1,
         "has_unavailable": "路线接口不可用" in text,
         "has_km_or_minutes": any(token in text for token in ("公里", "km", "分钟", "min")),
         "has_traffic": any(token in text for token in ("路况", "畅通", "缓行", "拥堵")),
@@ -93,13 +103,13 @@ def main() -> int:
     control_row = payload["control"]
     if route_row["status"] != 200:
         errors.append(f"route status {route_row['status']}")
+    if not (route_row["has_unavailable"] or route_row["tool_mentioned"] or route_row["function_call_count"]):
+        errors.append("route did not call drive_route")
     if route_row["has_phone"] or route_row["has_rating"]:
         errors.append("route leaked phone/rating")
-    if not (route_row["has_km_or_minutes"] or route_row["has_unavailable"] or route_row["tool_mentioned"]):
-        errors.append("route had no duration/distance, tool call, or unavailable")
     if control_row["status"] != 200:
         errors.append(f"control status {control_row['status']}")
-    if control_row["tool_mentioned"] or control_row["has_unavailable"]:
+    if control_row["tool_mentioned"] or control_row["has_unavailable"] or control_row.get("function_call_count"):
         errors.append("control unexpectedly used drive_route")
     payload["errors"] = errors
     OUT.parent.mkdir(parents=True, exist_ok=True)

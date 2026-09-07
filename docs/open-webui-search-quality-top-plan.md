@@ -1,6 +1,6 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 已跑**（2026-09-07）：`max_tool_calls=3` 能转发；Flash / Sol 两轮都刹在 4 次搜；Grok「继续」漏到 11。生产 Filter/Pipe **已还原 Exa**。W1+ 未点头不执行。  
+> **状态**：用户已选 **顶级档**。**W0 已跑**。**W1 Tool 已挂**（2026-09-07）：`amap_drive_route` 在 12 个 public 文本上；**高德 Web Key 未注入**，实时路况待 key。W2+ 未点头不执行。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
 > **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
@@ -74,7 +74,8 @@
 - OWUI 0.11.3；薄 Filter ST-14 deny 类，12 个 public 文本 default-on。  
 - OpenAI / Google / xAI：**Exa**；Anthropic：`auto`；中国三只：`auto`→Exa。  
 - T1 `SEARCH_PAGE_COMPACT_V1`；`$0.05` / `step_count=8`；OpenRouter 写明 `max_uses` **只转 Anthropic**。  
-- 无地图工具、无 X 原厂、无 T2、无单发 token 顶。  
+- 无 X 原厂、无 T2、无单发 token 顶。  
+- **ST-16**：`amap_drive_route` 已挂 12 个 public 文本；高德 Key **未**注入。  
 - 钥匙：不入库；**不** `enable` `openai.api_configs`；不写新的非空 `WEBUI_SECRET_KEY`。
 
 ---
@@ -129,7 +130,7 @@
 | 步 | 做什么 | 过门 | 回滚 |
 |----|--------|------|------|
 | **W0** 只读探针 | **已做**。脚本 `scripts/run_search_quality_w0.py`：带标记的消息才 native + `max_tool_calls=3` 且去掉 `stop_server_tools_when`；未标记生产流量仍 Exa。Flash / Grok / Sol 各 1 条十主题诱搜 +「你继续」。预算 ≤ `$10` | 见 **§10**：转发成功；Flash/Sol 刹在 4；Grok 续轮 11。生产已还原 | 已还原 |
-| **W1** 高德路线 | 工具 + 钥匙 env + 挂合格文本 + 短 JSON + 次数顶。无 UI | 中国路线题：有坐标级距离/时长/路况大意，误差目标约 1km；误搜不升；无评分/电话字段 | 卸工具、剥 filterIds |
+| **W1** 高德路线 | **已挂** Tool `amap_drive_route` 到 12 个 public 文本。压缩 JSON、次数顶=3、无 UI。**高德 Key 尚未注入**（Valves / `AMAP_KEY`）；现网烟雾能调到工具并返回「路线接口不可用」，实时公里/路况待 key | 工具挂载 + 误搜不调；有 key 后正文有距离/时长/路况大意，无电话/评分 | `scripts/rollback_amap_drive_route.py` |
 | **W2** Gemini native | Google 类 Search+Fetch `engine=native` | 短问仍会搜；单发 `$` 与次数可接受；中国路况仍走高德不是 Google | 改回 `exa` |
 | **W3** Grok native | xAI 类 `native` | 能引用 X；网页即时搜不差于现网 Exa 烟雾；Grok「继续」超额符合 §1.1 | 改回 `exa` |
 | **W4** Google Routes | 海外路线，同上压缩 | 海外题有路网级时长；国内仍高德 | 卸海外分支 |
@@ -197,9 +198,9 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-本文件 = 已选顶级档的施工单。  
-**W0 已做**（§10）。**下一执行步默认 W1**（高德路线工具）。回 `W1：同意` 才改实例。  
-若改做 W3 Grok native：须接受「继续」可能 >4 次搜（本次 11 次 / `$0.06`），回 `W3：同意`。
+**W0 / W1 已做**（§10–§11）。**下一执行步默认 W3**（Grok native / X）。回 `W3：同意` 才改搜索引擎。  
+W1 实时路况：把高德 **Web 服务** Key 填进 Admin → Tools → China Drive Route → Valves `AMAP_KEY`（或 Cloud secret `AMAP_KEY` 后让 agent `apply_amap_drive_route.py --mode attach` merge）。**不要**写进 git。
+
 
 ---
 
@@ -226,4 +227,17 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 2. **xAI**：首轮 4，续轮 11。`max_tool_calls` **不是** Grok native 的硬顶。W3 仍可做（11 次 / `$0.06` 远低于 spike 口径），但不能声称次数门牢。  
 3. **OpenAI / W6**：**仍关**。Sol 两轮 4 只证明这一只模型的外环能刹；`$19` 出在 Astra Pro 原厂内循环，本波**故意没测** Astra Pro。Grok 续轮已经证明 native 可以无视 `mtc=3`。  
 4. 生产搜索路径未变：OpenAI / Google / xAI 仍是 **Exa** + `$0.05` / 8 步。
+
+---
+
+## 11. W1 结果（2026-09-07）
+
+落地：OWUI Tool `amap_drive_route`（`AMAP_DRIVE_ROUTE_V1`），public `*` read；挂在与 ST-14 相同的 **12** 个 public 文本；Sonar / 图像未挂。返回压缩 JSON（`km` / `minutes` / `traffic` / `via` 约 1km，最长 24 点）。每 chat 120s 窗口最多 3 次。无地图 UI。Pipe / 搜索引擎 **未改**。
+
+钥匙：Cloud Agent 与 Tool Valves 里都 **没有** 高德 Web 服务 Key。不进 git。
+
+烟雾（Gemini Flash，`$0.003`）：`function_call_count=1`，正文出现 **「路线接口不可用」**，无电话/评分。导数控制题 0 次工具。`verify_amap_drive_route.py` 15 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。
+
+**未完成的过门**：有 key 之后再跑 `scripts/run_amap_drive_route_smoke.py`，正文应出现坐标级距离/时长/路况大意（不是「接口不可用」后的常规估算）。
+
 

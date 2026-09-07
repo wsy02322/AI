@@ -33,7 +33,11 @@ HttpFn = Callable[[str, dict[str, str]], dict[str, Any]]
 
 
 def fail(message: str = UNAVAILABLE, **extra: Any) -> str:
-    payload = {"ok": False, "error": message}
+    payload = {
+        "ok": False,
+        "error": message,
+        "hint": "不要编造精确分钟数冒充路况",
+    }
     payload.update(extra)
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
@@ -346,10 +350,12 @@ class Tools:
         destination: str,
         __metadata__: dict | None = None,
     ) -> str:
-        """China driving route with live traffic. origin/destination: place name or 'lng,lat' (GCJ-02).
+        """Must-use tool for China driving time, traffic, or how to go by car.
 
-        Returns compact JSON: km, minutes, traffic, sparse via points (~1km).
-        No phone, rating, or map UI. On failure returns 路线接口不可用.
+        Call this instead of guessing live minutes. origin/destination: place name
+        or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes, traffic, sparse
+        ~1km via points. No phone, rating, or map UI. If ok is false, say
+        路线接口不可用 and do not invent exact minutes.
         """
         # AMAP_DRIVE_ROUTE_V1
         origin = (origin or "").strip()
