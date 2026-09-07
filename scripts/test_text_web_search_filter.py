@@ -19,6 +19,7 @@ from text_web_search_filter import (
     Filter,
     TEXT_WEB_SEARCH_COUNTED_EXA_V1,
     TEXT_WEB_SEARCH_DENY_CLASS_V1,
+    TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1,
     TEXT_WEB_SEARCH_OPENAI_EXA_V1,
     TEXT_WEB_SEARCH_XAI_NATIVE_V1,
 )
@@ -26,9 +27,9 @@ from text_web_search_filter import (
 
 def _expected_engine(model_id: str) -> str:
     lowered = model_id.lower()
-    if any(marker in lowered for marker in ("x-ai.", "x-ai/", "xai.", "xai/")):
+    if any(marker in lowered for marker in ("x-ai.", "x-ai/", "xai.", "xai/", "google.", "google/")):
         return "native"
-    if any(marker in lowered for marker in ("openai.", "openai/", "google.", "google/")):
+    if any(marker in lowered for marker in ("openai.", "openai/")):
         return "exa"
     return "auto"
 
@@ -133,6 +134,7 @@ class TextWebSearchFilterTests(unittest.TestCase):
         self.assertIn(TEXT_WEB_SEARCH_COUNTED_EXA_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_OPENAI_EXA_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_XAI_NATIVE_V1, source)
+        self.assertIn(TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1, source)
         self.assertIn(TEXT_WEB_SEARCH_DENY_CLASS_V1, source)
         _, deepseek = _run(f"{PIPE}.deepseek.deepseek-v4-pro-0813")
         _, kimi = _run(f"{PIPE}.moonshotai.kimi-k3")
@@ -151,8 +153,10 @@ class TextWebSearchFilterTests(unittest.TestCase):
         self.assertEqual(sol["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
         self.assertEqual(grok["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
         self.assertEqual(grok["openrouter_pipe"]["server_tools"]["web_fetch"]["engine"], "native")
-        self.assertEqual(flash["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
-        self.assertEqual(gemini_pro["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "exa")
+        self.assertEqual(flash["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
+        self.assertEqual(flash["openrouter_pipe"]["server_tools"]["web_fetch"]["engine"], "native")
+        self.assertEqual(gemini_pro["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "native")
+        self.assertEqual(gemini_pro["openrouter_pipe"]["server_tools"]["web_fetch"]["engine"], "native")
         self.assertEqual(opus["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
         self.assertEqual(fable["openrouter_pipe"]["server_tools"]["web_search"]["engine"], "auto")
 

@@ -71,6 +71,27 @@ class W0InjectTests(unittest.TestCase):
         self.assertIn("stop_server_tools_when", opus_meta["openrouter_pipe"])
         self.assertNotIn("max_tool_calls", opus_body)
 
+        # W2: Google is already native in production, so the W0 probe
+        # (counted-Exa only) must not attach to Flash.
+        flash = f"{PIPE}.google.gemini-3.8-flash"
+        flash_unmarked, flash_unmarked_meta = _run(cls, flash, "What is the weather in Tokyo?")
+        self.assertEqual(
+            flash_unmarked_meta["openrouter_pipe"]["server_tools"]["web_search"]["engine"],
+            "native",
+        )
+        self.assertNotIn("w0_probe", flash_unmarked_meta["openrouter_pipe"])
+        flash_marked, flash_marked_meta = _run(
+            cls,
+            flash,
+            f"{FILTER_MARKER} Search ten independent topics separately.",
+        )
+        self.assertEqual(
+            flash_marked_meta["openrouter_pipe"]["server_tools"]["web_search"]["engine"],
+            "native",
+        )
+        self.assertNotIn("max_tool_calls", flash_marked)
+        self.assertNotIn("w0_probe", flash_marked_meta["openrouter_pipe"])
+
     def test_pipe_inject_copies_max_tool_calls_and_stamps(self) -> None:
         stub = (
             "prefix\n"

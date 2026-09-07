@@ -47,6 +47,14 @@ def _defaults(model: dict[str, Any]) -> list[str]:
     return list((model.get("meta") or {}).get("defaultFilterIds") or [])
 
 
+def _counted_exa_block(content: str) -> str:
+    start = content.find("COUNTED_EXA_MARKERS")
+    if start < 0:
+        return ""
+    end = content.find(")", start)
+    return content[start : end + 1] if end > start else ""
+
+
 def verify_mode(h: dict[str, str], mode: str) -> int:
     report = Report()
     status, function = get_function(h, TEXT_WEB_SEARCH_FILTER)
@@ -66,15 +74,24 @@ def verify_mode(h: dict[str, str], mode: str) -> int:
     if "TEXT_WEB_SEARCH_COUNTED_EXA_V1" not in content:
         report.err("thin filter missing counted-Exa marker")
     else:
-        report.ok("thin filter OpenAI/Google classes use Exa")
+        report.ok("thin filter OpenAI class uses Exa")
     if "TEXT_WEB_SEARCH_OPENAI_EXA_V1" not in content:
         report.err("thin filter missing OpenAI Exa marker")
     else:
-        report.ok("thin filter OpenAI class uses Exa")
+        report.ok("thin filter OpenAI Exa marker present")
     if "TEXT_WEB_SEARCH_XAI_NATIVE_V1" not in content:
         report.err("thin filter missing xAI native marker")
     else:
         report.ok("thin filter xAI class uses native")
+    if "TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1" not in content:
+        report.err("thin filter missing Google native marker")
+    else:
+        report.ok("thin filter Google class uses native")
+    counted_block = _counted_exa_block(content)
+    if "openai." in counted_block and "google." not in counted_block:
+        report.ok("counted-Exa markers are OpenAI-only (W6 still closed)")
+    else:
+        report.err("counted-Exa markers still include Google or dropped OpenAI")
     if function.get("is_global"):
         report.err("thin filter is global")
     else:

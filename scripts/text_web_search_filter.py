@@ -16,14 +16,18 @@ TEXT_WEB_SEARCH_FILTER_V1 = "TEXT_WEB_SEARCH_FILTER_V1"
 TEXT_WEB_SEARCH_OPENAI_EXA_V1 = "TEXT_WEB_SEARCH_OPENAI_EXA_V1"
 TEXT_WEB_SEARCH_COUNTED_EXA_V1 = "TEXT_WEB_SEARCH_COUNTED_EXA_V1"
 TEXT_WEB_SEARCH_XAI_NATIVE_V1 = "TEXT_WEB_SEARCH_XAI_NATIVE_V1"
+TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1 = "TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1"
 TEXT_WEB_SEARCH_DENY_CLASS_V1 = "TEXT_WEB_SEARCH_DENY_CLASS_V1"
 
-# Native search ignores max_uses except Anthropic. OpenAI / Google stay on Exa
-# so OpenRouter can count steps / $0.05. xAI is native (W3: web + X).
+# Native search ignores max_uses except Anthropic. OpenAI stays on Exa so
+# OpenRouter can count steps / $0.05 (W6 still closed). Google is native
+# (W2: Google index). xAI is native (W3: web + X).
 # Not a model-id allowlist. Image ids are denied before this runs.
 COUNTED_EXA_MARKERS = (
     "openai.",
     "openai/",
+)
+GOOGLE_NATIVE_MARKERS = (
     "google.",
     "google/",
 )
@@ -33,7 +37,7 @@ XAI_NATIVE_MARKERS = (
     "xai.",
     "xai/",
 )
-UNMETERED_NATIVE_MARKERS = COUNTED_EXA_MARKERS + XAI_NATIVE_MARKERS
+UNMETERED_NATIVE_MARKERS = GOOGLE_NATIVE_MARKERS + XAI_NATIVE_MARKERS
 
 DENY_MARKERS = (
     "sonar",
@@ -125,21 +129,26 @@ class Filter:
         refs = self._refs(body, __model__)
         return any(marker in refs for marker in XAI_NATIVE_MARKERS)
 
+    def _is_google(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
+        refs = self._refs(body, __model__)
+        return any(marker in refs for marker in GOOGLE_NATIVE_MARKERS)
+
     def _uses_counted_search_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None) -> bool:
         """Native search ignores max_uses except Anthropic.
 
-        TEXT_WEB_SEARCH_COUNTED_EXA_V1: OpenAI / Google classes go through Exa.
+        TEXT_WEB_SEARCH_COUNTED_EXA_V1: OpenAI class stays on Exa (W6 closed).
+        TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1: Google uses native (Google index).
         TEXT_WEB_SEARCH_XAI_NATIVE_V1: xAI uses native (web + X). Anthropic auto.
         Image / video ids are denied before this runs.
         """
-        if self._is_xai(body, __model__):
+        if self._is_xai(body, __model__) or self._is_google(body, __model__):
             return False
         refs = self._refs(body, __model__)
         return any(marker in refs for marker in COUNTED_EXA_MARKERS)
 
     def _tool_engine(self, body: dict[str, Any], __model__: dict[str, Any] | None, default: str) -> str:
-        # TEXT_WEB_SEARCH_XAI_NATIVE_V1
-        if self._is_xai(body, __model__):
+        # TEXT_WEB_SEARCH_XAI_NATIVE_V1 / TEXT_WEB_SEARCH_GOOGLE_NATIVE_V1
+        if self._is_xai(body, __model__) or self._is_google(body, __model__):
             return "native"
         if self._uses_counted_search_engine(body, __model__):
             return "exa"
