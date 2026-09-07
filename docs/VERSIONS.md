@@ -9,7 +9,7 @@
 | OWUI | **0.11.3**（`GET /api/version`）。image id `129f4038ec70`；RepoDigest `ghcr.io/open-webui/open-webui@sha256:751b617714b91e4cfd0186a509c72480c858e012976103b09a30dad053c36175`（旧钉 `e97bf9531916` / 0.11.0） |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
-| Pipe content SHA256（前 12） | `7242967443d4`（W6 `MAX_TOOL_CALLS_FORWARD_V1`；更早 `9c4836ace251` → `f797e92d6d3f` → `7415c2e4347a`） |
+| Pipe content SHA256（前 12） | `45844d32b3d9`（ST-14 `SERVER_TOOL_FAIL_RETRY_V1`；更早 `7242967443d4` → `9c4836ace251` → `f797e92d6d3f`） |
 | Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1`、`IMAGE_DATA_URI_PERSIST_V1`、`SEARCH_PAGE_COMPACT_V1`、`MAX_TOOL_CALLS_FORWARD_V1`、`SERVER_TOOL_FAIL_RETRY_V1` **均应存在** |
 | Banner | **一条** `usage-guide-v7`（不可 dismiss；🌐 Text chat models can search；同一段、无粗体） |
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
@@ -25,7 +25,7 @@
 | 即时搜 M1a | **已过门**（2026-09-07）：`via` + `legs[]`。西安→西宁→青海湖→张掖 **865.8 + 146.7 + 521.3 km**（1 次调用）；南站→机场 **36.9 km**；JFK→Times Square **27 km**。`verify_amap` 17 ok；`verify_google` 18 ok；`verify_stack` 24 ok |
 | 即时搜 MAP_LITE | **已过门**（2026-09-07）：分段表 + 官方导航 + 中国多站**一张**高德静态图。四站 `nav_url` + PNG 43KB；南站→机场 / JFK **无图**。Flash 均 1 次调用。`verify_amap` 18 ok；`verify_google` 19 ok；`verify_stack` 24 ok |
 | 即时搜 MAP_ROAD | **已过门**（2026-09-07）：静态图改画抽稀路网折线（最多约 100 点，失败回退直线）。四站图走 G30 走廊（经兰州）。`verify_amap` 19 ok；`verify_stack` 24 ok |
-| ST-14 Sol 400 重试 | Pipe marker `SERVER_TOOL_FAIL_RETRY_V1`（先剥回放图，再关 server tools）。sha 以 apply 后 `verify_stack` 为准 |
+| ST-14 Sol 400 重试 | **已挂**（2026-09-07）：Pipe `SERVER_TOOL_FAIL_RETRY_V1` sha `45844d32b3d9`。`verify_stack` `VERIFY_SMOKE=0` 24 ok；短 Sol 搜 200 / 有 web_search / `$0.20`。未在 `$19` 会话复现 |
 | 上次 `verify_live_baseline.py` | **2026-09-04（0.11.3）**：TTS/STT/Call 仍绿；Banner v3 **不写** screen share（脚本 needle 过期，1 err，不改 Banner） |
 | 上次 GA-A | **2026-08-21**：MiniMax TTS 可用；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）。脚本已出树，结论见 SPEC Don't |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |

@@ -724,3 +724,5 @@ Flash 烟雾（`M1A_EXPECT_LIVE=1`）：
 
 回放：`python3 scripts/patch_pipe_server_tool_fail.py`（已有 marker 则 no-op）。
 
+活测（2026-09-07）：Pipe `7242967443d4` → `45844d32b3d9`。`verify_stack` `VERIFY_SMOKE=0` **24 ok**。短 Sol「OpenAI 本周产品新闻」**200**、有 `web_search`、引用 `openai.com/news`、`$0.20`。未在 `$19` 那条会话再发「下一阶段」。
+
