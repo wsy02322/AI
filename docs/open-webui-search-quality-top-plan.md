@@ -1,6 +1,6 @@
 # 即时搜顶级档：地图 + X + 平均 spike ≤ `$0.2`
 
-> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 / W4 已过门**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
+> **状态**：用户已选 **顶级档**。**W0 / W1 / W2 / W3 / W4 已过门**。**W5** 官方 X 按次 Tool **已挂**，过门 **等 Key**。xAI / Google 类 Search+Fetch = `native`。OpenAI 仍 Exa。W6 仍关。  
 > **取代** `docs/open-webui-search-metered-quality-plan.md` 里的旧硬约束「`$19` 概率必须为零 / 生产永远禁止 OpenAI·Google·xAI native」。那份仍可作 T1 根因备忘。  
 > **已确认（本波）**：深调研 **继续只用 Sonar**；普通气泡不当 Deep Research。  
 > **W6**：仍关。Sol 刹住 **不是** Astra Pro 绿灯；`$19` 形态未用 Astra Pro 复测。
@@ -76,6 +76,7 @@
 - T1 `SEARCH_PAGE_COMPACT_V1`；`$0.05` / `step_count=8`；OpenRouter 写明 `max_uses` **只转 Anthropic**。  
 - 无 X 原厂、无 T2、无单发 token 顶。  
 - **ST-16**：`amap_drive_route` + `google_drive_route` 已挂 12 个 public 文本；高德 / Google Maps Key **已注入** Valves（不进 git）。  
+- **ST-17 / W5**：`x_recent_search`（显示名 X Recent Posts）已挂同一批 12 个 public 文本；`X_BEARER_TOKEN` **未注入**，活测过门未过。Grok native X 仍在。  
 - 钥匙：不入库；**不** `enable` `openai.api_configs`；不写新的非空 `WEBUI_SECRET_KEY`。
 
 ---
@@ -108,8 +109,8 @@
 ### 3.3 X
 
 - **W3**：Grok native 自带 X（与网页绑定）。  
-- **W5**（可后做）：全模型可计数 X（官方 X API 或直连 xAI 仅 `x_search`）。配额/ToS/第二上游 → 单独过门。  
-- 推文只回摘要 + 链接，不全文墙。
+- **W5**（已选官方 X API 按次）：薄 Tool `x_recent_search` 已挂 12 个 public 文本。近 7 天关键词真帖 + `x.com/status`。API `max_results` 下限 **10**（不是 5）。每轮最多 3 次。失败说「X 接口不可用」。过门等 Valves Key。  
+- 推文只回摘要 + 链接，不全文墙。不采用 Nitter / xAI 侧车。
 
 ### 3.4 硬顶（服务 `$0.2`）
 
@@ -134,7 +135,7 @@
 | **W2** Gemini native | **已过门**。Google 类 Search+Fetch `engine=native`。OpenAI 仍 Exa。见 **§14** | Flash 短问 4 次搜 / `$0.056`；北京南站→首都机场走高德 36.7km / 41 分钟，0 次网页搜 | 改回 `exa` |
 | **W3** Grok native | **已过门**。xAI 类 Search+Fetch `engine=native`。见 **§13** | 能引用 X；网页即时搜仍出活链；Grok「继续」超额符合 §1.1 | 把 xAI 改回 `exa` 后 `apply_search_quality_w3.py` 的逆操作（Filter content） |
 | **W4** Google Routes | **已过门**。Tool `google_drive_route` 挂 12 个 public 文本；Key 在 Valves。见 **§16** | Flash 海外 27km / 57 分钟；国内仍高德 36.7km / 41 分钟 | `scripts/rollback_google_drive_route.py` |
-| **W5** 全模型 X | 可计数 X 工具 | 非 Grok 也能引帖；配额不打穿；次数能刹 | 卸工具 |
+| **W5** 全模型 X | **已挂**。官方 X API 按次 Tool `x_recent_search`；12 个 public 文本；Key **未注入**。见 **§18** | Flash 必须调工具并引活链；Grok 回归仍能搜 X；纯网页题不得无故狂调 X；次数顶有效 | `scripts/rollback_x_recent_search.py` |
 | **W6** OpenAI native | **W0 未开绿灯**（Sol 能刹，Astra Pro 未测；Grok 续轮已证明 native 可越过 `max_tool_calls`） | Astra Pro「你继续」不得再出现无顶 46 次/上百万 input；超额期望仍 ≤ `$0.2` | 改回 `exa` |
 | **W7** T2 | 单次用户消息内轮累计 | 「继续」叠 spike 变稀 | 去 Pipe marker |
 
@@ -152,11 +153,11 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 | W2 | 平均仍应是短问几美分级 | 低：改类引擎 | 原厂循环数不一定到；靠 W0 与观察 |
 | W3 | Grok 同体积远低于 Astra | 低 | 网页+X 绑定；Grok 狠搜可数美元 |
 | W4 | 同 W1 量级 | 中：第二钥匙、坐标系 | 海外稳、国内弱（国内不走它） |
-| W5 | X API 月费或 xAI 按次 | **高** | ToS/配额 |
+| W5 | 官方 X 按次（约 `$0.005`/条，默认 10 条） | 中（与路线工具同形） | ToS/配额；无 Key 则说接口不可用 |
 | W6 | 质量接近 ChatGPT 即时搜 | 低（一行）但 **spike 风险最高** | 无硬顶则与 §1.1 冲突 |
 | W7 | 降尾部 | 中：Pipe 记账 | 须单测，勿伤 ST-10/11 |
 
-钥匙：高德 Key、Google Maps Platform（Routes）、可选 X/xAI。只进 env，**不进 git**，不进 Pipe `API_KEY` 覆盖，不开 OpenRouter 直连槽。
+钥匙：高德 Key、Google Maps Platform（Routes）、X Bearer。只进 Tool Valves，**不进 git**，不进 Pipe `API_KEY` 覆盖，不开 OpenRouter 直连槽。
 
 ---
 
@@ -198,7 +199,7 @@ W1 不依赖 native。W3 用最低复杂度换 X。W6 故意靠后。W5 最重�
 
 ## 9. 请你确认后才执行
 
-**W0 / W1 / W2 / W3 / W4 已过门**（§10–§11、§13–§14、§16）。**不要自行开 W5 / W6。** W5 见 **§17**（先选上游或明确不做）。W6 仍关。
+**W0 / W1 / W2 / W3 / W4 已过门**（§10–§11、§13–§14、§16）。**W5** 已挂、过门等 Key（§18–§19）。**不要自行开 W6。** W6 仍关。
 
 
 ---
@@ -284,7 +285,7 @@ Grok 4.6 烟雾（`$0.25`）：
 
 `verify_text_web_search.py --mode final` 15 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w3-results.json`。
 
-W0 已接受 Grok 续轮可 >4 次搜。**W2 Gemini native 已过门**（§14）。W5 全模型 X、W6 OpenAI native **未做**。
+W0 已接受 Grok 续轮可 >4 次搜。**W2 Gemini native 已过门**（§14）。W5 已挂、过门等 Key（§18）。W6 OpenAI native **未做**。
 
 ---
 
@@ -299,7 +300,7 @@ Flash 3.8 烟雾（`$0.059`）：
 
 `verify_text_web_search.py --mode final` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w2-results.json`。
 
-**过门通过。** 中国路况仍走高德，不是 Google 网页搜。W5 / W6 **未做**。
+**过门通过。** 中国路况仍走高德，不是 Google 网页搜。W5 见 **§18**（已挂、过门等 Key）。W6 **未做**。
 
 ---
 
@@ -345,11 +346,11 @@ Flash 烟雾（`GOOGLE_EXPECT_LIVE=1`，约 `$0.005`）：
 
 `verify_google_drive_route.py --require-key` 17 ok；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。JSON：`docs/open-webui-search-quality-w4-results.json`。
 
-**过门通过。** W5 见 **§17**（未确认）。W6 **未做**。
+**过门通过。** W5 已挂、过门等 Key（§18）。W6 **未做**。
 
 ---
 
-## 17. W5 沟通：其他模型读 X，相对 Grok 差在哪（未确认，不施工）
+## 17. W5 沟通：其他模型读 X，相对 Grok 差在哪（已确认：官方 X API 按次）
 
 现网只有 **Grok 4.6** 的 Search+Fetch 是 `native`，网页和 X **绑在一起**。W3 烟雾：同一道「最近 Tesla/SpaceX 帖」能引出活的 `x.com/.../status/...`。
 
@@ -399,9 +400,9 @@ Flash 烟雾（`GOOGLE_EXPECT_LIVE=1`，约 `$0.005`）：
 3. 对照题（纯网页新闻）：不得无故狂调 X。
 4. 次数顶有效；单发 `$` 可接受。
 
-回 `W5：X API 按次` / `W5：xAI 侧车` / `W5：不做`。需要数字再回 `W5：先对照`。
+用户已回 **`W5：X API 按次`**。xAI 侧车不做。
 
-### 17.3 非 Grok 最高性价比（2026-09-07 沟通，未施工）
+### 17.3 非 Grok 最高性价比（2026-09-07 沟通；已选官方 X 按次）
 
 OpenRouter **不会**把 Grok 的 `x_search` 分给 Gemini / OpenAI / Claude。W2 Google native 仍是网页，不是 X。
 
@@ -412,11 +413,48 @@ xAI 文档里的 `x_search` 是 **Grok 身上的 server tool**（`$5` / 1k 次 =
 | 方案 | 非 Grok 拿到什么 | 大约 `$` | 复杂度 | 性价比 |
 |------|------------------|----------|--------|--------|
 | **不做**（X 题用 Grok） | 无 | `$0` | 零 | 问 X 少时最优 |
-| **官方 X API 按次 + 薄工具** | 近 7 天关键词真帖 + `x.com/status` | 每问 5～8 条 ≈ `$0.025`～`$0.04`；顶 3 次 ≈ `$0.12` | 中（和路线工具同形） | **要真帖时最优** |
+| **官方 X API 按次 + 薄工具** | 近 7 天关键词真帖 + `x.com/status` | 每问 **10** 条（API 下限）≈ `$0.05`；顶 3 次 ≈ `$0.15` | 中（和路线工具同形） | **要真帖时最优** |
 | xAI 侧车（便宜 Grok + 只 `x_search`） | 接近 Grok 同源（语义/线程） | `$0.005`/搜 + Grok token；Grok 可能连搜几次 | 高 | 质量更好，`$` 和复杂度都更差 |
 | 继续网页搜 | 新闻转述 / 旧帖 / 易编链 | 已付网页搜 | 零 | 便宜但经常不是 X |
 
-**性价比主推（若一定要非 Grok 读 X）**：官方 X 按次 + 与高德同形的薄 Tool；`max_results=5～8`；每轮最多 2～3 次；只回作者/时间/摘要/链接。不挂 Sonar/图像。失败说「X 接口不可用」。
+**性价比主推（已选）**：官方 X 按次 + 与高德同形的薄 Tool。X Recent Search 的 `max_results` **下限 10**（不是计划初稿的 5～8）；Valves 默认 10、上限 20。每轮最多 3 次。只回作者/时间/摘要/链接。不挂 Sonar/图像。失败说「X 接口不可用」。不请求 `public_metrics`。
 
-不采用：Nitter、为 X 去开 OpenAI native、把网页搜写成已接 X。
+不采用：Nitter、为 X 去开 OpenAI native、把网页搜写成已接 X、xAI 侧车。
+
+---
+
+## 18. W5 X Bearer：申请 + 注入
+
+现网 Tool 调这一条（只要 Recent Search，不要 Embed / 全文墙）：
+
+- `GET https://api.x.com/2/tweets/search/recent`（`tweet.fields=created_at,author_id`；`expansions=author_id`；`user.fields=username`）
+
+Tool **已挂** 12 个 public 文本（2026-09-07）。Valves `X_BEARER_TOKEN` **未注入**。活测过门未过。Grok native X 不受影响。
+
+### 18.1 申请
+
+1. 打开 [developer.x.com](https://developer.x.com/) 并登录。
+2. 进 **Developer Portal** → 建一个 **Project** 和 **App**（已有就用现成的）。
+3. **开通结算 / pay-per-use**（2026 新号按次；旧 Basic `$200`/月不对新用户开）。没结算时 Recent Search 常 403。
+4. App → **Keys and tokens** → 生成或复制 **Bearer Token**（一长串）。不要复制 API Key / API Secret / Client ID。
+5. 不要把 Token 写进 git、聊天、Pipe `API_KEY`，也不要改 `WEBUI_SECRET_KEY`。
+
+### 18.2 注入（用网站，不要 SSH）
+
+1. 打开 [https://micropigeon.com/workspace/tools](https://micropigeon.com/workspace/tools)（Admin 登录）。
+2. 找到 **X Recent Posts**，鼠标放上去，点 **Valves**。
+3. 在 **X Bearer Token** / `X_BEARER_TOKEN` 框粘贴 → **Save**。Max Calls 保持 3，Max Results 保持 **10**（不要改成 5，上游会拒）。
+4. 回 `W5 Key 已注入`。**不要**把 Token 贴进聊天。
+
+注入后 agent 跑 `verify_x_recent_search.py --require-key` 和 `X_EXPECT_LIVE=1 python3 scripts/run_x_recent_search_smoke.py`。
+
+---
+
+## 19. W5 安装记录（2026-09-07，过门等 Key）
+
+落地：OWUI Tool `x_recent_search`（`X_RECENT_SEARCH_V1`），显示名 X Recent Posts；挂在与 ST-14 相同的 **12** 个 public 文本。Sonar / 图像未挂。压缩 JSON（`author` / `time` / 短 `text` / `x.com/.../status/...`）。每 chat 120s 最多 3 次。`max_results` 默认 10（API 下限）。不请求 `public_metrics`。无嵌入 UI。Pipe / 搜索引擎 **未改**（OpenAI Exa、Google native、xAI native）。Token 只在 Tool Valves，不进 git。
+
+`verify_x_recent_search.py` 17 ok（`X_BEARER_TOKEN unset`）；`verify_stack.py` `VERIFY_SMOKE=0` 24 ok。Pipe 仍 `9c4836ace251`。JSON：`docs/open-webui-search-quality-w5-results.json`。
+
+**活测过门未过。** 注入 Key 后再跑 §17.2。W6 **未做**。
 

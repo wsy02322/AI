@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-07",
+  "gate": "W5",
+  "status": "waiting_for_key",
+  "tool_id": "x_recent_search",
+  "display_name": "X Recent Posts",
+  "marker": "X_RECENT_SEARCH_V1",
+  "attached_public_text": 12,
+  "key_set": false,
+  "max_results": 10,
+  "max_calls_per_turn": 3,
+  "api_min_results": 10,
+  "omits_public_metrics": true,
+  "pipe_sha12": "9c4836ace251",
+  "verify_x_recent_search_ok": 17,
+  "verify_stack_ok": 24,
+  "engines_unchanged": {
+    "openai": "exa",
+    "google": "native",
+    "xai": "native"
+  }
+}
