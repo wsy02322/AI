@@ -17,11 +17,17 @@ from amap_drive_route_tool import (
     AMAP_DRIVE_ROUTE_MAP_ROAD_V1,
     AMAP_DRIVE_ROUTE_NAV_LEGS_V1,
     AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1,
+    AMAP_DRIVE_ROUTE_NAV_PAGE_V1,
     AMAP_DRIVE_ROUTE_V1,
     UNAVAILABLE,
     Tools,
     allow_call,
+    amap_nav_app_android,
+    amap_nav_app_ios,
+    amap_nav_page_url,
     amap_nav_url,
+    decode_nav_page_payload,
+    encode_nav_page_payload,
     amap_nav_web_url,
     compact_route,
     lookup_drive,
@@ -38,6 +44,8 @@ from stack_contract import (
     AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER,
     AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER,
     AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_MARKER,
+    AMAP_DRIVE_ROUTE_NAV_PAGE_MARKER,
+    AMAP_NAV_PAGE_MARKER,
     AMAP_DRIVE_ROUTE_MARKER,
 )
 
@@ -59,14 +67,17 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertEqual(AMAP_DRIVE_ROUTE_MAP_ROAD_V1, AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER)
         self.assertEqual(AMAP_DRIVE_ROUTE_NAV_LEGS_V1, AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER)
         self.assertEqual(AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1, AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_MARKER)
+        self.assertEqual(AMAP_DRIVE_ROUTE_NAV_PAGE_V1, AMAP_DRIVE_ROUTE_NAV_PAGE_MARKER)
         self.assertIn(AMAP_DRIVE_ROUTE_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_M1A_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_MAP_LITE_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_MARKER, source)
-        self.assertNotIn("amapuri://route/plan", source)
-        self.assertNotIn("iosamap://path?", source)
+        self.assertIn(AMAP_DRIVE_ROUTE_NAV_PAGE_MARKER, source)
+        page = Path(__file__).resolve().parents[1].joinpath("nav", "index.html").read_text(encoding="utf-8")
+        self.assertIn(AMAP_NAV_PAGE_MARKER, page)
+        self.assertNotIn('payload["nav_app_android"] =', source)
 
     def test_sparse_via_about_one_km(self) -> None:
         points = [(116.0 + i * 0.01, 39.9) for i in range(20)]
@@ -162,6 +173,7 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertNotIn("nav_app_android", data)
         self.assertNotIn("nav_app_ios", data)
         self.assertNotIn("nav_app_label", data)
+        self.assertNotIn("nav_page_url", data)
         self.assertNotIn("amapuri://", raw)
         self.assertNotIn("iosamap://", raw)
         self.assertNotIn("map_data_uri", data)
@@ -273,6 +285,7 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertNotIn("nav_app_ios", data)
         self.assertNotIn("nav_app_label", data)
         self.assertIn("逐站添加", data["nav_hint"])
+        self.assertNotIn("nav_page_url", data)
         self.assertNotIn("amapuri://", raw)
         parsed = urllib.parse.urlparse(data["legs"][0]["nav_url"])
         self.assertEqual(parsed.netloc, "uri.amap.com")
@@ -410,6 +423,19 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertIn("uri.amap.com/navigation", full)
         self.assertNotIn("via=", full)
         self.assertNotIn("米脂", urllib.parse.unquote(full))
+        encoded = encode_nav_page_payload(stops)
+        decoded = decode_nav_page_payload(encoded)
+        self.assertEqual([name for name, _xy in decoded or []], [name for name, _xy in stops])
+        page = amap_nav_page_url("https://micropigeon.com/nav/", stops)
+        self.assertTrue(page.startswith("https://micropigeon.com/nav/#p="))
+        self.assertNotIn("amapuri://", page)
+        android = amap_nav_app_android(stops)
+        ios = amap_nav_app_ios(stops)
+        self.assertIn("vian=5", android)
+        self.assertIn("vianames=", android)
+        self.assertIn("临县", urllib.parse.unquote(android))
+        self.assertIn("vian=5", ios)
+        self.assertIn("sourceApplication=micropigeon", ios)
 
     def test_static_draw_points_caps_road_sample(self) -> None:
         resolved = [("西安", (108.94, 34.26)), ("张掖", (100.45, 38.93))]
@@ -524,12 +550,25 @@ class AmapDriveRouteTests(unittest.TestCase):
                 },
             }
 
-        data = json.loads(lookup_drive("k", "西安", "张掖", via="西宁", max_via=8, http=http))
+        data = json.loads(
+            lookup_drive(
+                "k",
+                "西安",
+                "张掖",
+                via="西宁",
+                max_via=8,
+                http=http,
+                page_base="https://micropigeon.com/nav/",
+            )
+        )
         self.assertTrue(data["ok"])
         self.assertNotIn("nav_url", data)
         self.assertIn("uri.amap.com/navigation", data["legs"][0]["nav_url"])
+        self.assertTrue(data["nav_page_url"].startswith("https://micropigeon.com/nav/#p="))
+        self.assertIn("nav_page_url", data["nav_hint"])
         self.assertNotIn("nav_app_android", data)
         self.assertNotIn("nav_app_ios", data)
+        self.assertNotIn("amapuri://", json.dumps(data))
         self.assertNotIn("map_data_uri", data)
 
 

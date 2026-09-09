@@ -63,7 +63,7 @@
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.x-ai.grok-4.6`（不默认双栏 compare） |
 | 置顶四格 | Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
-| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14）：OpenAI **native + max_tool_calls=3**（W6），**Google native**（W2），**xAI native**（ST-17），Anthropic/中国三只 `auto`。Tool `amap_drive_route` + `google_drive_route`（ST-16；中国高德 / 海外 Google Routes；**M1a** `via`+`legs`；**MAP_LITE** 表+每段网页导航+中国多站一张沿路网的高德静态图；**不出** App 全程深链）+ `x_recent_search`（ST-17 / W5；官方 X 近 7 天，已过门）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
+| 搜索 | **12** 个 public 文本挂薄 `Web Search`（ST-14）：OpenAI **native + max_tool_calls=3**（W6），**Google native**（W2），**xAI native**（ST-17），Anthropic/中国三只 `auto`。Tool `amap_drive_route` + `google_drive_route`（ST-16；中国高德 / 海外 Google Routes；**M1a** `via`+`legs`；**MAP_LITE** 表+每段网页+HTTPS 全程落地页+中国多站一张沿路网的高德静态图；聊天**不出** App 深链）+ `x_recent_search`（ST-17 / W5；官方 X 近 7 天，已过门）。两档 Sonar 仍是 Quick / Deep。原生 Web Search **关**。broad OR Web Tools **停用**。已知限制：Anthropic 读不了 `api.github.com` Releases JSON |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
 | Notebook | **N1**：Knowledge「YouTube Notebook」+ OpenRouter embedding。N2+ Studio **未做** |
 | Follow-up 芯片 | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）。Autocomplete / Title **仍开** |
@@ -208,7 +208,8 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 10c. `python3 scripts/apply_google_drive_route.py --mode attach`（ST-16 海外 Routes；Key 在 Valves，不进 git）。  
 10d. `python3 scripts/apply_x_recent_search.py --mode attach`（ST-17 / W5 官方 X 近 7 天；Bearer 在 Valves，不进 git）。  
 10e. `python3 scripts/apply_search_quality_w6.py`（OpenAI native + `max_tool_calls=3`；会打 Pipe `MAX_TOOL_CALLS_FORWARD_V1`）。  
-10f. `python3 scripts/apply_search_quality_m1a.py`（ST-16 M1a + MAP_LITE + NAV_WEB_ONLY：`via` + `legs[]` + 每段网页导航 / 中国多站一张沿路网的高德静态图；不出 App 深链；merge Valves，不覆盖 Key）。  
+10f. `python3 scripts/apply_search_quality_m1a.py`（ST-16 M1a + MAP_LITE + NAV_PAGE：`via` + `legs[]` + 每段网页 + `nav_page_url` / 中国多站一张沿路网的高德静态图；聊天不出 App 深链；merge Valves，不覆盖 Key）。  
+10g. 全程落地页：按 `nav/DEPLOY.md` 在 Caddy **先于** `reverse_proxy :8080` 挂 `/nav/`（静态 HTML，不进 OWUI 容器）。Valve `NAV_PAGE_BASE=https://micropigeon.com/nav/`。
 11. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
 12. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable / 压页 / 次数顶 / Sol 400 重试：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py` / `patch_pipe_search_page_compact.py` / `patch_pipe_max_tool_calls.py` / `patch_pipe_server_tool_fail.py`（已有 marker 则 no-op）。  
 13. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_text_web_search.py --mode final`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  

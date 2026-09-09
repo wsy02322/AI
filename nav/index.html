@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>全程路线</title>
+  <!-- AMAP_NAV_PAGE_V1 -->
+  <style>
+    :root { color-scheme: light dark; }
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 0; padding: 24px; max-width: 40rem; }
+    h1 { font-size: 1.25rem; margin: 0 0 12px; }
+    ol { padding-left: 1.2rem; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    a.btn, button {
+      display: inline-block; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid #2b6cb0; background: #2b6cb0; color: #fff; text-decoration: none;
+      font: inherit; cursor: pointer;
+    }
+    a.btn.secondary, button.secondary { background: transparent; color: inherit; }
+    .muted { color: #666; font-size: 0.9rem; }
+    .err { color: #b00020; }
+    li a { word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>全程路线</h1>
+  <p id="status" class="muted">正在读取站点…</p>
+  <ol id="stops"></ol>
+  <div class="row" id="actions" hidden>
+    <button type="button" id="open-app">在高德 App 打开全程</button>
+    <button type="button" id="open-android" class="secondary">安卓</button>
+    <button type="button" id="open-ios" class="secondary">iOS</button>
+  </div>
+  <p class="muted">桌面请用下面分段网页。全程深链由本页生成，不要从聊天复制 amapuri。</p>
+  <h2 style="font-size:1rem">分段网页导航</h2>
+  <ol id="legs"></ol>
+
+  <script>
+    const PAGE_MARKER = "AMAP_NAV_PAGE_V1";
+    const MAX_STOPS = 8;
+
+    function b64urlToBytes(text) {
+      const pad = text.length % 4 === 0 ? "" : "=".repeat(4 - (text.length % 4));
+      const raw = atob(text.replace(/-/g, "+").replace(/_/g, "/") + pad);
+      const out = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+      return out;
+    }
+
+    function decodePayload(text) {
+      const json = new TextDecoder().decode(b64urlToBytes(text));
+      const rows = JSON.parse(json);
+      if (!Array.isArray(rows) || rows.length < 2 || rows.length > MAX_STOPS) return null;
+      const stops = [];
+      for (const row of rows) {
+        if (!Array.isArray(row) || row.length < 3) return null;
+        const name = String(row[0] || "").trim().slice(0, 40);
+        const lng = Number(row[1]);
+        const lat = Number(row[2]);
+        if (!name || !Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+        if (lng < 70 || lng > 140 || lat < 15 || lat > 55) return null;
+        stops.push({ name, lng, lat });
+      }
+      return stops;
+    }
+
+    function enc(params) {
+      return Object.entries(params)
+        .map(([key, value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value).replace(/%7C/gi, "|"))
+        .join("&");
+    }
+
+    function appParams(stops) {
+      const origin = stops[0];
+      const dest = stops[stops.length - 1];
+      const params = {
+        sid: "",
+        slat: String(origin.lat),
+        slon: String(origin.lng),
+        sname: origin.name,
+        did: "",
+        dlat: String(dest.lat),
+        dlon: String(dest.lng),
+        dname: dest.name,
+        dev: "0",
+        t: "0",
+        sourceApplication: "micropigeon",
+      };
+      const mid = stops.slice(1, -1);
+      if (mid.length) {
+        params.vian = String(mid.length);
+        params.vialons = mid.map((item) => String(item.lng)).join("|");
+        params.vialats = mid.map((item) => String(item.lat)).join("|");
+        params.vianames = mid.map((item) => item.name).join("|");
+      }
+      return params;
+    }
+
+    function androidUrl(stops) {
+      return "amapuri://route/plan/?" + enc(appParams(stops));
+    }
+
+    function iosUrl(stops) {
+      return "iosamap://path?" + enc(appParams(stops));
+    }
+
+    function webUrl(a, b) {
+      const params = {
+        from: a.lng + "," + a.lat + "," + a.name,
+        to: b.lng + "," + b.lat + "," + b.name,
+        mode: "car",
+        policy: "1",
+        src: "micropigeon",
+        coordinate: "gaode",
+        callnative: "0",
+      };
+      return "https://uri.amap.com/navigation?" + new URLSearchParams(params).toString();
+    }
+
+    function preferIos() {
+      return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    function payloadText() {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const query = new URLSearchParams(location.search);
+      return hash.get("p") || query.get("p") || "";
+    }
+
+    function render(stops) {
+      const status = document.getElementById("status");
+      const list = document.getElementById("stops");
+      const legs = document.getElementById("legs");
+      const actions = document.getElementById("actions");
+      status.textContent = stops.map((item) => item.name).join(" → ");
+      for (const item of stops) {
+        const li = document.createElement("li");
+        li.textContent = item.name;
+        list.appendChild(li);
+      }
+      for (let i = 0; i < stops.length - 1; i++) {
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = webUrl(stops[i], stops[i + 1]);
+        link.textContent = "在高德打开 " + stops[i].name + "→" + stops[i + 1].name;
+        li.appendChild(link);
+        legs.appendChild(li);
+      }
+      actions.hidden = false;
+      const open = (url) => { location.href = url; };
+      document.getElementById("open-app").addEventListener("click", () => {
+        open(preferIos() ? iosUrl(stops) : androidUrl(stops));
+      });
+      document.getElementById("open-android").addEventListener("click", () => open(androidUrl(stops)));
+      document.getElementById("open-ios").addEventListener("click", () => open(iosUrl(stops)));
+    }
+
+    try {
+      const raw = payloadText();
+      const stops = raw ? decodePayload(raw) : null;
+      if (!stops) {
+        document.getElementById("status").className = "err";
+        document.getElementById("status").textContent = "路线参数无效。请从对话里的全程链接重新打开。";
+      } else {
+        render(stops);
+      }
+    } catch (err) {
+      document.getElementById("status").className = "err";
+      document.getElementById("status").textContent = "路线参数无效。请从对话里的全程链接重新打开。";
+    }
+    void PAGE_MARKER;
+  </script>
+</body>
+</html>

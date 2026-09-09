@@ -2,8 +2,8 @@
 title: China Drive Route
 author: micropigeon
 id: amap_drive_route
-description: Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, optional road-following static map.
-version: 1.4.0
+description: Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, full-route landing page, optional road-following static map.
+version: 1.5.0
 """
 
 from __future__ import annotations
@@ -26,6 +26,8 @@ AMAP_DRIVE_ROUTE_MAP_LITE_V1 = "AMAP_DRIVE_ROUTE_MAP_LITE_V1"
 AMAP_DRIVE_ROUTE_MAP_ROAD_V1 = "AMAP_DRIVE_ROUTE_MAP_ROAD_V1"
 AMAP_DRIVE_ROUTE_NAV_LEGS_V1 = "AMAP_DRIVE_ROUTE_NAV_LEGS_V1"
 AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1 = "AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1"
+AMAP_DRIVE_ROUTE_NAV_PAGE_V1 = "AMAP_DRIVE_ROUTE_NAV_PAGE_V1"
+AMAP_NAV_PAGE_DEFAULT_BASE = "https://micropigeon.com/nav/"
 UNAVAILABLE = "路线接口不可用"
 NOTE = "分钟数是路网估算；实时路况只代表现在"
 MAX_STOPS = 8
@@ -104,6 +106,87 @@ def amap_nav_web_url(
 
 def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
     return amap_nav_web_url(resolved[0], resolved[-1])
+
+
+def encode_nav_page_payload(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    rows = [
+        [str(name).strip()[:40], round(float(lng), 5), round(float(lat), 5)]
+        for name, (lng, lat) in resolved
+    ]
+    raw = json.dumps(rows, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def decode_nav_page_payload(text: str) -> list[tuple[str, tuple[float, float]]] | None:
+    blob = (text or "").strip()
+    if not blob:
+        return None
+    pad = "=" * (-len(blob) % 4)
+    try:
+        raw = base64.urlsafe_b64decode(blob + pad)
+        rows = json.loads(raw.decode("utf-8"))
+    except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    if not isinstance(rows, list) or not (2 <= len(rows) <= MAX_STOPS):
+        return None
+    stops: list[tuple[str, tuple[float, float]]] = []
+    for row in rows:
+        if not isinstance(row, list) or len(row) < 3:
+            return None
+        name = str(row[0] or "").strip()[:40]
+        try:
+            lng = float(row[1])
+            lat = float(row[2])
+        except (TypeError, ValueError):
+            return None
+        if not name or not (70 <= lng <= 140 and 15 <= lat <= 55):
+            return None
+        stops.append((name, (lng, lat)))
+    return stops
+
+
+def amap_nav_page_url(base: str, resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    root = (base or "").strip()
+    if not root or len(resolved) < 2:
+        return ""
+    if not root.endswith(".html") and not root.endswith("/"):
+        root += "/"
+    return root + "#p=" + encode_nav_page_payload(resolved)
+
+
+def amap_nav_app_params(resolved: list[tuple[str, tuple[float, float]]]) -> dict[str, str]:
+    origin_name, (olng, olat) = resolved[0]
+    dest_name, (dlng, dlat) = resolved[-1]
+    params = {
+        "sid": "",
+        "slat": f"{olat}",
+        "slon": f"{olng}",
+        "sname": origin_name,
+        "did": "",
+        "dlat": f"{dlat}",
+        "dlon": f"{dlng}",
+        "dname": dest_name,
+        "dev": "0",
+        "t": "0",
+        "sourceApplication": "micropigeon",
+    }
+    mids = resolved[1:-1]
+    if mids:
+        params["vian"] = str(len(mids))
+        params["vialons"] = "|".join(f"{lng}" for _name, (lng, _lat) in mids)
+        params["vialats"] = "|".join(f"{lat}" for _name, (_lng, lat) in mids)
+        params["vianames"] = "|".join(name for name, _xy in mids)
+    return params
+
+
+def amap_nav_app_android(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    return "amapuri://route/plan/?" + urllib.parse.urlencode(
+        amap_nav_app_params(resolved), safe="|"
+    )
+
+
+def amap_nav_app_ios(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    return "iosamap://path?" + urllib.parse.urlencode(amap_nav_app_params(resolved), safe="|")
 
 
 def path_points_from_route(path: dict[str, Any]) -> list[tuple[float, float]]:
@@ -197,6 +280,7 @@ def attach_closeout(
     include_map: bool,
     path_points: list[tuple[float, float]] | None = None,
     http: HttpFn | None = None,
+    page_base: str = "",
 ) -> dict[str, Any]:
     payload.pop("nav_app_android", None)
     payload.pop("nav_app_ios", None)
@@ -209,13 +293,21 @@ def attach_closeout(
                 continue
             leg["nav_url"] = amap_nav_web_url(start, end)
             leg["nav_label"] = f"在高德打开 {start[0]}→{end[0]}"
+    page_url = amap_nav_page_url(page_base, resolved)
+    if page_url:
+        payload["nav_page_url"] = page_url
+        payload["nav_page_label"] = "打开全程（网页，可进高德 App）"
     if len(resolved) == 2:
         payload["nav_url"] = amap_nav_web_url(resolved[0], resolved[1])
         payload["nav_label"] = "在高德打开这条路线"
         payload.pop("nav_hint", None)
     else:
         payload.pop("nav_url", None)
-        payload["nav_hint"] = "全程请按表在高德里逐站添加；不要自己编 amapuri / iosamap"
+        payload["nav_hint"] = (
+            "全程请点 nav_page_url；不要自己编 amapuri / iosamap"
+            if page_url
+            else "全程请按表在高德里逐站添加；不要自己编 amapuri / iosamap"
+        )
     if include_map:
         png = fetch_amap_static_png(key, resolved, path_points=path_points, http=http)
         if png:
@@ -613,6 +705,7 @@ def lookup_drive(
     max_via: int,
     via: Any = "",
     http: HttpFn | None = None,
+    page_base: str = "",
 ) -> str:
     via_stops = parse_via(via)
     if len(via_stops) > MAX_VIA_STOPS:
@@ -683,6 +776,7 @@ def lookup_drive(
         include_map=len(resolved) >= 3,
         path_points=path_points,
         http=http,
+        page_base=page_base,
     )
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
@@ -705,6 +799,10 @@ class Tools:
         AMAP_KEY: str = Field(default="", description="Amap Web Service key. Not committed.")
         MAX_CALLS_PER_TURN: int = Field(default=3, ge=1, le=5)
         MAX_VIA_POINTS: int = Field(default=24, ge=4, le=40)
+        NAV_PAGE_BASE: str = Field(
+            default=AMAP_NAV_PAGE_DEFAULT_BASE,
+            description="Public HTTPS landing page for full-route App open. Empty disables it.",
+        )
 
     def __init__(self) -> None:
         self.valves = self.Valves()
@@ -730,12 +828,13 @@ class Tools:
         place name or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes,
         traffic, legs[], totals. Single-stop also returns nav_url (web).
         Multi-stop: each legs[i] has nav_url (web, that pair only; Amap web
-        URI allows one via). Do not emit nav_app_android / nav_app_ios /
-        amapuri / iosamap. Multi-stop also returns map_data_uri
-        (Amap static map of the sparse road polyline, not city-to-city
-        straight lines). In the visible reply: (1) a legs table,
-        (2) one markdown link per leg [legs[i].nav_label](legs[i].nav_url),
-        (3) one sentence: 全程请按表在高德里逐站添加；不要自己编 amapuri / iosamap,
+        URI allows one via). If nav_page_url exists, that HTTPS page opens
+        the full itinerary (App button + per-leg web). Do not emit
+        nav_app_android / nav_app_ios / amapuri / iosamap. Multi-stop also
+        returns map_data_uri (Amap static map of the sparse road polyline,
+        not city-to-city straight lines). In the visible reply: (1) a legs
+        table, (2) [nav_page_label](nav_page_url) when present,
+        (3) one markdown link per leg [legs[i].nav_label](legs[i].nav_url),
         (4) if map_data_uri exists, one markdown image. Do not invent a
         single uri.amap.com link that lists every city. Do not invent
         amapuri:// or iosamap:// links. Do not paste raw
@@ -749,6 +848,7 @@ class Tools:
         # AMAP_DRIVE_ROUTE_MAP_ROAD_V1
         # AMAP_DRIVE_ROUTE_NAV_LEGS_V1
         # AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1
+        # AMAP_DRIVE_ROUTE_NAV_PAGE_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:
@@ -767,4 +867,5 @@ class Tools:
             destination,
             via=via,
             max_via=int(self.valves.MAX_VIA_POINTS),
+            page_base=str(self.valves.NAV_PAGE_BASE or "").strip(),
         )
