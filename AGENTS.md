@@ -4,9 +4,9 @@
 
 **入库纪律（已确认）**：默认不改 git。先在对话里分析 / plan / 确认。只有「没有它，重建会少一块能力或踩同一条禁令」才入库：脚本、`SPEC` / 钉子、runbook 一步、`VERSIONS` 指纹。过门数字、施工日记、plan 长文、results JSON **不进**。未确认的门在 SPEC Later / Don't **一行**，不单开章节。重大改动仍先提案，提案可以只在对话里。
 
-灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。指定文本模型联网见 **`docs/open-webui-text-web-search-plan.md`**（**ST-14 / WS-A 已落地且质量已收口**；用薄 `openrouter_text_web_search`，不要重开 broad Web Tools）。结论见 **`docs/open-webui-text-web-search-eval-b-results.md`**。长对话账单见 **`docs/open-webui-search-cost-plan.md`**。即时搜顶级档（**W0–W6 已过门**；W7 未确认）见 **`docs/open-webui-search-quality-top-plan.md`**。未确认不上 Controller、不加 Filter 指引、不抬 `$0.05`。深调研 **只用 Sonar**。OpenAI native 已落地：`max_tool_calls=3`（Astra Pro 续轮已刹）。Grok 续轮仍可越过次数顶。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0**见 **`docs/open-webui-secret-key-persist-plan.md`**。官方 **0.11.3** 升级见 **`docs/open-webui-upgrade-0113-plan.md`**。独立画图 Studio 见 **`docs/open-webui-image-studio-plan.md`** 与 **`image-studio/`**（IS-A+ 施工中；独立容器，**不改** OWUI / Pipe / picker）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
+灾后 / 新会话：先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。按任务再读 Live / Notebook / 文件 / Studio / L0 / 图像 continuity。搜索 / 地图 / X 以 SPEC ST-14/16/17 为准。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 指定文本模型薄 Web Search；**ST-16** = 出行路线工具（W1 高德 / W4 Google Routes / **M1a via+legs** / **MAP_LITE 表+导航+一张沿路网的高德静态图**）；**ST-17** = Grok native / X（W3 已过门；W5 官方 X 按次已过门）。不要把这些写成同一个号。
+**ST 编号**：**ST-11** = Fable 同模型续聊；**ST-12** = Follow-up 关；**ST-14** = 薄 Web Search；**ST-16** = 出行路线（高德 / Google / M1a / 每段网页导航 + App 全程 + 路网图）；**ST-17** = Grok native / X。不要混号。
 
 ## 宪法（所有动作）
 
