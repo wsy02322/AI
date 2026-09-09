@@ -2,8 +2,8 @@
 title: China Drive Route
 author: micropigeon
 id: amap_drive_route
-description: Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, App full-route deep link, optional road-following static map.
-version: 1.3.0
+description: Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, optional road-following static map.
+version: 1.4.0
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ AMAP_DRIVE_ROUTE_M1A_V1 = "AMAP_DRIVE_ROUTE_M1A_V1"
 AMAP_DRIVE_ROUTE_MAP_LITE_V1 = "AMAP_DRIVE_ROUTE_MAP_LITE_V1"
 AMAP_DRIVE_ROUTE_MAP_ROAD_V1 = "AMAP_DRIVE_ROUTE_MAP_ROAD_V1"
 AMAP_DRIVE_ROUTE_NAV_LEGS_V1 = "AMAP_DRIVE_ROUTE_NAV_LEGS_V1"
+AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1 = "AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1"
 UNAVAILABLE = "路线接口不可用"
 NOTE = "分钟数是路网估算；实时路况只代表现在"
 MAX_STOPS = 8
@@ -103,42 +104,6 @@ def amap_nav_web_url(
 
 def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
     return amap_nav_web_url(resolved[0], resolved[-1])
-
-
-def amap_nav_app_params(resolved: list[tuple[str, tuple[float, float]]]) -> dict[str, str]:
-    origin_name, (olng, olat) = resolved[0]
-    dest_name, (dlng, dlat) = resolved[-1]
-    params = {
-        "sid": "",
-        "slat": f"{olat}",
-        "slon": f"{olng}",
-        "sname": origin_name,
-        "did": "",
-        "dlat": f"{dlat}",
-        "dlon": f"{dlng}",
-        "dname": dest_name,
-        "dev": "0",
-        "t": "0",
-    }
-    mids = resolved[1:-1]
-    if mids:
-        params["vian"] = str(len(mids))
-        params["vialons"] = "|".join(f"{lng}" for _name, (lng, _lat) in mids)
-        params["vialats"] = "|".join(f"{lat}" for _name, (_lng, lat) in mids)
-        params["vianames"] = "|".join(name for name, _xy in mids)
-    return params
-
-
-def amap_nav_app_android(resolved: list[tuple[str, tuple[float, float]]]) -> str:
-    return "amapuri://route/plan/?" + urllib.parse.urlencode(
-        amap_nav_app_params(resolved), safe="|"
-    )
-
-
-def amap_nav_app_ios(resolved: list[tuple[str, tuple[float, float]]]) -> str:
-    params = amap_nav_app_params(resolved)
-    params["sourceApplication"] = "micropigeon"
-    return "iosamap://path?" + urllib.parse.urlencode(params, safe="|")
 
 
 def path_points_from_route(path: dict[str, Any]) -> list[tuple[float, float]]:
@@ -233,9 +198,9 @@ def attach_closeout(
     path_points: list[tuple[float, float]] | None = None,
     http: HttpFn | None = None,
 ) -> dict[str, Any]:
-    payload["nav_app_android"] = amap_nav_app_android(resolved)
-    payload["nav_app_ios"] = amap_nav_app_ios(resolved)
-    payload["nav_app_label"] = "在高德App打开全程"
+    payload.pop("nav_app_android", None)
+    payload.pop("nav_app_ios", None)
+    payload.pop("nav_app_label", None)
     legs = payload.get("legs")
     if isinstance(legs, list) and len(legs) == len(resolved) - 1:
         for index, leg in enumerate(legs):
@@ -247,9 +212,10 @@ def attach_closeout(
     if len(resolved) == 2:
         payload["nav_url"] = amap_nav_web_url(resolved[0], resolved[1])
         payload["nav_label"] = "在高德打开这条路线"
+        payload.pop("nav_hint", None)
     else:
         payload.pop("nav_url", None)
-        payload["nav_label"] = payload["nav_app_label"]
+        payload["nav_hint"] = "全程请按表在高德里逐站添加；不要自己编 amapuri / iosamap"
     if include_map:
         png = fetch_amap_static_png(key, resolved, path_points=path_points, http=http)
         if png:
@@ -764,14 +730,15 @@ class Tools:
         place name or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes,
         traffic, legs[], totals. Single-stop also returns nav_url (web).
         Multi-stop: each legs[i] has nav_url (web, that pair only; Amap web
-        URI allows one via). Also nav_app_android / nav_app_ios for the full
-        itinerary in the 高德 app. Multi-stop also returns map_data_uri
+        URI allows one via). Do not emit nav_app_android / nav_app_ios /
+        amapuri / iosamap. Multi-stop also returns map_data_uri
         (Amap static map of the sparse road polyline, not city-to-city
         straight lines). In the visible reply: (1) a legs table,
         (2) one markdown link per leg [legs[i].nav_label](legs[i].nav_url),
-        (3) [nav_app_label](nav_app_android) and the iOS app link,
+        (3) one sentence: 全程请按表在高德里逐站添加；不要自己编 amapuri / iosamap,
         (4) if map_data_uri exists, one markdown image. Do not invent a
-        single uri.amap.com link that lists every city. Do not paste raw
+        single uri.amap.com link that lists every city. Do not invent
+        amapuri:// or iosamap:// links. Do not paste raw
         base64. Do not print the API key. No phone, rating, or interactive
         map UI. If ok is false, say 路线接口不可用 and do not invent exact
         minutes.
@@ -781,6 +748,7 @@ class Tools:
         # AMAP_DRIVE_ROUTE_MAP_LITE_V1
         # AMAP_DRIVE_ROUTE_MAP_ROAD_V1
         # AMAP_DRIVE_ROUTE_NAV_LEGS_V1
+        # AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:
