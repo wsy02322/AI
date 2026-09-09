@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upsert ST-16 drive tools (M1a via/legs + MAP_LITE nav/static). Merge valves only."""
+"""Upsert ST-16 drive tools (M1a via/legs + MAP_LITE + NAV_WEB_ONLY). Merge valves only."""
 
 from __future__ import annotations
 

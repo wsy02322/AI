@@ -14,6 +14,7 @@ from stack_contract import (
     AMAP_DRIVE_ROUTE_MAP_LITE_MARKER,
     AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER,
     AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER,
+    AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_MARKER,
     AMAP_DRIVE_ROUTE_MARKER,
     AMAP_DRIVE_ROUTE_MODEL_IDS,
     AMAP_DRIVE_ROUTE_TOOL,
@@ -73,6 +74,14 @@ def main() -> int:
         report.err("tool missing nav-legs marker")
     else:
         report.ok("tool nav-legs marker")
+    if AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_MARKER not in content:
+        report.err("tool missing nav-web-only marker")
+    else:
+        report.ok("tool nav-web-only marker")
+    if "amapuri://route/plan" in content or "iosamap://path?" in content:
+        report.err("tool still emits app deep links")
+    else:
+        report.ok("tool has no app deep-link builders")
     if tool.get("name") != "China Drive Route":
         report.err(f"tool name={tool.get('name')}")
     else:
