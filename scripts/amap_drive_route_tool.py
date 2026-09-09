@@ -2,8 +2,8 @@
 title: China Drive Route
 author: micropigeon
 id: amap_drive_route
-description: Amap driving route and traffic for China. Compact JSON, via stops, official nav link, optional road-following static map.
-version: 1.2.1
+description: Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, App full-route deep link, optional road-following static map.
+version: 1.3.0
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ AMAP_DRIVE_ROUTE_V1 = "AMAP_DRIVE_ROUTE_V1"
 AMAP_DRIVE_ROUTE_M1A_V1 = "AMAP_DRIVE_ROUTE_M1A_V1"
 AMAP_DRIVE_ROUTE_MAP_LITE_V1 = "AMAP_DRIVE_ROUTE_MAP_LITE_V1"
 AMAP_DRIVE_ROUTE_MAP_ROAD_V1 = "AMAP_DRIVE_ROUTE_MAP_ROAD_V1"
+AMAP_DRIVE_ROUTE_NAV_LEGS_V1 = "AMAP_DRIVE_ROUTE_NAV_LEGS_V1"
 UNAVAILABLE = "路线接口不可用"
 NOTE = "分钟数是路网估算；实时路况只代表现在"
 MAX_STOPS = 8
@@ -81,9 +82,13 @@ def stop_region(lng: float, lat: float) -> str:
     return "overseas"
 
 
-def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
-    origin_name, (olng, olat) = resolved[0]
-    dest_name, (dlng, dlat) = resolved[-1]
+def amap_nav_web_url(
+    origin: tuple[str, tuple[float, float]],
+    dest: tuple[str, tuple[float, float]],
+) -> str:
+    """Web URI: one origin and one destination. Amap pages accept at most one via."""
+    origin_name, (olng, olat) = origin
+    dest_name, (dlng, dlat) = dest
     params = {
         "from": f"{olng},{olat},{origin_name}",
         "to": f"{dlng},{dlat},{dest_name}",
@@ -93,11 +98,47 @@ def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
         "coordinate": "gaode",
         "callnative": "0",
     }
-    if len(resolved) > 2:
-        params["via"] = ";".join(
-            f"{lng},{lat},{name}" for name, (lng, lat) in resolved[1:-1]
-        )
     return "https://uri.amap.com/navigation?" + urllib.parse.urlencode(params)
+
+
+def amap_nav_url(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    return amap_nav_web_url(resolved[0], resolved[-1])
+
+
+def amap_nav_app_params(resolved: list[tuple[str, tuple[float, float]]]) -> dict[str, str]:
+    origin_name, (olng, olat) = resolved[0]
+    dest_name, (dlng, dlat) = resolved[-1]
+    params = {
+        "sid": "",
+        "slat": f"{olat}",
+        "slon": f"{olng}",
+        "sname": origin_name,
+        "did": "",
+        "dlat": f"{dlat}",
+        "dlon": f"{dlng}",
+        "dname": dest_name,
+        "dev": "0",
+        "t": "0",
+    }
+    mids = resolved[1:-1]
+    if mids:
+        params["vian"] = str(len(mids))
+        params["vialons"] = "|".join(f"{lng}" for _name, (lng, _lat) in mids)
+        params["vialats"] = "|".join(f"{lat}" for _name, (_lng, lat) in mids)
+        params["vianames"] = "|".join(name for name, _xy in mids)
+    return params
+
+
+def amap_nav_app_android(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    return "amapuri://route/plan/?" + urllib.parse.urlencode(
+        amap_nav_app_params(resolved), safe="|"
+    )
+
+
+def amap_nav_app_ios(resolved: list[tuple[str, tuple[float, float]]]) -> str:
+    params = amap_nav_app_params(resolved)
+    params["sourceApplication"] = "micropigeon"
+    return "iosamap://path?" + urllib.parse.urlencode(params, safe="|")
 
 
 def path_points_from_route(path: dict[str, Any]) -> list[tuple[float, float]]:
@@ -192,8 +233,23 @@ def attach_closeout(
     path_points: list[tuple[float, float]] | None = None,
     http: HttpFn | None = None,
 ) -> dict[str, Any]:
-    payload["nav_url"] = amap_nav_url(resolved)
-    payload["nav_label"] = "在高德打开这条路线"
+    payload["nav_app_android"] = amap_nav_app_android(resolved)
+    payload["nav_app_ios"] = amap_nav_app_ios(resolved)
+    payload["nav_app_label"] = "在高德App打开全程"
+    legs = payload.get("legs")
+    if isinstance(legs, list) and len(legs) == len(resolved) - 1:
+        for index, leg in enumerate(legs):
+            start, end = resolved[index], resolved[index + 1]
+            if not isinstance(leg, dict):
+                continue
+            leg["nav_url"] = amap_nav_web_url(start, end)
+            leg["nav_label"] = f"在高德打开 {start[0]}→{end[0]}"
+    if len(resolved) == 2:
+        payload["nav_url"] = amap_nav_web_url(resolved[0], resolved[1])
+        payload["nav_label"] = "在高德打开这条路线"
+    else:
+        payload.pop("nav_url", None)
+        payload["nav_label"] = payload["nav_app_label"]
     if include_map:
         png = fetch_amap_static_png(key, resolved, path_points=path_points, http=http)
         if png:
@@ -706,18 +762,25 @@ class Tools:
         semicolon, max 6). Do not call once per city. Hong Kong / Macau / Taiwan
         and overseas cities: use Overseas Drive Route instead. origin/destination:
         place name or 'lng,lat' (GCJ-02). Returns compact JSON: km, minutes,
-        traffic, legs[], totals, nav_url. Multi-stop also returns map_data_uri
+        traffic, legs[], totals. Single-stop also returns nav_url (web).
+        Multi-stop: each legs[i] has nav_url (web, that pair only; Amap web
+        URI allows one via). Also nav_app_android / nav_app_ios for the full
+        itinerary in the 高德 app. Multi-stop also returns map_data_uri
         (Amap static map of the sparse road polyline, not city-to-city
         straight lines). In the visible reply: (1) a legs table,
-        (2) markdown link [nav_label](nav_url), (3) if map_data_uri exists,
-        one markdown image. Do not paste raw base64. Do not print the API key.
-        No phone, rating, or interactive map UI. If ok is false, say
-        路线接口不可用 and do not invent exact minutes.
+        (2) one markdown link per leg [legs[i].nav_label](legs[i].nav_url),
+        (3) [nav_app_label](nav_app_android) and the iOS app link,
+        (4) if map_data_uri exists, one markdown image. Do not invent a
+        single uri.amap.com link that lists every city. Do not paste raw
+        base64. Do not print the API key. No phone, rating, or interactive
+        map UI. If ok is false, say 路线接口不可用 and do not invent exact
+        minutes.
         """
         # AMAP_DRIVE_ROUTE_V1
         # AMAP_DRIVE_ROUTE_M1A_V1
         # AMAP_DRIVE_ROUTE_MAP_LITE_V1
         # AMAP_DRIVE_ROUTE_MAP_ROAD_V1
+        # AMAP_DRIVE_ROUTE_NAV_LEGS_V1
         origin = (origin or "").strip()
         destination = (destination or "").strip()
         if not origin or not destination:

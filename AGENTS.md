@@ -76,7 +76,7 @@
 | `scripts/verify_google_drive_route.py` | ST-16：海外 Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Key |
 | `scripts/run_google_drive_route_smoke.py` | ST-16：Flash 海外题 + 中国仍高德；有 Key 后加 `GOOGLE_EXPECT_LIVE=1` |
 | `scripts/rollback_google_drive_route.py` | ST-16：从模型剥 `google_drive_route`，不删 Tool |
-| `scripts/apply_search_quality_m1a.py` | ST-16 / M1a + MAP_LITE：upsert 两把路线工具（via + legs + 导航链接 / 中国多站静态图）；merge Valves，不覆盖 Key |
+| `scripts/apply_search_quality_m1a.py` | ST-16 / M1a + MAP_LITE + NAV_LEGS：upsert 两把路线工具（via + legs + 每段网页导航 + App 全程 / 中国多站静态图）；merge Valves，不覆盖 Key |
 | `scripts/run_drive_route_m1a_smoke.py` | ST-16 / M1a + MAP_LITE：直接多站须有 `nav_url`+`map_data_uri`；Flash 单段/多站/海外；有 Key 后加 `M1A_EXPECT_LIVE=1` |
 | `scripts/apply_search_quality_w5.py` | ST-17 / W5：安装挂载官方 X Recent Search（merge Valves，不覆盖已有 Token） |
 | `scripts/apply_x_recent_search.py` | ST-17：`--mode install\|attach\|detach` |

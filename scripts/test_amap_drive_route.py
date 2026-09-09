@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import unittest
+import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -14,11 +15,15 @@ from amap_drive_route_tool import (
     AMAP_DRIVE_ROUTE_M1A_V1,
     AMAP_DRIVE_ROUTE_MAP_LITE_V1,
     AMAP_DRIVE_ROUTE_MAP_ROAD_V1,
+    AMAP_DRIVE_ROUTE_NAV_LEGS_V1,
     AMAP_DRIVE_ROUTE_V1,
     UNAVAILABLE,
     Tools,
     allow_call,
+    amap_nav_app_android,
+    amap_nav_app_ios,
     amap_nav_url,
+    amap_nav_web_url,
     compact_route,
     lookup_drive,
     parse_polyline,
@@ -32,6 +37,7 @@ from stack_contract import (
     AMAP_DRIVE_ROUTE_M1A_MARKER,
     AMAP_DRIVE_ROUTE_MAP_LITE_MARKER,
     AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER,
+    AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER,
     AMAP_DRIVE_ROUTE_MARKER,
 )
 
@@ -51,10 +57,12 @@ class AmapDriveRouteTests(unittest.TestCase):
         source = Path(__file__).with_name("amap_drive_route_tool.py").read_text(encoding="utf-8")
         self.assertEqual(AMAP_DRIVE_ROUTE_MAP_LITE_V1, AMAP_DRIVE_ROUTE_MAP_LITE_MARKER)
         self.assertEqual(AMAP_DRIVE_ROUTE_MAP_ROAD_V1, AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER)
+        self.assertEqual(AMAP_DRIVE_ROUTE_NAV_LEGS_V1, AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER)
         self.assertIn(AMAP_DRIVE_ROUTE_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_M1A_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_MAP_LITE_MARKER, source)
         self.assertIn(AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER, source)
+        self.assertIn(AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER, source)
 
     def test_sparse_via_about_one_km(self) -> None:
         points = [(116.0 + i * 0.01, 39.9) for i in range(20)]
@@ -145,6 +153,10 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertEqual(len(data["legs"]), 1)
         self.assertEqual(data["totals"]["km"], 28.5)
         self.assertIn("uri.amap.com/navigation", data["nav_url"])
+        self.assertNotIn("via=", data["nav_url"])
+        self.assertIn("uri.amap.com/navigation", data["legs"][0]["nav_url"])
+        self.assertTrue(data["nav_app_android"].startswith("amapuri://route/plan/"))
+        self.assertTrue(data["nav_app_ios"].startswith("iosamap://path?"))
         self.assertNotIn("map_data_uri", data)
         self.assertNotIn("test-key", raw)
         self.assertEqual(len(calls), 3)
@@ -245,8 +257,16 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertEqual(sum(1 for url in calls if "geocode" in url), 4)
         self.assertEqual(sum(1 for url in calls if "driving" in url), 3)
         self.assertEqual(sum(1 for url in calls if "staticmap" in url), 1)
-        self.assertIn("uri.amap.com/navigation", data["nav_url"])
-        self.assertIn("via=", data["nav_url"])
+        self.assertNotIn("nav_url", data)
+        self.assertEqual(len(data["legs"]), 3)
+        for leg in data["legs"]:
+            self.assertIn("uri.amap.com/navigation", leg["nav_url"])
+            self.assertNotIn("via=", leg["nav_url"])
+        self.assertIn("vian=2", data["nav_app_android"])
+        self.assertIn("vialons=", data["nav_app_android"])
+        self.assertIn("vian=2", data["nav_app_ios"])
+        parsed = urllib.parse.urlparse(data["legs"][0]["nav_url"])
+        self.assertEqual(parsed.netloc, "uri.amap.com")
         self.assertTrue(data["map_data_uri"].startswith("data:image/png;base64,"))
         self.assertEqual(len(static_paths), 1)
         self.assertIn("103.83,36.06", static_paths[0])
@@ -362,6 +382,31 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertGreater(data["km"], 400)
         self.assertEqual(seen, [("西安", ""), ("西宁", "")])
 
+    def test_web_nav_is_one_pair_app_keeps_all_vias(self) -> None:
+        stops = [
+            ("太原", (112.55, 37.87)),
+            ("临县", (110.99, 37.95)),
+            ("米脂", (110.18, 37.76)),
+            ("盐池", (107.41, 37.78)),
+            ("临夏", (103.24, 35.60)),
+            ("循化", (102.49, 35.85)),
+            ("同仁", (102.02, 35.52)),
+        ]
+        web = amap_nav_web_url(stops[0], stops[1])
+        self.assertNotIn("via=", web)
+        self.assertIn("%E5%A4%AA%E5%8E%9F", web)
+        self.assertIn("%E4%B8%B4%E5%8E%BF", web)
+        self.assertNotIn("%E7%B1%B3%E8%84%82", web)
+        android = amap_nav_app_android(stops)
+        ios = amap_nav_app_ios(stops)
+        self.assertTrue(android.startswith("amapuri://route/plan/"))
+        self.assertTrue(ios.startswith("iosamap://path?"))
+        self.assertIn("vian=5", android)
+        self.assertIn("vian=5", ios)
+        self.assertIn("110.99", android)
+        self.assertIn("102.49", android)
+        self.assertIn("micropigeon", ios)
+
     def test_static_draw_points_caps_road_sample(self) -> None:
         resolved = [("西安", (108.94, 34.26)), ("张掖", (100.45, 38.93))]
         long_path = [(108.94 - i * 0.05, 34.26 + i * 0.03) for i in range(400)]
@@ -409,6 +454,7 @@ class AmapDriveRouteTests(unittest.TestCase):
         self.assertNotIn("key=", raw)
         url = amap_nav_url([("西安", (108.94, 34.26)), ("西宁", (101.78, 36.62)), ("张掖", (100.45, 38.93))])
         self.assertIn("uri.amap.com/navigation", url)
+        self.assertNotIn("via=", url)
 
     def test_static_map_falls_back_to_straight_path(self) -> None:
         paths: list[str] = []
@@ -476,7 +522,9 @@ class AmapDriveRouteTests(unittest.TestCase):
 
         data = json.loads(lookup_drive("k", "西安", "张掖", via="西宁", max_via=8, http=http))
         self.assertTrue(data["ok"])
-        self.assertIn("uri.amap.com/navigation", data["nav_url"])
+        self.assertNotIn("nav_url", data)
+        self.assertIn("uri.amap.com/navigation", data["legs"][0]["nav_url"])
+        self.assertTrue(data["nav_app_android"].startswith("amapuri://"))
         self.assertNotIn("map_data_uri", data)
 
 
