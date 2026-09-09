@@ -19,7 +19,7 @@ grep -q AMAP_NAV_PAGE_V1 /var/www/micropigeon-nav/index.html
 
 ```
     handle /nav {
-        redir /nav/ 308
+        redir * /nav/ 308
     }
     handle_path /nav/* {
         root * /var/www/micropigeon-nav
@@ -27,6 +27,8 @@ grep -q AMAP_NAV_PAGE_V1 /var/www/micropigeon-nav/index.html
         file_server
     }
 ```
+
+`redir * /nav/ 308` 不能写成 `redir /nav/ 308`：Caddy 会把 `/nav/` 当成 matcher，`/nav` 会落到 OWUI SPA。
 
 然后 `caddy reload`。
 
