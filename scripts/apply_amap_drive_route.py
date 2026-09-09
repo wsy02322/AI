@@ -64,7 +64,7 @@ def upsert_tool(h: dict[str, str]) -> dict[str, Any]:
     payload = {
         "id": AMAP_DRIVE_ROUTE_TOOL,
         "name": TOOL_NAME,
-        "meta": {"description": "Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, optional road-following static map."},
+        "meta": {"description": "Amap driving route and traffic for China. Compact JSON, via stops, per-leg web nav, full-route landing page, optional road-following static map."},
         "content": content,
         "access_grants": [PUBLIC_GRANT],
     }
@@ -106,10 +106,13 @@ def merge_valves(h: dict[str, str]) -> dict[str, Any]:
         current = got.json()
     env_key = (os.environ.get("AMAP_KEY") or os.environ.get("AMAP_WEB_KEY") or "").strip()
     existing_key = str(current.get("AMAP_KEY") or "").strip()
+    env_page = (os.environ.get("NAV_PAGE_BASE") or "").strip()
+    existing_page = str(current.get("NAV_PAGE_BASE") or "").strip()
     valves = {
         "AMAP_KEY": env_key or existing_key,
         "MAX_CALLS_PER_TURN": int(current.get("MAX_CALLS_PER_TURN") or 3),
         "MAX_VIA_POINTS": int(current.get("MAX_VIA_POINTS") or 24),
+        "NAV_PAGE_BASE": env_page or existing_page or "https://micropigeon.com/nav/",
     }
     response = requests.post(
         f"{OPENWEBUI_URL}/api/v1/tools/id/{AMAP_DRIVE_ROUTE_TOOL}/valves/update",
@@ -119,7 +122,11 @@ def merge_valves(h: dict[str, str]) -> dict[str, Any]:
     )
     if response.status_code != 200:
         raise RuntimeError(f"tool valves: {response.status_code} {response.text[:300]}")
-    print(f"tool valves key_set={bool(valves['AMAP_KEY'])} max_calls={valves['MAX_CALLS_PER_TURN']}")
+    print(
+        f"tool valves key_set={bool(valves['AMAP_KEY'])} "
+        f"max_calls={valves['MAX_CALLS_PER_TURN']} "
+        f"nav_page={valves['NAV_PAGE_BASE']}"
+    )
     return valves
 
 

@@ -6,7 +6,7 @@
 
 灾后 / 新会话：先读 **`docs/open-webui-rebuild-archive.md`**，再读 **`docs/SPEC.md`**。按任务再读 Live / Notebook / 文件 / Studio / L0 / 图像 continuity。搜索 / 地图 / X 以 SPEC ST-14/16/17 为准。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊；**ST-12** = Follow-up 关；**ST-14** = 薄 Web Search；**ST-16** = 出行路线（高德 / Google / M1a / 每段网页导航 + 路网图；不出 App 深链）；**ST-17** = Grok native / X。不要混号。
+**ST 编号**：**ST-11** = Fable 同模型续聊；**ST-12** = Follow-up 关；**ST-14** = 薄 Web Search；**ST-16** = 出行路线（高德 / Google / M1a / 每段网页导航 + 全程落地页 + 路网图；聊天不出 App 深链）；**ST-17** = Grok native / X。不要混号。
 
 ## 宪法（所有动作）
 
@@ -67,7 +67,8 @@
 | `scripts/run_search_quality_w2.py` | W2：Flash 短问须搜；中国路线须走高德 |
 | `scripts/apply_search_quality_w3.py` | ST-17 / W3：薄 Filter content-only，xAI → native（不碰 valves / 挂载） |
 | `scripts/run_search_quality_w3.py` | ST-17：Grok 引 X + 网页搜 |
-| `scripts/apply_amap_drive_route.py` | ST-16：安装/挂载高德驾车 Tool（`--mode install|attach|detach`）；merge Valves，不覆盖已有 `AMAP_KEY` |
+| `scripts/apply_amap_drive_route.py` | ST-16：安装/挂载高德驾车 Tool（`--mode install|attach|detach`）；merge Valves，不覆盖已有 `AMAP_KEY` / `NAV_PAGE_BASE` |
+| `nav/DEPLOY.md` | ST-16：Caddy 挂 `/nav/` 静态落地页（不进 OWUI 容器） |
 | `scripts/inject_amap_key.py` | ST-16：探针高德上游 + merge Tool Valves `AMAP_KEY`（不打印 Key） |
 | `scripts/inject_amap_key_vps.sh` | ST-16：VPS 本机注入（`127.0.0.1:8080`，不重启容器） |
 | `scripts/verify_amap_drive_route.py` | ST-16：Tool marker + 12 文本挂载 + Sonar/图像未挂；`--require-key` 才要求 Valves 有 Key |
@@ -78,7 +79,7 @@
 | `scripts/verify_google_drive_route.py` | ST-16：海外 Tool marker + 12 文本挂载；`--require-key` 才要求 Valves 有 Key |
 | `scripts/run_google_drive_route_smoke.py` | ST-16：Flash 海外题 + 中国仍高德；有 Key 后加 `GOOGLE_EXPECT_LIVE=1` |
 | `scripts/rollback_google_drive_route.py` | ST-16：从模型剥 `google_drive_route`，不删 Tool |
-| `scripts/apply_search_quality_m1a.py` | ST-16 / M1a + MAP_LITE + NAV_WEB_ONLY：upsert 两把路线工具（via + legs + 每段网页导航 / 中国多站静态图；不出 App 深链）；merge Valves，不覆盖 Key |
+| `scripts/apply_search_quality_m1a.py` | ST-16 / M1a + MAP_LITE + NAV_PAGE：upsert 两把路线工具（via + legs + 每段网页 + 全程落地页 / 中国多站静态图；聊天不出 App 深链）；merge Valves，不覆盖 Key |
 | `scripts/run_drive_route_m1a_smoke.py` | ST-16 / M1a + MAP_LITE：直接多站须有 `nav_url`+`map_data_uri`；Flash 单段/多站/海外；有 Key 后加 `M1A_EXPECT_LIVE=1` |
 | `scripts/apply_search_quality_w5.py` | ST-17 / W5：安装挂载官方 X Recent Search（merge Valves，不覆盖已有 Token） |
 | `scripts/apply_x_recent_search.py` | ST-17：`--mode install\|attach\|detach` |

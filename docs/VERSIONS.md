@@ -17,7 +17,7 @@
 | 默认聊天 + Task | **Grok 4.6**；全局 Image Gen **关** |
 | ST-14 | 薄 Filter deny 类；public 文本 12 default-on。OpenAI native + `max_tool_calls=3`；Google / xAI native；Anthropic / 中国三只 `auto`。质量收口见 `docs/open-webui-text-web-search-eval-b-results.md` |
 | ST-11 / S2′ | `FABLE_UNSIGNED_SUMMARY_V1`；`PERSIST_REASONING_TOKENS` 仍 conversation |
-| ST-16 高德 | `AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_V1`（多站只出分段网页导航，无 App 深链） |
+| ST-16 高德 | `AMAP_DRIVE_ROUTE_NAV_PAGE_V1`（分段网页 + HTTPS 全程落地页；聊天无 App 深链） |
 | HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；5× OpenRouter slot **全 `enable=false`** |
 | Pipe `API_KEY` | `encrypted:`（API 保存）；decrypt 失败时 merge 明文 |
 | L0 | `WEBUI_SECRET_KEY=""`；重建后用户重登。K1/K2 冻结 |

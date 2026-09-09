@@ -15,6 +15,8 @@ from stack_contract import (
     AMAP_DRIVE_ROUTE_MAP_ROAD_MARKER,
     AMAP_DRIVE_ROUTE_NAV_LEGS_MARKER,
     AMAP_DRIVE_ROUTE_NAV_WEB_ONLY_MARKER,
+    AMAP_DRIVE_ROUTE_NAV_PAGE_MARKER,
+    AMAP_NAV_PAGE_MARKER,
     AMAP_DRIVE_ROUTE_MARKER,
     AMAP_DRIVE_ROUTE_MODEL_IDS,
     AMAP_DRIVE_ROUTE_TOOL,
@@ -78,10 +80,14 @@ def main() -> int:
         report.err("tool missing nav-web-only marker")
     else:
         report.ok("tool nav-web-only marker")
-    if "amapuri://route/plan" in content or "iosamap://path?" in content:
-        report.err("tool still emits app deep links")
+    if AMAP_DRIVE_ROUTE_NAV_PAGE_MARKER not in content:
+        report.err("tool missing nav-page marker")
     else:
-        report.ok("tool has no app deep-link builders")
+        report.ok("tool nav-page marker")
+    if 'payload["nav_app_android"] =' in content:
+        report.err("tool assigns nav_app_android")
+    else:
+        report.ok("tool does not assign app deep-link fields")
     if tool.get("name") != "China Drive Route":
         report.err(f"tool name={tool.get('name')}")
     else:
@@ -104,6 +110,24 @@ def main() -> int:
         report.ok("AMAP_KEY set")
     else:
         report.ok("AMAP_KEY unset")
+    page_base = str((valves or {}).get("NAV_PAGE_BASE") or "").strip()
+    if page_base:
+        report.ok(f"NAV_PAGE_BASE set")
+        try:
+            page_resp = requests.get(page_base.split("#", 1)[0], timeout=20)
+            body = page_resp.text if page_resp.status_code == 200 else ""
+        except requests.RequestException:
+            body = ""
+        if AMAP_NAV_PAGE_MARKER in body:
+            report.ok("nav landing page marker")
+        elif require_key:
+            report.err("nav landing page not serving AMAP_NAV_PAGE_V1")
+        else:
+            report.ok("nav landing page not required")
+    elif require_key:
+        report.err("NAV_PAGE_BASE unset")
+    else:
+        report.ok("NAV_PAGE_BASE unset")
 
     inspect = list(dict.fromkeys([*PUBLIC_MODEL_IDS, *IMAGE_MODEL_IDS, *SONAR_MODEL_IDS]))
     for model_id in inspect:
