@@ -17,7 +17,7 @@
 3. `docs/SPEC.md`（UX / ST / P0 / Later / Don't）  
 4. `docs/VERSIONS.md`（指纹）  
 5. `docs/open-webui-secret-key-persist-plan.md` §2（容器重建 SOP）  
-6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**（`docs/open-webui-upgrade-0113-plan.md`）、搜索账单（`docs/open-webui-search-cost-plan.md`）、即时搜顶级档（`docs/open-webui-search-quality-top-plan.md`：W0 已测、**W1 高德已过门**、**W2 Gemini native 已过门**、**W3 Grok native 已过门**、**W4 Google Routes 已过门**、**W5 官方 X 按次已过门**、**W6 OpenAI native 已过门**）  
+6. 按任务再读：图像 continuity、Live、Notebook、文件录入、**0.11.3 升级**、Studio、L0。搜索 / 地图 / X 以 SPEC ST-14/16/17 为准（**W7 / M1b 未确认**）。  
 
 独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**与本 OWUI 重建无关**。
 
