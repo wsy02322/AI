@@ -97,6 +97,8 @@ def _direct_china_multi(h: dict[str, str]) -> dict:
     data = json.loads(raw)
     legs = data.get("legs") or []
     nav = str(data.get("nav_url") or "")
+    leg_navs = [str(leg.get("nav_url") or "") for leg in legs if isinstance(leg, dict)]
+    app = str(data.get("nav_app_android") or "")
     uri = str(data.get("map_data_uri") or "")
     raw = json.dumps(data, ensure_ascii=False)
     return {
@@ -105,7 +107,9 @@ def _direct_china_multi(h: dict[str, str]) -> dict:
         "stops": data.get("stops") or [],
         "leg_km": [leg.get("km") for leg in legs],
         "xining_qinghai_km": legs[1]["km"] if len(legs) > 1 else None,
-        "has_nav_url": "uri.amap.com/navigation" in nav,
+        "has_nav_url": any("uri.amap.com/navigation" in item for item in (*leg_navs, nav)),
+        "has_app_nav": app.startswith("amapuri://"),
+        "web_via_in_nav": any("via=" in item for item in (*leg_navs, nav)),
         "has_map_data_uri": uri.startswith("data:image/"),
         "map_kind": data.get("map_kind") or "",
         "key_leaked": ("key=" in raw.lower()) or ("amap_key" in raw.lower()),
@@ -148,6 +152,10 @@ def main() -> int:
             errors.append(f"西宁→青海湖 km={qh} want <400")
         if not direct.get("has_nav_url"):
             errors.append("direct multi missing amap nav_url")
+        if not direct.get("has_app_nav"):
+            errors.append("direct multi missing amap app nav")
+        if direct.get("web_via_in_nav"):
+            errors.append("direct multi web nav still has via=")
         if not direct.get("has_map_data_uri"):
             errors.append("direct multi missing map_data_uri")
         if direct.get("key_leaked"):
