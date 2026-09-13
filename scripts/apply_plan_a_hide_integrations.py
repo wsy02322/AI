@@ -220,6 +220,7 @@ def verify(h: dict[str, str]) -> int:
         "open_webui_openrouter_integration.perplexity.sonar-deep-research",
         "open_webui_openrouter_integration.anthropic.claude-opus-5",
         "open_webui_openrouter_integration.google.gemini-3.1-flash-image",
+        "open_webui_openrouter_integration.openai.gpt-image-2.5-flare",
         "open_webui_openrouter_integration.openai.gpt-image-2",
     ]
     listed = {m["id"]: m for m in list_pipe_models(h)}
