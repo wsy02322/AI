@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (20 public + extra Gemini).
+"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (21 public + extra Gemini).
 
 Do not run this to "clean" a drifted live picker. It disables every Pipe id
 outside ACTIVE_MODEL_IDS, including unaccepted GPT Image 2.5 Sunburst.
