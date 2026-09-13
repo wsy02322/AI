@@ -58,7 +58,8 @@ def main() -> int:
 
     models = client.get("/api/models").json()
     ids = [row["id"] for row in models.get("models") or []]
-    if "openai:gpt-image-2" in ids and "openai:gpt-image-2.5-flare" in ids and len(ids) == 9:
+    want = {"openai:gpt-image-2", "openai:gpt-image-2.5-flare", "openai:gpt-image-2.5-sunburst"}
+    if want.issubset(ids) and len(ids) == 10:
         oks.append(f"catalog {len(ids)}")
     else:
         errors.append(f"catalog {ids}")

@@ -2,9 +2,9 @@
 
 给 VPS agent 复制。**不要**改 `open-webui` 容器、**不要**改 `/custom/entrypoint.sh`、**不要**写 `WEBUI_SECRET_KEY`、**不要** enable `openai.api_configs`、**不要** merge 这些钥匙进 Pipe、**不要**拷现网 `openai.api_keys[0]` 进 Studio（除非用户书面说复用）。
 
-仓库现已 **public**：`https://github.com/wsy02322/AI`。本波分支 `cursor/studio-gpt-image-25-flare-decf`（基线 `cursor/image-studio-next-plan-decf`）。
+仓库现已 **public**：`https://github.com/wsy02322/AI`。本波分支 `cursor/studio-gpt-image-25-sunburst-decf`（基线 `cursor/studio-gpt-image-25-flare-decf`）。
 
-**GPT Image 2.5 Flare**：目录多一行 `openai:gpt-image-2.5-flare`，直连 `gpt-image-2.5-flare`，质量含 `xhigh` / `max`。**GPT Image 2 留下**。不要一次加上 Sunburst。
+**GPT Image 2.5**：目录含 `openai:gpt-image-2`、`openai:gpt-image-2.5-flare`、`openai:gpt-image-2.5-sunburst`。Flare / Sunburst 质量含 `xhigh` / `max`。**GPT Image 2 留下**。
 
 ## 隔离
 
@@ -26,13 +26,13 @@
 ```bash
 mkdir -p /opt/image-studio /var/lib/image-studio
 # 优先 git：
-git clone --depth 1 -b cursor/studio-gpt-image-25-flare-decf \
+git clone --depth 1 -b cursor/studio-gpt-image-25-sunburst-decf \
   https://github.com/wsy02322/AI.git /opt/image-studio/src
 # 若 git 仍失败，用公开 tarball（分支最新）：
-# curl -sSL https://github.com/wsy02322/AI/archive/refs/heads/cursor/studio-gpt-image-25-flare-decf.tar.gz \
+# curl -sSL https://github.com/wsy02322/AI/archive/refs/heads/cursor/studio-gpt-image-25-sunburst-decf.tar.gz \
 #   | tar -xzf - -C /tmp
 # rm -rf /opt/image-studio/src
-# mv /tmp/AI-cursor-studio-gpt-image-25-flare-decf /opt/image-studio/src
+# mv /tmp/AI-cursor-studio-gpt-image-25-sunburst-decf /opt/image-studio/src
 test -f /opt/image-studio/src/image-studio/Dockerfile
 ```
 
@@ -94,17 +94,17 @@ DNS 未加好时不要强求 HTTPS 绿；先回传 `healthz` 即可。
 - `image.micropigeon.com` 是否 443 / 证书
 - Caddy reload 是否成功
 
-真出图由用户在浏览器登录后点「生成」。Flare 验收：登录后目录应有 **GPT Image 2.5 Flare** 与 **GPT Image 2**；先用 Flare 短出一张，再试一刀蒙版。Sunburst 先不要加。
+真出图由用户在浏览器登录后点「生成」。验收：目录应有 **Flare**、**Sunburst**、**GPT Image 2**。Sunburst 先短出一张（可用 `quality=low`），再试一刀蒙版。
 
-## 已上线站点：只 pull Flare
+## 已上线站点：只 pull Sunburst
 
 现网容器已在时，**不要**重写 `.env` / Caddy / OWUI：
 
 ```bash
 cd /opt/image-studio/src
-git fetch origin cursor/studio-gpt-image-25-flare-decf
-git checkout cursor/studio-gpt-image-25-flare-decf
-git pull --ff-only origin cursor/studio-gpt-image-25-flare-decf
+git fetch origin cursor/studio-gpt-image-25-sunburst-decf
+git checkout cursor/studio-gpt-image-25-sunburst-decf
+git pull --ff-only origin cursor/studio-gpt-image-25-sunburst-decf
 docker build -t image-studio:local /opt/image-studio/src/image-studio
 docker rm -f image-studio
 docker run -d --name image-studio --restart unless-stopped \
@@ -113,7 +113,7 @@ docker run -d --name image-studio --restart unless-stopped \
   -v /var/lib/image-studio:/data \
   image-studio:local
 curl -sS http://127.0.0.1:8091/healthz
-# GET /api/models（登录后）应含 openai:gpt-image-2 与 openai:gpt-image-2.5-flare
+# GET /api/models（登录后）应含 gpt-image-2、gpt-image-2.5-flare、gpt-image-2.5-sunburst（共 10）
 ```
 
 ## 不要

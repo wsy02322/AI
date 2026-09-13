@@ -16,7 +16,7 @@ class CatalogTests(unittest.TestCase):
     def test_openai_size_and_public_count(self) -> None:
         from app.catalog import MODELS, get_model, openai_size
 
-        self.assertEqual(len(MODELS), 9)
+        self.assertEqual(len(MODELS), 10)
         self.assertEqual(openai_size("1:1"), "1024x1024")
         self.assertEqual(openai_size("16:9"), "1536x1024")
         self.assertEqual(get_model("openai:gpt-image-2")["edit"], "mask")
@@ -25,6 +25,11 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(flare["upstream"], "gpt-image-2.5-flare")
         self.assertIn("xhigh", flare["qualities"])
         self.assertIn("max", flare["qualities"])
+        sun = get_model("openai:gpt-image-2.5-sunburst")
+        self.assertEqual(sun["edit"], "mask")
+        self.assertEqual(sun["upstream"], "gpt-image-2.5-sunburst")
+        self.assertIn("xhigh", sun["qualities"])
+        self.assertIn("max", sun["qualities"])
         html = (ROOT / "templates" / "studio.html").read_text()
         self.assertIn("Generate new", html)
         self.assertIn("Download", html)
