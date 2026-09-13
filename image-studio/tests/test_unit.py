@@ -16,10 +16,15 @@ class CatalogTests(unittest.TestCase):
     def test_openai_size_and_public_count(self) -> None:
         from app.catalog import MODELS, get_model, openai_size
 
-        self.assertEqual(len(MODELS), 8)
+        self.assertEqual(len(MODELS), 9)
         self.assertEqual(openai_size("1:1"), "1024x1024")
         self.assertEqual(openai_size("16:9"), "1536x1024")
         self.assertEqual(get_model("openai:gpt-image-2")["edit"], "mask")
+        flare = get_model("openai:gpt-image-2.5-flare")
+        self.assertEqual(flare["edit"], "mask")
+        self.assertEqual(flare["upstream"], "gpt-image-2.5-flare")
+        self.assertIn("xhigh", flare["qualities"])
+        self.assertIn("max", flare["qualities"])
         html = (ROOT / "templates" / "studio.html").read_text()
         self.assertIn("Generate new", html)
         self.assertIn("Download", html)
