@@ -58,7 +58,7 @@ def main() -> int:
 
     models = client.get("/api/models").json()
     ids = [row["id"] for row in models.get("models") or []]
-    if "openai:gpt-image-2" in ids and len(ids) == 8:
+    if "openai:gpt-image-2" in ids and "openai:gpt-image-2.5-flare" in ids and len(ids) == 9:
         oks.append(f"catalog {len(ids)}")
     else:
         errors.append(f"catalog {ids}")
