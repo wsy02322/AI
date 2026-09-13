@@ -130,22 +130,23 @@ def main() -> int:
 
     sun = get_model(h, GPT_IMAGE_25_SUNBURST_ID)
     flare = get_model(h, GPT_IMAGE_25_FLARE_ID)
-    image2 = get_model(h, IMAGE2_ID)
     _check_row(oks, errors, "sunburst", sun, check_caps=True, description=GPT_IMAGE_25_SUNBURST_DESCRIPTION)
     _check_row(oks, errors, "flare", flare, check_caps=False, description=None)
-    _check_row(oks, errors, "image-2", image2, check_caps=False, description=None)
 
     runtime = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
     runtime_ids = {m["id"] for m in runtime}
     for label, mid in (
         ("sunburst", GPT_IMAGE_25_SUNBURST_ID),
         ("flare", GPT_IMAGE_25_FLARE_ID),
-        ("image-2", IMAGE2_ID),
     ):
         if mid not in runtime_ids:
             errors.append(f"{label} missing from runtime picker")
         else:
             oks.append(f"{label} in picker")
+    if IMAGE2_ID in runtime_ids:
+        errors.append("image-2 still in runtime picker")
+    else:
+        oks.append("image-2 retired from picker")
 
     if SMOKE:
         payload = {

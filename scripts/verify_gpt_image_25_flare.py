@@ -99,33 +99,27 @@ def main() -> int:
     oks: list[str] = []
 
     flare = get_model(h, GPT_IMAGE_25_FLARE_ID)
-    image2 = get_model(h, IMAGE2_ID)
-    for label, model, want_public in (
-        ("flare", flare, True),
-        ("image-2", image2, True),
-    ):
-        if model.get("is_active") is False:
-            errors.append(f"{label} inactive")
-        else:
-            oks.append(f"{label} active")
-        if is_public(model.get("access_grants") or []) != want_public:
-            errors.append(f"{label} public={is_public(model.get('access_grants') or [])} want {want_public}")
-        else:
-            oks.append(f"{label} public")
-        caps = (model.get("meta") or {}).get("capabilities") or {}
-        if label == "flare":
-            for key in ("code_interpreter", "web_search", "builtin_tools", "terminal"):
-                if caps.get(key):
-                    errors.append(f"flare {key} still true")
-            if caps.get("builtin_tools") is not False:
-                errors.append(f"flare builtin_tools={caps.get('builtin_tools')} want false")
-            else:
-                oks.append("flare image caps stripped")
-            desc = (model.get("meta") or {}).get("description") or ""
-            if desc != GPT_IMAGE_25_FLARE_DESCRIPTION:
-                errors.append(f"flare description mismatch: {desc[:80]}")
-            else:
-                oks.append("flare description")
+    if flare.get("is_active") is False:
+        errors.append("flare inactive")
+    else:
+        oks.append("flare active")
+    if not is_public(flare.get("access_grants") or []):
+        errors.append("flare not public")
+    else:
+        oks.append("flare public")
+    caps = (flare.get("meta") or {}).get("capabilities") or {}
+    for key in ("code_interpreter", "web_search", "builtin_tools", "terminal"):
+        if caps.get(key):
+            errors.append(f"flare {key} still true")
+    if caps.get("builtin_tools") is not False:
+        errors.append(f"flare builtin_tools={caps.get('builtin_tools')} want false")
+    else:
+        oks.append("flare image caps stripped")
+    desc = (flare.get("meta") or {}).get("description") or ""
+    if desc != GPT_IMAGE_25_FLARE_DESCRIPTION:
+        errors.append(f"flare description mismatch: {desc[:80]}")
+    else:
+        oks.append("flare description")
 
     runtime = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
     runtime_ids = {m["id"] for m in runtime}
@@ -133,10 +127,10 @@ def main() -> int:
         errors.append("flare missing from runtime picker")
     else:
         oks.append("flare in picker")
-    if IMAGE2_ID not in runtime_ids:
-        errors.append("image-2 missing from runtime picker")
+    if IMAGE2_ID in runtime_ids:
+        errors.append("image-2 still in runtime picker")
     else:
-        oks.append("image-2 still in picker")
+        oks.append("image-2 retired from picker")
 
     if SMOKE:
         payload = {

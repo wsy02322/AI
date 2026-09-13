@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""ST-IMG: public GPT Image 2.5 Flare only. Keep GPT Image 2. Do not touch Sunburst.
+"""ST-IMG: public GPT Image 2.5 Flare. GPT Image 2 is retired.
 
-Merge-only on one model row. Does not run catalog visibility (picker has drifted extras).
-Does not rewrite banners (live is usage-guide-v7; this tree's apply script is still v3).
+Merge-only on the Flare row. Does not rewrite banners (live is usage-guide-v7).
 """
 
 from __future__ import annotations
@@ -15,16 +14,11 @@ import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from apply_wave0 import strip_tool_caps
-from stack_contract import GPT_IMAGE_25_FLARE_DESCRIPTION, GPT_IMAGE_25_FLARE_ID, PIPE
+from stack_contract import GPT_IMAGE_25_FLARE_DESCRIPTION, GPT_IMAGE_25_FLARE_ID
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
 PUBLIC_GRANT = {"principal_type": "user", "principal_id": "*", "permission": "read"}
-IMAGE2_ID = f"{PIPE}.openai.gpt-image-2"
-IMAGE2_DESCRIPTION = (
-    "ALTERNATE IMAGE MODEL. Switch here before asking for pictures. "
-    "Prefer GPT Image 2.5 Flare for everyday OpenAI images."
-)
 
 
 def _login_candidates() -> list[str]:
@@ -132,8 +126,7 @@ def main() -> int:
     h = headers(signin())
     refresh_catalog(h)
     apply_image_row(h, GPT_IMAGE_25_FLARE_ID, GPT_IMAGE_25_FLARE_DESCRIPTION)
-    apply_image_row(h, IMAGE2_ID, IMAGE2_DESCRIPTION)
-    print("gpt-image-2.5-flare apply ok (image-2 kept public)")
+    print("gpt-image-2.5-flare apply ok (image-2 stays retired)")
     return 0
 
 

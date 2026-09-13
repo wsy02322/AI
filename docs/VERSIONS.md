@@ -17,7 +17,8 @@
 | 上次 `verify_stack.py` | **2026-09-01**：Banner v3、chips=0、Follow-up 关、Fable marker、当时 19 public。picker 契约当时 **21** |
 | ST-IMG Flare | **2026-09-13**：`openai.gpt-image-2.5-flare` 先加入 public；GPT Image 2 留下 |
 | ST-IMG Sunburst | **2026-09-13**：`openai.gpt-image-2.5-sunburst` 加入 public。验收 `verify_gpt_image_25_sunburst.py` |
-| Picker prune | **2026-09-13**：picker 收成 **25 public**（Astra 23 + Flare/Sunburst）。关未确认新家族 / latest 别名 / 视频。`apply_picker_prune.py`。不重放 Banner |
+| Picker prune | **2026-09-13**：先收到 25，再退休 GPT Image 2 → **24 public** |
+| Retire GPT Image 2 | **2026-09-13**：OWUI inactive + 剥 `*`；Studio 目录删除。Flare / Sunburst 留下。`apply_retire_gpt_image_2.py` |
 | 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**；STT whisper-large-v3-turbo 可用 |
 | 上次 GA-A `run_ga_a_trial.py` | **2026-08-21**：MiniMax MP3 31149 B / 1.62s 整段；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）；§1 仅关闭问题 3 |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |

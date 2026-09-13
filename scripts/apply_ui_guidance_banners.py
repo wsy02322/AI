@@ -64,10 +64,6 @@ DESCRIPTIONS = {
     ),
     GPT_IMAGE_25_FLARE_ID: GPT_IMAGE_25_FLARE_DESCRIPTION,
     GPT_IMAGE_25_SUNBURST_ID: GPT_IMAGE_25_SUNBURST_DESCRIPTION,
-    f"{PIPE}.openai.gpt-image-2": (
-        "ALTERNATE IMAGE MODEL. Switch here before asking for pictures. "
-        "Prefer GPT Image 2.5 Flare for everyday OpenAI images."
-    ),
 }
 
 # OWUI Suggested chips always submit on click. Clear them; banners carry the hints.

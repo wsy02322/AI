@@ -32,10 +32,10 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 
 | ID | 必须 |
 |----|------|
-| UX-1 | **四格捷径**：Chat = Sol Pro / Opus；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / **GPT Image 2.5 Flare** / **Sunburst** 精修 / GPT Image 2 备选 等） |
+| UX-1 | **四格捷径**：Chat = Sol Pro / Opus；Quick search = Sonar Pro Search；Deep report = Sonar Deep Research；Images = 先切图像模型（Banana Pro / **GPT Image 2.5 Flare** / **Sunburst** 精修 等） |
 | UX-2 | 英文指引：**一条** Banner `usage-guide-v3`（Sonar/图像分流 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
-| UX-4 | **25 个 public**（对比用；picker = public）。原则：最顶级 + 若有的轻量版 + 中国文本旗舰（DeepSeek / Kimi / Qwen）+ Astra + GPT Image 2.5 Flare / Sunburst。GPT Image 2 **留下**。留下的家族只跟 catalog **最新 id**。未确认新家族（Ling / Nex / Fugu / Schematron / Mercury / 视频 / batch / `~openai.*-latest`）**不** active |
+| UX-4 | **24 个 public**（对比用；picker = public）。原则：最顶级 + 若有的轻量版 + 中国文本旗舰（DeepSeek / Kimi / Qwen）+ Astra + GPT Image 2.5 Flare / Sunburst。**GPT Image 2 已退休**。留下的家族只跟 catalog **最新 id**。未确认新家族（Ling / Nex / Fugu / Schematron / Mercury / 视频 / batch / `~openai.*-latest`）**不** active |
 | UX-5 | 新对话默认 **单模型**：`grok-4.6`；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth；Sol Pro 在置顶四格 |
 | UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false |
 | UX-7 | 回复下方 **Follow-up 建议芯片关闭**（易误触）。空对话 `prompt_suggestions` 保持 **空**。不关 Autocomplete / Title |
@@ -116,4 +116,4 @@ Pipe 前缀：`open_webui_openrouter_integration.`
 
 **置顶**：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`、`anthropic.claude-opus-5`、`openai.gpt-5.6-sol-pro`
 
-**25 public** 与 `scripts/stack_contract.py` 中 `PUBLIC_MODEL_IDS` 必须一致（picker = public）。
+**24 public** 与 `scripts/stack_contract.py` 中 `PUBLIC_MODEL_IDS` 必须一致（picker = public）。

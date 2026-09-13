@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Disable Pipe catalog rows outside ACTIVE_MODEL_IDS (picker == 25 public).
+"""Disable Pipe catalog rows outside ACTIVE_MODEL_IDS (picker == 24 public).
 
-Keeps the principle series (Astra 23 + GPT Image 2.5 Flare/Sunburst + Image 2).
+Keeps the principle series (Astra 23 + GPT Image 2.5 Flare/Sunburst). GPT Image 2 is retired.
 Does not call models/sync. Does not rewrite banners. Does not strip grants on
 kept rows. Unconfirmed families / latest aliases / video / batch become inactive.
 """

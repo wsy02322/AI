@@ -26,7 +26,7 @@ SONAR_MODEL_IDS = [
 GPT_IMAGE_25_FLARE_ID = f"{PIPE}.openai.gpt-image-2.5-flare"
 GPT_IMAGE_25_FLARE_DESCRIPTION = (
     "OPENAI GPT IMAGE 2.5 FLARE. Everyday / fast Images API. "
-    "Switch here before asking for pictures. GPT Image 2 stays as an alternate."
+    "Switch here before asking for pictures."
 )
 GPT_IMAGE_25_SUNBURST_ID = f"{PIPE}.openai.gpt-image-2.5-sunburst"
 GPT_IMAGE_25_SUNBURST_DESCRIPTION = (
@@ -39,7 +39,6 @@ IMAGE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3.1-flash-image",
     GPT_IMAGE_25_FLARE_ID,
     GPT_IMAGE_25_SUNBURST_ID,
-    f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
     f"{PIPE}.bytedance-seed.seedream-5-0-lite",
@@ -69,7 +68,6 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.openai.gpt-6-astra-pro",
     GPT_IMAGE_25_FLARE_ID,
     GPT_IMAGE_25_SUNBURST_ID,
-    f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.perplexity.sonar-pro-search",
     f"{PIPE}.qwen.qwen-image-3-pro",
@@ -86,9 +84,10 @@ RETIRED_MODEL_IDS = [
     f"{PIPE}.anthropic.claude-fable-5",
     f"{PIPE}.google.gemini-3.7-flash",
     f"{PIPE}.qwen.qwen3.8-max",
+    f"{PIPE}.openai.gpt-image-2",
 ]
 
-# Runtime picker == 25 public. Unconfirmed families stay inactive.
+# Runtime picker == 24 public. Unconfirmed families stay inactive.
 ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [

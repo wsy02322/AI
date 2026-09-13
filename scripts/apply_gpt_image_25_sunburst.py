@@ -20,17 +20,11 @@ from stack_contract import (
     GPT_IMAGE_25_FLARE_ID,
     GPT_IMAGE_25_SUNBURST_DESCRIPTION,
     GPT_IMAGE_25_SUNBURST_ID,
-    PIPE,
 )
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
 PUBLIC_GRANT = {"principal_type": "user", "principal_id": "*", "permission": "read"}
-IMAGE2_ID = f"{PIPE}.openai.gpt-image-2"
-IMAGE2_DESCRIPTION = (
-    "ALTERNATE IMAGE MODEL. Switch here before asking for pictures. "
-    "Prefer GPT Image 2.5 Flare for everyday OpenAI images."
-)
 
 
 def _login_candidates() -> list[str]:
@@ -139,8 +133,7 @@ def main() -> int:
     refresh_catalog(h)
     apply_image_row(h, GPT_IMAGE_25_SUNBURST_ID, GPT_IMAGE_25_SUNBURST_DESCRIPTION)
     apply_image_row(h, GPT_IMAGE_25_FLARE_ID, GPT_IMAGE_25_FLARE_DESCRIPTION)
-    apply_image_row(h, IMAGE2_ID, IMAGE2_DESCRIPTION)
-    print("gpt-image-2.5-sunburst apply ok (flare + image-2 kept public)")
+    print("gpt-image-2.5-sunburst apply ok (flare kept; image-2 stays retired)")
     return 0
 
 
