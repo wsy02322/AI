@@ -2,7 +2,8 @@
 """Accept GPT Image 2.5 Flare as public Images-API model. GPT Image 2 must stay public.
 
 Optional live smoke: VERIFY_IMAGE_SMOKE=1 (default) sends one short generate via chat.
-Does not public Sunburst. Does not require picker == ACTIVE_MODEL_IDS.
+Does not require picker == ACTIVE_MODEL_IDS. Sunburst public status is owned by
+verify_gpt_image_25_sunburst.py after the Flare gate passed.
 """
 
 from __future__ import annotations
@@ -21,7 +22,6 @@ from stack_contract import GPT_IMAGE_25_FLARE_DESCRIPTION, GPT_IMAGE_25_FLARE_ID
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
 IMAGE2_ID = f"{PIPE}.openai.gpt-image-2"
-SUNBURST_ID = f"{PIPE}.openai.gpt-image-2.5-sunburst"
 SMOKE = os.environ.get("VERIFY_IMAGE_SMOKE", "1") != "0"
 
 
@@ -126,18 +126,6 @@ def main() -> int:
                 errors.append(f"flare description mismatch: {desc[:80]}")
             else:
                 oks.append("flare description")
-
-    sun = requests.get(
-        f"{OPENWEBUI_URL}/api/v1/models/model",
-        headers=h,
-        params={"id": SUNBURST_ID},
-        timeout=30,
-    )
-    if sun.status_code == 200:
-        if is_public(sun.json().get("access_grants") or []):
-            errors.append("sunburst unexpectedly public")
-        else:
-            oks.append("sunburst not public")
 
     runtime = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=90).json().get("data") or []
     runtime_ids = {m["id"] for m in runtime}

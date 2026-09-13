@@ -14,7 +14,13 @@ import time
 import requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stack_contract import DEFAULT_MODELS, GPT_IMAGE_25_FLARE_DESCRIPTION, GPT_IMAGE_25_FLARE_ID
+from stack_contract import (
+    DEFAULT_MODELS,
+    GPT_IMAGE_25_FLARE_DESCRIPTION,
+    GPT_IMAGE_25_FLARE_ID,
+    GPT_IMAGE_25_SUNBURST_DESCRIPTION,
+    GPT_IMAGE_25_SUNBURST_ID,
+)
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 PIPE = "open_webui_openrouter_integration"
@@ -57,6 +63,7 @@ DESCRIPTIONS = {
         "FASTER IMAGE MODEL. Switch here before asking for pictures."
     ),
     GPT_IMAGE_25_FLARE_ID: GPT_IMAGE_25_FLARE_DESCRIPTION,
+    GPT_IMAGE_25_SUNBURST_ID: GPT_IMAGE_25_SUNBURST_DESCRIPTION,
     f"{PIPE}.openai.gpt-image-2": (
         "ALTERNATE IMAGE MODEL. Switch here before asking for pictures. "
         "Prefer GPT Image 2.5 Flare for everyday OpenAI images."

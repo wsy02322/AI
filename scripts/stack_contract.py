@@ -28,11 +28,17 @@ GPT_IMAGE_25_FLARE_DESCRIPTION = (
     "OPENAI GPT IMAGE 2.5 FLARE. Everyday / fast Images API. "
     "Switch here before asking for pictures. GPT Image 2 stays as an alternate."
 )
+GPT_IMAGE_25_SUNBURST_ID = f"{PIPE}.openai.gpt-image-2.5-sunburst"
+GPT_IMAGE_25_SUNBURST_DESCRIPTION = (
+    "OPENAI GPT IMAGE 2.5 SUNBURST. Slower / higher-quality Images API. "
+    "Switch here before asking for pictures. Everyday OpenAI images: GPT Image 2.5 Flare."
+)
 
 IMAGE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3-pro-image",
     f"{PIPE}.google.gemini-3.1-flash-image",
     GPT_IMAGE_25_FLARE_ID,
+    GPT_IMAGE_25_SUNBURST_ID,
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
@@ -56,6 +62,7 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.openai.gpt-5.6-sol",
     f"{PIPE}.openai.gpt-5.6-sol-pro",
     GPT_IMAGE_25_FLARE_ID,
+    GPT_IMAGE_25_SUNBURST_ID,
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.perplexity.sonar-pro-search",
@@ -71,9 +78,9 @@ EXTRA_ACTIVE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3.7-flash",
 ]
 
-# Runtime picker contract: 20 public + extra Gemini. Live picker may have drifted extras;
+# Runtime picker contract: 21 public + extra Gemini. Live picker may have drifted extras;
 # do not run apply_model_catalog_visibility.py to "clean" unless you intend to disable
-# every Pipe id not in ACTIVE_MODEL_IDS (that would hide unaccepted Sunburst etc.).
+# every Pipe id not in ACTIVE_MODEL_IDS.
 ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [

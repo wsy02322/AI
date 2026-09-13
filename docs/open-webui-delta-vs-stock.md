@@ -217,7 +217,7 @@
 | Chat / 推理 | GPT-5.6 Sol Pro、Claude Opus 5 | `…openai.gpt-5.6-sol-pro`、`…anthropic.claude-opus-5` |
 | Images | Nano Banana Pro、GPT Image 2 等 | 见 §6.2 |
 
-### 6.2 全员可读（public）模型 — 20 个
+### 6.2 全员可读（public）模型 — 21 个
 
 Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants: principal_id=* read`（2026-08-20）：
 
@@ -236,6 +236,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `google.gemini-3-pro-image` | Nano Banana Pro |
 | `google.gemini-3.1-flash-image` | Nano Banana 2 |
 | `openai.gpt-image-2.5-flare` | OpenAI 2.5 日常档（Images API） |
+| `openai.gpt-image-2.5-sunburst` | OpenAI 2.5 精修档（Images API） |
 | `openai.gpt-image-2` | 图像（备选；留下） |
 | `openai.gpt-5.4-image-2` | 图像 |
 | `bytedance-seed.seedream-5-0-pro` / `lite` | Seedream 5 |

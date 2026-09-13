@@ -28,7 +28,7 @@
 | `webui.db` / data volume（聊天、Knowledge 文件、用户） | **必须从备份还原**。脚本重建不出聊天记录 |
 | OpenRouter API key | 控制台重开，**merge** 进 Pipe `API_KEY`（明文输入；保存后 DB 常为 `encrypted:`） |
 | JWT / 登录态 | **不必备份**。L0：`WEBUI_SECRET_KEY=""`，重建后 **用户重登** |
-| Pipe / Guard / 20 public / Banner / Task | 本仓库脚本可重放 |
+| Pipe / Guard / 21 public / Banner / Task | 本仓库脚本可重放 |
 | 某一版 Pipe `content` 全文 | 一般不还原旧 blob；装**当时**上游 Pipe，再按 §5 打补丁与 merge valves |
 
 备份口令（运维，不进 git）：升配 / 换镜像 / 大改前复制 `webui.db`。例：`/root/backups/webui-valves-fix-20260821-154729.db`。
@@ -134,28 +134,28 @@
 
 Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
-### 3.5 20 个 public（契约；id 前缀皆 `open_webui_openrouter_integration.`）
+### 3.5 21 个 public（契约；id 前缀皆 `open_webui_openrouter_integration.`）
 
-与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。这 20 个 **均 public + is_active**。
+与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。这 21 个 **均 public + is_active**。
 
 聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max`  
 搜索：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`  
-图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2.5-flare`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
+图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2.5-flare`、`openai.gpt-image-2.5-sunburst`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
 
-`openai.gpt-image-2.5-sunburst` 可在 catalog / picker 里 **active**，**不要** public，直到 Flare 两站出图稳了再单独加。
+GPT Image 2 **留下**当备选，是否从 public 拿掉另问。
 
 Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 
-### 3.6 Picker（20 public + 2 Gemini；现网可能更多 extras）
+### 3.6 Picker（21 public + 2 Gemini；现网可能更多 extras）
 
-契约 `GET /api/models` **至少**含 **22**：`PUBLIC_MODEL_IDS`（20）加：
+契约 `GET /api/models` **至少**含 **23**：`PUBLIC_MODEL_IDS`（21）加：
 
-- `google.gemini-3.1-pro-preview` — **保留** active；**不**在 20 public 名单（现网 grants 为空，管理员可见）  
-- `google.gemini-3.7-flash` — **保留** active；**不**并进 20 名单（现网已有 `*` read，不要剥掉）
+- `google.gemini-3.1-pro-preview` — **保留** active；**不**在 21 public 名单（现网 grants 为空，管理员可见）  
+- `google.gemini-3.7-flash` — **保留** active；**不**并进 21 名单（现网已有 `*` read，不要剥掉）
 
 **去除（is_active=false）**：`ibm-granite.granite-4.2-8b`、`inception.mercury-2.5-preview`。
 
-现网 picker 可能多于 22（探测曾到 42）。**不要**为了对齐契约跑 `apply_model_catalog_visibility.py` 全量禁用。灾后若真要收 picker，先确认 extras 名单。不要把这两个 Gemini 写成已批准扩编 public。
+现网 picker 可能多于 23（探测曾到 42）。**不要**为了对齐契约跑 `apply_model_catalog_visibility.py` 全量禁用。灾后若真要收 picker，先确认 extras 名单。不要把这两个 Gemini 写成已批准扩编 public。
 
 ### 3.7 Knowledge
 
@@ -171,7 +171,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 
 ### 3.9 Image Studio（独立站）
 
-`https://image.micropigeon.com` 目录在 `image-studio/`（分支 `cursor/studio-gpt-image-25-flare-decf`，基线 `cursor/image-studio-next-plan-decf`）。**不要**把整棵 Studio 树并进主站分支。Flare 行：`openai:gpt-image-2.5-flare`，直连 `gpt-image-2.5-flare`，质量含 `xhigh`/`max`。GPT Image 2 留下。回放见该分支 `image-studio/DEPLOY.md`。未部署则 Studio 出图烟雾做不了。
+`https://image.micropigeon.com` 目录在 `image-studio/`（分支 `cursor/studio-gpt-image-25-sunburst-decf`）。**不要**把整棵 Studio 树并进主站分支。OpenAI 行：`gpt-image-2`、`gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`。回放见该分支 `image-studio/DEPLOY.md`。
 
 ---
 
@@ -182,7 +182,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | Banner | 一条 `usage-guide-v3` | 一条 `usage-guide-v3` | 跑 `apply_ui_guidance_banners.py` 即可 |
 | 空对话 chips | 0 | 0 | 保持空 |
 | Follow-up | `apply_wave0` merge false | `false` | **必须关** |
-| Picker | 契约 22（20 public + 2 Gemini） | 现网可能更多 extras | **不要**盲跑 visibility；Granite / Mercury 关掉 |
+| Picker | 契约 23（21 public + 2 Gemini） | 现网可能更多 extras | **不要**盲跑 visibility；Granite / Mercury 关掉 |
 | Pipe sha | VERSIONS `7415c2e4347a` | `7415c2e4347a` | 新装 Pipe 后打补丁并更新 VERSIONS |
 | openai 槽 | 5 槽全 disable | **5** 槽全 OpenRouter disable | 保持全 disable；不必复活 gptsapi |
 | Fable | marker `FABLE_UNSIGNED_SUMMARY_V1` | 同 sha 的 Pipe 上应有 | `patch_pipe_fable_thinking_replay.py`（已有则 no-op） |
@@ -201,8 +201,8 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 4. 确认 3 个 Guard global active；web_tools / image_gen **inactive**。  
 5. `python3 scripts/apply_plan_a_hide_integrations.py`  
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
-7. `python3 scripts/apply_model_catalog_visibility.py`（仅当确认要收成 22 = 20 public + 2 Gemini）  
-7b. `python3 scripts/apply_gpt_image_25_flare.py`（Flare public；Image 2 留下）  
+7. `python3 scripts/apply_model_catalog_visibility.py`（仅当确认要收成 23 = 21 public + 2 Gemini）  
+7b. `python3 scripts/apply_gpt_image_25_flare.py` 然后 `apply_gpt_image_25_sunburst.py`（Image 2 留下）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
@@ -245,6 +245,6 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 | `AGENTS.md` | 日常操作禁令与脚本表 |
 | `docs/open-webui-delta-vs-stock.md` | 相对官方差异长表（部分日期早于本快照） |
 | `docs/open-webui-disaster-recovery-rebuild-plan.md` | 为何不靠全量快照 |
-| `scripts/stack_contract.py` | 20 public / picker 契约 22（+2 Gemini）/ Guard / Task / Banner v3（现网 v7）/ Follow-up 关 / Fable marker |
+| `scripts/stack_contract.py` | 21 public / picker 契约 23（+2 Gemini）/ Guard / Task / Banner v3（现网 v7）/ Follow-up 关 / Fable marker |
 | `docs/open-webui-file-ingest-plan.md` | 文件录入（T0 未确认，重建时不要顺便装 Tika） |
 | `docs/VERSIONS.md` | 上次验收指纹（重建后重填） |

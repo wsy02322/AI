@@ -15,7 +15,8 @@
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
 | 上次 `verify_stack.py` | **2026-09-01**：Banner v3、chips=0、Follow-up 关、Fable marker、当时 19 public。picker 契约当时 **21** |
-| ST-IMG Flare | **2026-09-13**：`openai.gpt-image-2.5-flare` 加入 20 public；GPT Image 2 留下；Sunburst **未** public。验收走 `verify_gpt_image_25_flare.py`。现网 Banner 是 `usage-guide-v7`，**不要**重放本树 v3 Banner 脚本。picker 已漂，**不要**跑 visibility |
+| ST-IMG Flare | **2026-09-13**：`openai.gpt-image-2.5-flare` 先加入 public；GPT Image 2 留下 |
+| ST-IMG Sunburst | **2026-09-13**：Flare 两站出图+蒙版稳后，`openai.gpt-image-2.5-sunburst` 加入 21 public。验收 `verify_gpt_image_25_sunburst.py`。现网 Banner 是 `usage-guide-v7`，**不要**重放本树 v3 Banner。picker 已漂，**不要**跑 visibility |
 | 上次 `verify_live_baseline.py` | **2026-08-21**：TTS = `minimax/speech-2.8-turbo`；OWUI `/audio/speech` **200**；STT whisper-large-v3-turbo 可用 |
 | 上次 GA-A `run_ga_a_trial.py` | **2026-08-21**：MiniMax MP3 31149 B / 1.62s 整段；gpt-audio-mini & gpt-audio **无**可播音频（Pipe `/responses` 拒 `modalities.audio`）；§1 仅关闭问题 3 |
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
