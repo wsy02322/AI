@@ -12,7 +12,7 @@
 
 目标仍是顶级；降级必须是用户点头的权衡，不是执行者自行放弃。发现与顶级档的能力缺口、或明显更强的实现路径时，当场主动提案（含是否升主线、风险、和不做的代价）；未确认不得动手。
 
-**P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **25 个 public**（Astra 23 原则系列 + GPT Image 2.5 Flare / Sunburst；GPT Image 2 仍为备选）。picker = public。未确认新家族 / latest 别名 / 视频 **不** active。
+**P0 四条并列**：图像生成、**语音聊天**、**屏幕共享**、Notebook/YouTube（各有独立 plan）。语音与屏享同级，不得写成「屏享 → 语音」；两者都受宪法复杂度确认门约束。视频生成与 slides 仍为 Later 必做，**不是** YouTube 知识理解。维持 **24 个 public**（Astra 23 原则系列 + GPT Image 2.5 Flare / Sunburst）。**GPT Image 2 已退休**（OWUI inactive + Studio 目录删除）。picker = public。未确认新家族 / latest 别名 / 视频 **不** active。
 
 未确认 N2+ **不改** Notebook 入口形态、不装第二前端。N1（RAG 槽 + YouTube ingest）已允许执行。Live 顶级方案须单独 plan/确认：L1 不是语音终态；rbb L2 只补 S2S、不补持续屏享，也不能冒充两项都达标。无 OpenAI/Google Realtime 钥匙时 **不换** OWUI 镜像。**运维 L0**：env `WEBUI_SECRET_KEY=""`；容器重建后用户重登可接受；**不做** JWT 持久化 / Pipe 加密（K1/K2 冻结）。
 
@@ -45,11 +45,12 @@
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 25 public；其余 Pipe catalog 禁用 |
 | `scripts/apply_picker_prune.py` | 只关原则系列以外的 extras（不 sync、不改 Banner） |
-| `scripts/verify_picker_prune.py` | picker == 25 public，无 extras |
+| `scripts/verify_picker_prune.py` | picker == 24 public，无 extras |
+| `scripts/apply_retire_gpt_image_2.py` | 退休 GPT Image 2（剥 public + inactive；Flare/Sunburst 留下） |
 | `scripts/apply_ui_guidance_banners.py` | 本树契约仍是一条 `usage-guide-v3`；**现网是 v7，不要无故重放** |
-| `scripts/restore_public_grants.py` | catalog 恢复后重建 25 public `access_grants`（不调用 sync） |
+| `scripts/restore_public_grants.py` | catalog 恢复后重建 24 public `access_grants`（不调用 sync） |
 | `scripts/apply_gpt_image_25_flare.py` | ST-IMG：public **Flare** + 剥图像 caps；**留下 Image 2**；不碰 Banner / visibility |
-| `scripts/verify_gpt_image_25_flare.py` | ST-IMG：Flare public、Image 2 仍在、可选短出图 |
+| `scripts/verify_gpt_image_25_flare.py` | ST-IMG：Flare public、Image 2 不在 picker、可选短出图 |
 | `scripts/apply_gpt_image_25_sunburst.py` | ST-IMG：Flare 两站稳后 public **Sunburst**；Flare / Image 2 留下 |
 | `scripts/verify_gpt_image_25_sunburst.py` | ST-IMG：Sunburst + Flare + Image 2 均 public、可选短出图 |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Accept picker == ACTIVE_MODEL_IDS (25 public). No extras, no missing keepers."""
+"""Accept picker == ACTIVE_MODEL_IDS (24 public). No extras, no missing keepers."""
 
 from __future__ import annotations
 

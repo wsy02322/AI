@@ -222,7 +222,6 @@ def verify(h: dict[str, str]) -> int:
         "open_webui_openrouter_integration.google.gemini-3.1-flash-image",
         "open_webui_openrouter_integration.openai.gpt-image-2.5-flare",
         "open_webui_openrouter_integration.openai.gpt-image-2.5-sunburst",
-        "open_webui_openrouter_integration.openai.gpt-image-2",
     ]
     listed = {m["id"]: m for m in list_pipe_models(h)}
     for mid in samples:

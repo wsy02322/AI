@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (picker == 25 public).
+"""Disable Pipe catalog models not in ACTIVE_MODEL_IDS (picker == 24 public).
 
 Prefer scripts/apply_picker_prune.py: disable-only extras, keep principle series.
 """
