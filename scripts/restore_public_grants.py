@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recreate the 21 public model rows + access_grants after a catalog wipe.
+"""Recreate the 25 public model rows + access_grants after a catalog wipe.
 
 Does NOT call POST /api/v1/models/sync (empty sync deletes every DB model).
 Requires the Pipe catalog to already be visible on GET /api/models.

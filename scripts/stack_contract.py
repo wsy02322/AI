@@ -48,39 +48,47 @@ IMAGE_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
+# Picker == public. Flagship (+ lite) of kept families, China text flagships,
+# Astra, and GPT Image 2.5 Flare/Sunburst. Count is the live principle series.
 PUBLIC_MODEL_IDS = [
-    f"{PIPE}.anthropic.claude-fable-5",
+    f"{PIPE}.anthropic.claude-fable-5.1",
     f"{PIPE}.anthropic.claude-opus-5",
     f"{PIPE}.bytedance-seed.seedream-5-0-lite",
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
     f"{PIPE}.deepseek.deepseek-v4-pro-0813",
     f"{PIPE}.google.gemini-3-pro-image",
     f"{PIPE}.google.gemini-3.1-flash-image",
+    f"{PIPE}.google.gemini-3.1-pro-preview",
+    f"{PIPE}.google.gemini-3.8-flash",
     f"{PIPE}.microsoft.mai-image-2.5-pro",
     f"{PIPE}.moonshotai.kimi-k3",
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.openai.gpt-5.6-sol",
     f"{PIPE}.openai.gpt-5.6-sol-pro",
+    f"{PIPE}.openai.gpt-6-astra",
+    f"{PIPE}.openai.gpt-6-astra-pro",
     GPT_IMAGE_25_FLARE_ID,
     GPT_IMAGE_25_SUNBURST_ID,
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.perplexity.sonar-pro-search",
     f"{PIPE}.qwen.qwen-image-3-pro",
-    f"{PIPE}.qwen.qwen3.8-max",
+    f"{PIPE}.qwen.qwen3.8-max-0902",
     f"{PIPE}.x-ai.grok-4.6",
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
-# Extra picker models (user 2026-09-01): keep Gemini; not added to the public list.
-EXTRA_ACTIVE_MODEL_IDS = [
-    f"{PIPE}.google.gemini-3.1-pro-preview",
+# No admin-only extras: picker == public.
+EXTRA_ACTIVE_MODEL_IDS: list[str] = []
+
+# Previous ids of kept families. Stay inactive; strip leftover * read if present.
+RETIRED_MODEL_IDS = [
+    f"{PIPE}.anthropic.claude-fable-5",
     f"{PIPE}.google.gemini-3.7-flash",
+    f"{PIPE}.qwen.qwen3.8-max",
 ]
 
-# Runtime picker contract: 21 public + extra Gemini. Live picker may have drifted extras;
-# do not run apply_model_catalog_visibility.py to "clean" unless you intend to disable
-# every Pipe id not in ACTIVE_MODEL_IDS.
+# Runtime picker == 25 public. Unconfirmed families stay inactive.
 ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [
