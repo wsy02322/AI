@@ -3,7 +3,7 @@
 > **状态**：Wave 0 **已应用到实例**。**P0 四条并列已写入契约**。P0-D **N1 已落地**（RAG + 视觉时间线；口播受 YouTube 风控）。现网 UX：一条 `usage-guide-v3`、空 chips、Follow-up 关（见 `open-webui-rebuild-archive.md`）。Wave 1 视频生成 / Wave 2 slides 仍待单独开一轮。
 > **日期**：2026-09-01（路线仍以 2026-08-21 拍板为准；UX/Task 钉子已按现网改）  
 > **宪法**：（1）顶级为目标；难则顶级与略降级一并提案、确认再选；（2）简单稳定易维护；（3）重大改动主动 plan/提案，确认后再执行（讨论≠执行）。  
-> **用户约束**：维持 **19 个 public**；**P0-A 图像、P0-B 语音聊天、P0-C 屏享、P0-D Notebook/YouTube** 同为最高优先级；语音和屏享都受宪法复杂度确认门约束；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
+> **用户约束**：维持 **20 个 public**（含 GPT Image 2.5 Flare；Image 2 仍为备选；Sunburst 未到）；**P0-A 图像、P0-B 语音聊天、P0-C 屏享、P0-D Notebook/YouTube** 同为最高优先级；语音和屏享都受宪法复杂度确认门约束；**视频生成**与 **slides** 仍为后续必做（≠ YouTube 知识理解）。
 
 ---
 
@@ -15,7 +15,7 @@
 |------------------|----------------------------|
 | Pipe + 466 模型 catalog | **原生 Images / Images Edit**（开着，模型 id 非 Pipe） |
 | 方案 A、3 Guard | **Code Interpreter / Code Execution**（pyodide，开） |
-| 19 public、4 置顶、DEFAULT_MODELS | **Audio STT/TTS**（OpenRouter whisper / tts，已配） |
+| 20 public、4 置顶、DEFAULT_MODELS | **Audio STT/TTS**（OpenRouter whisper / tts，已配） |
 | Banner / suggestions / Description | **RAG / Knowledge**（N1 已产品化：OpenRouter embedding + YouTube Notebook；口播受风控） |
 | 关原生 Web Search、关 Direct Connections | **Memories / Notes / Automations / Calendar**（均 enable） |
 | 明确不做：ComfyUI、inpainting、第二套 Pipe | **Task 模型**（**已改** Pipe `grok-4.6`；旧幽灵 id `x-ai/grok-4.5` 不再用） |
@@ -38,9 +38,9 @@
 |------|------|----------------|
 | 聊天 / 推理 | **Grok 4.6** 默认；Sol Pro / Opus 等 public | **维持**。Reasoning depth 走 Valves（Banner 提示） |
 | 快搜 / 深研 | 两档 Sonar public | **维持**。不重开 Web Tools / 原生 Web Search |
-| 作图 | 9 个图像模型 public；切模型即作图；全局 Image Gen **关** | **P0-A**：维持为主路径（见 §2） |
+| 作图 | 10 个图像模型 public（含 GPT Image 2.5 Flare；Image 2 留下）；切模型即作图；全局 Image Gen **关** | **P0-A**：维持为主路径（见 §2） |
 | 文件上传 | Direct Uploads（默认关；Tika T0 未确认） | **维持**。见 `open-webui-file-ingest-plan.md` |
-| 模型对比 | **19 public** | **维持 19**，不收到 6 |
+| 模型对比 | **20 public** | **维持 20**，不收到 6 |
 | 稳定性护栏 | Guard + 方案 A + valves | **维持**；`verify_stack.py` 已落地 |
 | 英文指引 | **一条** `usage-guide-v3` + Description；**0** chips | **维持现网**；不要写回双条 v2 / 4 chips |
 
@@ -98,7 +98,7 @@
 **（1）强能力 — 路线 S 并不弱于 ChatGPT，在「对比模型」上更强。**
 
 - ChatGPT 同会话作图：方便，但 **后端图像模型由产品代选**，用户很难对比 Banana vs GPT Image 2 vs Seedream。  
-- 我们的用户 **会对比模型**（已决定维持 19 public）。同会话作图会把 9 个图像模型 **藏进一个开关**，反而削弱「超越官网」的那一点（可选最强图像模型）。  
+- 我们的用户 **会对比模型**（已决定维持 20 public）。同会话作图会把图像模型 **藏进一个开关**，反而削弱「超越官网」的那一点（可选最强图像模型）。  
 - 单张质量：专用图像模型 ≥ ChatGPT 代选引擎。差距只在「少点一次模型切换」。  
 - 该切换 **不够「极大复杂」**；复杂的是 tool 注入和第二条路径。
 
@@ -127,7 +127,7 @@
 
 ---
 
-## 3. 19 个 public：维持，并当产品资产
+## 3. 20 个 public：维持，并当产品资产
 
 不缩名单。用法：
 
@@ -135,9 +135,9 @@
 |------|------|
 | 默认 / 对比锚 | Sol Pro；Opus、Sol、Grok 4.6、Kimi、DeepSeek、Qwen Max、Fable 等文本 |
 | 搜索两档 | Sonar Pro Search / Deep Research |
-| 作图对比 | Banana Pro/2、GPT Image 2、GPT-5.4 Image 2、Seedream Pro/Lite、MAI、Qwen Image、Grok Imagine |
+| 作图对比 | Banana Pro/2、**GPT Image 2.5 Flare**、GPT Image 2（备选）、GPT-5.4 Image 2、Seedream Pro/Lite、MAI、Qwen Image、Grok Imagine |
 
-指引继续以四格为 **入门捷径**（Banner），19 个为 **对比清单**。不要把 Banner 改成「只有四个能用」。
+指引继续以四格为 **入门捷径**（Banner），20 个为 **对比清单**。不要把 Banner 改成「只有四个能用」。
 
 后续视频 public 时：**少量旗舰加入对比清单**，不要一次 24 个。
 
@@ -151,8 +151,8 @@
 
 | ID | 内容 |
 |----|------|
-| W0-1 | `scripts/verify_stack.py`：DEFAULT_MODELS、方案 A、Guard active、Sonar/图像无 tool 404、19 public、banners/suggestions |
-| W0-2 | `docs/SPEC.md` + `AGENTS.md`：四格 + 19 public + 路线 S + **P0 四条** + 视频生成/slides = Later |
+| W0-1 | `scripts/verify_stack.py`：DEFAULT_MODELS、方案 A、Guard active、Sonar/图像无 tool 404、20 public、banners/suggestions |
+| W0-2 | `docs/SPEC.md` + `AGENTS.md`：四格 + 20 public + 路线 S + **P0 四条** + 视频生成/slides = Later |
 | W0-3 | 按模型 capabilities：**Sonar / 纯图像** 关闭会邀请用户开 tool 的项（`code_interpreter`；图像上多余的 `builtin_tools` / `terminal`）。**不**关 Sol Pro 的 code interpreter |
 | W0-4 | `docs/VERSIONS.md` 记 OWUI / Pipe；Pipe 更新 Runbook：更新后跑 W0-1 + 现有 apply 脚本 |
 | W0-5 | Task 默认模型：**已改** Pipe Grok 4.6（旧幽灵 id `x-ai/grok-4.5` 不再用） |
@@ -220,7 +220,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 
 **现在（Wave 0 后）**
 
-- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；19 public 仍在；picker = 19 public + 两个 extra Gemini  
+- 新对话 = **仅 Grok 4.6**（不默认 compare）；四格置顶仍在；20 public 仍在；picker 契约 = 20 public + 两个 extra Gemini  
 - Sonar / 图像无 tool 404；Integrations 仍无 Web Tools / Image Gen / Web Search  
 - `verify_stack` 可重复跑绿  
 

@@ -23,9 +23,16 @@ SONAR_MODEL_IDS = [
     f"{PIPE}.perplexity.sonar-deep-research",
 ]
 
+GPT_IMAGE_25_FLARE_ID = f"{PIPE}.openai.gpt-image-2.5-flare"
+GPT_IMAGE_25_FLARE_DESCRIPTION = (
+    "OPENAI GPT IMAGE 2.5 FLARE. Everyday / fast Images API. "
+    "Switch here before asking for pictures. GPT Image 2 stays as an alternate."
+)
+
 IMAGE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3-pro-image",
     f"{PIPE}.google.gemini-3.1-flash-image",
+    GPT_IMAGE_25_FLARE_ID,
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
@@ -48,6 +55,7 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.openai.gpt-5.6-sol",
     f"{PIPE}.openai.gpt-5.6-sol-pro",
+    GPT_IMAGE_25_FLARE_ID,
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.perplexity.sonar-pro-search",
@@ -57,13 +65,15 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.x-ai.grok-imagine-image-2.0",
 ]
 
-# Extra picker models (user 2026-09-01): keep Gemini; not added to the 19 public list.
+# Extra picker models (user 2026-09-01): keep Gemini; not added to the public list.
 EXTRA_ACTIVE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3.1-pro-preview",
     f"{PIPE}.google.gemini-3.7-flash",
 ]
 
-# Runtime picker: 19 public + extra Gemini. Granite / Mercury stay inactive.
+# Runtime picker contract: 20 public + extra Gemini. Live picker may have drifted extras;
+# do not run apply_model_catalog_visibility.py to "clean" unless you intend to disable
+# every Pipe id not in ACTIVE_MODEL_IDS (that would hide unaccepted Sunburst etc.).
 ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [
