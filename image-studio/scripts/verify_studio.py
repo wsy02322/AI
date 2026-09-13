@@ -58,8 +58,8 @@ def main() -> int:
 
     models = client.get("/api/models").json()
     ids = [row["id"] for row in models.get("models") or []]
-    want = {"openai:gpt-image-2", "openai:gpt-image-2.5-flare", "openai:gpt-image-2.5-sunburst"}
-    if want.issubset(ids) and len(ids) == 10:
+    want = {"openai:gpt-image-2.5-flare", "openai:gpt-image-2.5-sunburst"}
+    if want.issubset(ids) and "openai:gpt-image-2" not in ids and len(ids) == 9:
         oks.append(f"catalog {len(ids)}")
     else:
         errors.append(f"catalog {ids}")
@@ -93,7 +93,7 @@ def main() -> int:
 
     gen = client.post(
         "/api/generate",
-        data={"model_id": "openai:gpt-image-2", "prompt": "a red square", "work_id": work_id},
+        data={"model_id": "openai:gpt-image-2.5-flare", "prompt": "a red square", "work_id": work_id},
     )
     if gen.status_code == 503 and "missing key" in gen.text:
         oks.append("generate 503 missing key")
@@ -106,7 +106,7 @@ def main() -> int:
 
     edit = client.post(
         "/api/edit",
-        data={"model_id": "openai:gpt-image-2", "prompt": "make it blue", "work_id": work_id},
+        data={"model_id": "openai:gpt-image-2.5-flare", "prompt": "make it blue", "work_id": work_id},
         files={"mask": ("mask.png", png_bytes((255, 255, 255, 180)), "image/png")},
     )
     if edit.status_code == 503 and "missing key" in edit.text:
