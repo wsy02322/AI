@@ -7,21 +7,6 @@ from typing import Any
 # Direct APIs first. OpenRouter is fallback / long-tail only.
 MODELS: list[dict[str, Any]] = [
     {
-        "id": "openai:gpt-image-2",
-        "label": "GPT Image 2",
-        "provider": "openai",
-        "upstream": "gpt-image-2",
-        "edit": "mask",
-        "refs_max": 16,
-        "n_max": 1,
-        "stream": True,
-        "aspects": ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16"],
-        "qualities": ["auto", "low", "medium", "high"],
-        "resolutions": [],
-        "backgrounds": ["auto", "opaque"],
-        "default_aspect": "1:1",
-    },
-    {
         "id": "openai:gpt-image-2.5-flare",
         "label": "GPT Image 2.5 Flare",
         "provider": "openai",

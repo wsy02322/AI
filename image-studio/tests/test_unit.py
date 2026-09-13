@@ -16,10 +16,11 @@ class CatalogTests(unittest.TestCase):
     def test_openai_size_and_public_count(self) -> None:
         from app.catalog import MODELS, get_model, openai_size
 
-        self.assertEqual(len(MODELS), 10)
+        self.assertEqual(len(MODELS), 9)
         self.assertEqual(openai_size("1:1"), "1024x1024")
         self.assertEqual(openai_size("16:9"), "1536x1024")
-        self.assertEqual(get_model("openai:gpt-image-2")["edit"], "mask")
+        with self.assertRaises(KeyError):
+            get_model("openai:gpt-image-2")
         flare = get_model("openai:gpt-image-2.5-flare")
         self.assertEqual(flare["edit"], "mask")
         self.assertEqual(flare["upstream"], "gpt-image-2.5-flare")
@@ -74,7 +75,7 @@ class StoreTests(unittest.TestCase):
                 work["id"],
                 image_bytes=buf.getvalue(),
                 prompt="p",
-                model="openai:gpt-image-2",
+                model="openai:gpt-image-2.5-flare",
                 kind="generate",
             )
             self.assertEqual(len(work["versions"]), 1)
