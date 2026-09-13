@@ -28,7 +28,7 @@
 | `webui.db` / data volume（聊天、Knowledge 文件、用户） | **必须从备份还原**。脚本重建不出聊天记录 |
 | OpenRouter API key | 控制台重开，**merge** 进 Pipe `API_KEY`（明文输入；保存后 DB 常为 `encrypted:`） |
 | JWT / 登录态 | **不必备份**。L0：`WEBUI_SECRET_KEY=""`，重建后 **用户重登** |
-| Pipe / Guard / 21 public / Banner / Task | 本仓库脚本可重放 |
+| Pipe / Guard / 25 public / Banner / Task | 本仓库脚本可重放 |
 | 某一版 Pipe `content` 全文 | 一般不还原旧 blob；装**当时**上游 Pipe，再按 §5 打补丁与 merge valves |
 
 备份口令（运维，不进 git）：升配 / 换镜像 / 大改前复制 `webui.db`。例：`/root/backups/webui-valves-fix-20260821-154729.db`。
@@ -196,8 +196,8 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 4. 确认 3 个 Guard global active；web_tools / image_gen **inactive**。  
 5. `python3 scripts/apply_plan_a_hide_integrations.py`  
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
-7. `python3 scripts/apply_model_catalog_visibility.py`（仅当确认要收成 23 = 21 public + 2 Gemini）  
-7b. `python3 scripts/apply_gpt_image_25_flare.py` 然后 `apply_gpt_image_25_sunburst.py`（Image 2 留下）  
+7. `python3 scripts/apply_picker_prune.py`（picker = 25 public）  
+7b. 若缺 Flare/Sunburst：`apply_gpt_image_25_flare.py` 然后 `apply_gpt_image_25_sunburst.py`（Image 2 留下）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
 9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
