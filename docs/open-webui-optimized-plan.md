@@ -245,7 +245,7 @@ NL-A（转录+embedding）完成 **不得**标为 NotebookLM 达标。
 | 文件 | 角色 |
 |------|------|
 | **本文件** | 路线与波次 |
-| `SPEC.md` | 体验与稳定性契约（含 P0；ST-11 Fable、ST-12 Follow-up） |
+| `SPEC.md` | 体验与稳定性契约（含 P0；ST-11 Fable、ST-12 Follow-up、ST-14 data-URI outlet） |
 | `open-webui-rebuild-archive.md` | 灾后入口 / 现网钉子 |
 | `open-webui-notebook-youtube-plan.md` | **P0-D** Notebook / YouTube |
 | `open-webui-live-voice-screen-plan.md` | **P0-B 语音 + P0-C 屏享** |

@@ -100,6 +100,11 @@ PIPE_PATCH_MARKERS = [
     "FABLE_UNSIGNED_SUMMARY_V1",
 ]
 
+# ST-14: image context Guard outlet strips assistant data-URI markdown; keeps http(s) links.
+GUARD_PATCH_MARKERS = {
+    "openrouter_image_context_guard": ["DATA_URI_OUTLET_V2"],
+}
+
 # Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
 BANNER_IDS = ["usage-guide-v3"]
 SUGGESTIONS_COUNT = 0
