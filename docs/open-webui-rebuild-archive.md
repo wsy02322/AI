@@ -125,7 +125,7 @@
 **全局 Guard（is_global + active）**
 
 - `openrouter_image_tool_guard`  
-- `openrouter_image_context_guard`（须含 `DATA_URI_OUTLET_V1`：stream/outlet persist-or-strip 助手 data-URI markdown）  
+- `openrouter_image_context_guard`（须含 `DATA_URI_OUTLET_V2`：stream/outlet 剥助手 data-URI markdown，保留 http(s) 链接）  
 - `openrouter_search_native_tool_guard`  
 
 **必须停用**：`openrouter_web_tools`、`openrouter_image_gen`。

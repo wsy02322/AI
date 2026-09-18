@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""ST-14: persist-or-strip assistant inline data-URI markdown on the image context Guard.
+"""ST-14: strip assistant inline data-URI markdown; keep http(s) links.
 
 Root cause: a text model (Opus) wrote an unclosed
   ![路线概览图](data:image/png;base64,...)
 into the reply. The UI rendered the truncated markdown instead of an image.
-Pipe ST-13 persist only covers Images API bytes, not model-authored markdown.
+
+User 2026-09-18: do not emit a replacement image; keep the existing Gaode / web links.
 
 Fix: content-only patch of global Filter `openrouter_image_context_guard`.
 - inlet unchanged (still image-model-only history trim)
 - stream + outlet run on every model
-- valid PNG/JPEG/GIF/WEBP → `/api/v1/files/<id>/content`
-- invalid / unclosed leftover → strip, never leave `data:image` junk
+- strip `data:image` markdown (closed or not); never persist to /api/v1/files
+- leave http(s) links and image-model `/api/v1/files/` markdown alone
 
 Does not touch valves / API_KEY / models/sync / Banner.
 """
@@ -29,7 +30,8 @@ import requests
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 GUARD_ID = "openrouter_image_context_guard"
-MARKER = "DATA_URI_OUTLET_V1"
+MARKER = "DATA_URI_OUTLET_V2"
+MARKER_V1 = "DATA_URI_OUTLET_V1"
 
 PersistFn = Callable[[bytes, str], str | None]
 
@@ -118,37 +120,14 @@ def iter_inline_images(text: str) -> list[tuple[bytes, str, str]]:
 
 
 def rewrite_assistant_text(text: str, persist_fn: PersistFn | None = None) -> str:
-    """Replace inline data-URI markdown/links with a file URL, or strip them."""
-    if not isinstance(text, str) or "data:image" not in text.lower():
-        if isinstance(text, str):
-            cleaned = _DANGLING_MD.sub("", text).rstrip()
-            return cleaned
+    """Strip inline data-URI markdown. persist_fn is ignored (ST-14 V2: no replacement image)."""
+    del persist_fn
+    if not isinstance(text, str):
         return text
-
-    def replace_md(match: re.Match[str]) -> str:
-        alt = (match.group(1) or "image").strip() or "image"
-        raw, mime = parse_data_uri(match.group(2))
-        if raw and persist_fn:
-            url = persist_fn(raw, mime)
-            if url:
-                return f"![{alt}]({url})"
-        return ""
-
-    md_spans = [m.span() for m in _MD_DATA_URI.finditer(text)]
-    rewritten = _MD_DATA_URI.sub(replace_md, text)
-
-    def replace_bare(match: re.Match[str]) -> str:
-        start = match.start()
-        if any(a <= start < b for a, b in md_spans):
-            return match.group(0)
-        raw, mime = parse_data_uri(match.group(0))
-        if raw and persist_fn:
-            url = persist_fn(raw, mime)
-            if url:
-                return f"![image]({url})"
-        return ""
-
-    rewritten = _BARE_DATA_URI.sub(replace_bare, rewritten)
+    if "data:image" not in text.lower():
+        return _DANGLING_MD.sub("", text).rstrip()
+    rewritten = _MD_DATA_URI.sub("", text)
+    rewritten = _BARE_DATA_URI.sub("", rewritten)
     rewritten = _DANGLING_MD.sub("", rewritten)
     rewritten = re.sub(r"\n{3,}", "\n\n", rewritten).rstrip()
     return rewritten
@@ -189,12 +168,7 @@ def looks_like_b64_chunk(text: str) -> bool:
 
 
 HELPERS = r'''
-# DATA_URI_OUTLET_V1 — persist-or-strip assistant inline data:image markdown.
-import base64 as _b64
-import hashlib as _hashlib
-import io as _io
-import uuid as _uuid
-
+# DATA_URI_OUTLET_V2 — strip assistant inline data:image markdown; keep http(s) links.
 _OUTLET_MD_DATA_URI = re.compile(
     r"!?\[([^\]]*)\]\((data:image/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+)\)?",
     re.I,
@@ -208,112 +182,20 @@ _OUTLET_DANGLING_MD = re.compile(
     re.I,
 )
 _OUTLET_LOOKS_B64 = re.compile(r"^[A-Za-z0-9+/=\s]{16,}$")
-_OUTLET_PNG = b"\x89PNG\r\n\x1a\n"
-_OUTLET_JPEG = b"\xff\xd8\xff"
-_OUTLET_GIF = b"GIF8"
-_OUTLET_MAX = 8 * 1024 * 1024
 _OUTLET_DROP = set()
-_OUTLET_FILE_CACHE: dict = {}
-
-
-def _outlet_parse_data_uri(uri: str):
-    text = (uri or "").strip()
-    if not text.lower().startswith("data:image/"):
-        return None, None
-    header, _, payload = text.partition(",")
-    if not payload:
-        return None, None
-    mime = "image/png"
-    matched = re.match(r"data:(image/[A-Za-z0-9.+-]+)", header, re.I)
-    if matched:
-        mime = matched.group(1).lower()
-    compact = re.sub(r"\s+", "", payload)
-    pad = (-len(compact)) % 4
-    if pad:
-        compact += "=" * pad
-    try:
-        raw = _b64.b64decode(compact, validate=False)
-    except Exception:
-        return None, None
-    if not raw or len(raw) > _OUTLET_MAX:
-        return None, None
-    if raw.startswith(_OUTLET_PNG):
-        if len(raw) >= 64 and b"IEND" in raw[-32:]:
-            return raw, mime
-        return None, None
-    if raw.startswith(_OUTLET_JPEG):
-        if len(raw) >= 64 and b"\xff\xd9" in raw[-16:]:
-            return raw, mime
-        return None, None
-    if raw.startswith(_OUTLET_GIF):
-        if len(raw) >= 64 and raw.endswith(b";"):
-            return raw, mime
-        return None, None
-    if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP" and len(raw) >= 64:
-        return raw, mime
-    return None, None
 
 
 def _outlet_rewrite_text(text: str, persist_map=None) -> str:
-    persist_map = persist_map or {}
+    del persist_map
     if not isinstance(text, str):
         return text
     if "data:image" not in text.lower():
         return _OUTLET_DANGLING_MD.sub("", text).rstrip()
-
-    def replace_md(match):
-        alt = (match.group(1) or "image").strip() or "image"
-        raw, mime = _outlet_parse_data_uri(match.group(2))
-        if raw:
-            url = persist_map.get(_hashlib.sha256(raw).hexdigest())
-            if url:
-                return f"![{alt}]({url})"
-        return ""
-
-    md_spans = [m.span() for m in _OUTLET_MD_DATA_URI.finditer(text)]
-    rewritten = _OUTLET_MD_DATA_URI.sub(replace_md, text)
-
-    def replace_bare(match):
-        start = match.start()
-        if any(a <= start < b for a, b in md_spans):
-            return match.group(0)
-        raw, mime = _outlet_parse_data_uri(match.group(0))
-        if raw:
-            url = persist_map.get(_hashlib.sha256(raw).hexdigest())
-            if url:
-                return f"![image]({url})"
-        return ""
-
-    rewritten = _OUTLET_BARE_DATA_URI.sub(replace_bare, rewritten)
+    rewritten = _OUTLET_MD_DATA_URI.sub("", text)
+    rewritten = _OUTLET_BARE_DATA_URI.sub("", rewritten)
     rewritten = _OUTLET_DANGLING_MD.sub("", rewritten)
     rewritten = re.sub(r"\n{3,}", "\n\n", rewritten).rstrip()
     return rewritten
-
-
-def _outlet_collect_images(text: str) -> list:
-    if not isinstance(text, str) or "data:image" not in text.lower():
-        return []
-    found = []
-    seen = set()
-    md_spans = [m.span() for m in _OUTLET_MD_DATA_URI.finditer(text)]
-
-    def add(uri: str) -> None:
-        raw, mime = _outlet_parse_data_uri(uri)
-        if not raw or not mime:
-            return
-        digest = _hashlib.sha256(raw).hexdigest()
-        if digest in seen:
-            return
-        seen.add(digest)
-        found.append((raw, mime, digest))
-
-    for match in _OUTLET_MD_DATA_URI.finditer(text):
-        add(match.group(2))
-    for match in _OUTLET_BARE_DATA_URI.finditer(text):
-        if any(a <= match.start() < b for a, b in md_spans):
-            continue
-        add(match.group(0))
-    return found
 
 
 def _outlet_rewrite_content(content, persist_map=None):
@@ -359,76 +241,12 @@ METHODS = r'''
             return str(event.get("id"))
         return ""
 
-    async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:
-        if not raw or not user_id:
-            return None
-        digest = _hashlib.sha256(raw).hexdigest()
-        cached = _OUTLET_FILE_CACHE.get(digest)
-        if cached:
-            return cached
-        try:
-            from open_webui.models.files import FileForm, Files
-            from open_webui.storage.provider import Storage
-        except Exception:
-            return None
-        ext = "png"
-        if isinstance(mime, str) and "/" in mime:
-            ext = (mime.split("/")[-1] or "png").split("+")[0]
-            if ext == "jpg":
-                ext = "jpeg"
-        file_id = str(_uuid.uuid4())
-        filename = f"{file_id}_inline.{ext}"
-        tags = {"OpenWebUI-User-Id": str(user_id), "OpenWebUI-File-Id": file_id}
-        try:
-            _contents, file_path = Storage.upload_file(_io.BytesIO(raw), filename, tags)
-        except TypeError:
-            try:
-                _contents, file_path = Storage.upload_file(_io.BytesIO(raw), filename)
-            except Exception:
-                return None
-        except Exception:
-            return None
-        try:
-            form = FileForm(
-                id=file_id,
-                filename=f"inline.{ext}",
-                path=file_path,
-                meta={"name": f"inline.{ext}", "content_type": mime, "size": len(raw)},
-            )
-            inserted = Files.insert_new_file(str(user_id), form)
-            if hasattr(inserted, "__await__"):
-                inserted = await inserted
-        except Exception:
-            return None
-        if inserted is None:
-            return None
-        stored_id = getattr(inserted, "id", None) or file_id
-        url = f"/api/v1/files/{stored_id}/content"
-        if len(_OUTLET_FILE_CACHE) > 64:
-            _OUTLET_FILE_CACHE.clear()
-        _OUTLET_FILE_CACHE[digest] = url
-        return url
-
-    async def _outlet_persist_map_for_text(self, text: str, user_id: str | None) -> dict:
-        persist_map = {}
-        for raw, mime, digest in _outlet_collect_images(text):
-            url = await self._outlet_persist_image(raw, mime, user_id)
-            if url:
-                persist_map[digest] = url
-        return persist_map
-
-    async def _outlet_rewrite_value(self, value, user_id: str | None, persist: bool):
+    async def _outlet_rewrite_value(self, value, user_id: str | None = None, persist: bool = False):
+        del user_id, persist
         if isinstance(value, str):
-            persist_map = {}
-            if persist:
-                persist_map = await self._outlet_persist_map_for_text(value, user_id)
-            return _outlet_rewrite_text(value, persist_map)
+            return _outlet_rewrite_text(value)
         if isinstance(value, (list, dict)):
-            blob = str(value)
-            persist_map = {}
-            if persist:
-                persist_map = await self._outlet_persist_map_for_text(blob, user_id)
-            return _outlet_rewrite_content(value, persist_map)
+            return _outlet_rewrite_content(value)
         return value
 
     async def stream(
@@ -538,6 +356,32 @@ def content_sha12(content: str) -> str:
 def patch_content(original: str) -> str:
     if MARKER in original:
         return original
+    if MARKER_V1 in original:
+        content = original
+        content = content.replace(
+            '                return f"![{alt}]({url})"',
+            '                return ""',
+        )
+        content = content.replace(
+            '                return f"![image]({url})"',
+            '                return ""',
+        )
+        content = content.replace(
+            "async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:\n        if not raw or not user_id:\n            return None",
+            "async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:\n        return None\n        if not raw or not user_id:\n            return None",
+        )
+        content = content.replace(MARKER_V1, MARKER)
+        content = content.replace(
+            "persist-or-strip assistant inline data-URI markdown (ST-14).",
+            "strip assistant inline data-URI markdown; keep http(s) links (ST-14).",
+        )
+        content = content.replace(
+            "persist-or-strip assistant inline data:image markdown.",
+            "strip assistant inline data:image markdown; keep http(s) links.",
+        )
+        if MARKER not in content:
+            raise RuntimeError("V1→V2 upgrade failed to insert marker")
+        return content
     if "class Filter:" not in original:
         raise RuntimeError("guard missing class Filter")
     if "def inlet(" not in original:
@@ -545,7 +389,7 @@ def patch_content(original: str) -> str:
     content = original
     content = content.replace(
         "description: Trim historical images in multi-turn image chats to avoid context token overflows.",
-        "description: Trim historical image chats; persist-or-strip assistant inline data-URI markdown (ST-14).",
+        "description: Trim historical image chats; strip assistant inline data-URI markdown; keep http(s) links (ST-14).",
         1,
     )
     content = content.replace("version: 0.1.0", "version: 0.2.0", 1)
@@ -588,28 +432,6 @@ def headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
-def http_persist(token: str, raw: bytes, mime: str) -> str | None:
-    ext = "png"
-    if "/" in mime:
-        ext = (mime.split("/")[-1] or "png").split("+")[0]
-        if ext == "jpg":
-            ext = "jpeg"
-    resp = requests.post(
-        f"{OPENWEBUI_URL}/api/v1/files/",
-        headers={"Authorization": f"Bearer {token}"},
-        files={"file": (f"inline.{ext}", raw, mime)},
-        data={"process": "false"},
-        timeout=60,
-    )
-    if resp.status_code != 200:
-        print(f"file upload {resp.status_code} {resp.text[:200]}", file=sys.stderr)
-        return None
-    fid = (resp.json() or {}).get("id")
-    if not fid:
-        return None
-    return f"/api/v1/files/{fid}/content"
-
-
 def _assistant_source_text(msg: dict) -> str:
     content = msg.get("content")
     if isinstance(content, str) and "data:image" in content.lower():
@@ -637,17 +459,6 @@ def sanitize_chat(token: str, chat_id: str) -> int:
     if resp.status_code != 200:
         raise SystemExit(f"get chat: {resp.status_code} {resp.text[:300]}")
     doc = resp.json()
-    cache: dict[str, str] = {}
-
-    def persist_fn(raw: bytes, mime: str) -> str | None:
-        digest = hashlib.sha256(raw).hexdigest()
-        if digest in cache:
-            return cache[digest]
-        url = http_persist(token, raw, mime)
-        if url:
-            cache[digest] = url
-        return url
-
     chat = doc.get("chat") or {}
     messages = ((chat.get("history") or {}).get("messages")) or {}
     updated = 0
@@ -657,7 +468,7 @@ def sanitize_chat(token: str, chat_id: str) -> int:
         source = _assistant_source_text(msg)
         if "data:image" not in source.lower() and "iVBORw0KGgo" not in source:
             continue
-        cleaned = rewrite_assistant_text(source, persist_fn=persist_fn)
+        cleaned = rewrite_assistant_text(source)
         if cleaned == msg.get("content"):
             continue
         # Admin can edit another user's message content; POST /chats/{id} is owner-only.
@@ -685,7 +496,7 @@ def sanitize_chat(token: str, chat_id: str) -> int:
         if "data:image" in str(msg.get("output") or ""):
             leftover_output += 1
     print(
-        f"chat {chat_id}: messages_updated={updated} files={len(cache)} "
+        f"chat {chat_id}: messages_updated={updated} "
         f"leftover_content={leftover_content} leftover_output={leftover_output}"
     )
     if leftover_content:
@@ -724,7 +535,7 @@ def apply_guard(token: str, dry_run: bool = False) -> int:
     )
     if resp.status_code != 200:
         raise SystemExit(f"update guard: {resp.status_code} {resp.text[:500]}")
-    print("guard content updated DATA_URI_OUTLET_V1 (content-only; valves untouched)")
+    print("guard content updated DATA_URI_OUTLET_V2 (content-only; valves untouched)")
     return 0
 
 

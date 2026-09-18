@@ -2,7 +2,7 @@
 
 灾后 / 新会话重建先读 **`docs/open-webui-rebuild-archive.md`**。日常改实例：先读 **`docs/SPEC.md`**，再读 **`docs/open-webui-optimized-plan.md`**。P0-D 读 **`docs/open-webui-notebook-youtube-plan.md`**。文件录入（Later，T0 未确认）读 **`docs/open-webui-file-ingest-plan.md`**。运维密钥 **L0 轻量档**见 **`docs/open-webui-secret-key-persist-plan.md`**（**已确认**：接受重登、不持久化 JWT、Pipe key 明文）。不要凭记忆重开 Web Tools，也不要同会话作图当主路径。独立 Gemini Live 新产品在 `handoff/gemini-live-standalone/`，**不要并进 OWUI 文档**。
 
-**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 助手 inline data-URI markdown persist-or-strip。不要把两条都写成 ST-11。
+**ST 编号**：**ST-11** = Fable 同模型续聊（unsigned thinking）；**ST-12** = Follow-up 芯片关；**ST-14** = 助手 inline data-URI markdown 只剥不落图。不要把两条都写成 ST-11。
 
 ## 宪法（所有动作）
 
@@ -54,7 +54,7 @@
 | `scripts/apply_ops_l0.py` | **L0 执行**：Pipe key / api_configs / catalog / public grants（merge-only） |
 | `scripts/verify_ops_l0.py` | **L0 验收**：ST-OPS 探针 |
 | `scripts/fix_sonar_tool_guard.py` | 误启用 web_tools 时的补丁参考 |
-| `scripts/patch_image_context_data_uri_outlet.py` | ST-14：Guard stream/outlet 剥未闭合 `data:image` markdown（content-only） |
+| `scripts/patch_image_context_data_uri_outlet.py` | ST-14：Guard stream/outlet 剥 `data:image` markdown，保留高德等链接 |
 | `scripts/verify_data_uri_outlet.py` | ST-14 验收 |
 
 ## Pipe 更新 Runbook
@@ -67,7 +67,7 @@
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
 8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  
-9. 若 Guard 丢了 data-URI outlet：`python3 scripts/patch_image_context_data_uri_outlet.py`（已有 `DATA_URI_OUTLET_V1` 则 no-op）  
+9. 若 Guard 丢了 data-URI outlet：`python3 scripts/patch_image_context_data_uri_outlet.py`（已有 `DATA_URI_OUTLET_V2` 则 no-op）  
 10. `python3 scripts/verify_stack.py` 全绿  
 11. 更新 `docs/VERSIONS.md` 的日期与 Pipe 指纹  
 

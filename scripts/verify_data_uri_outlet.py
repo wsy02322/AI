@@ -111,9 +111,13 @@ def main() -> int:
         else:
             probe_id = created.json()["id"]
             mid = str(uuid.uuid4())
+            png = (
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+            )
             junk = (
-                "见下图 ![路线概览图](data:image/png;base64,"
-                "iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAMAAABF6+6qAAADAFBMVEXExMT59/"
+                "见下图 "
+                f"![路线概览图](data:image/png;base64,{png})\n"
+                "[在高德打开 碌曲县→迭部县](https://uri.amap.com/navigation?from=1&to=2)"
             )
             completed = requests.post(
                 f"{OPENWEBUI_URL}/api/chat/completed",
@@ -136,10 +140,14 @@ def main() -> int:
                 asst = ((completed.json().get("messages") or [{}])[-1] or {}).get("content")
                 if not isinstance(asst, str) or "data:image" in asst or "iVBORw" in asst:
                     r.err(f"outlet did not strip data URI: {asst!r:.180}")
+                elif "/api/v1/files/" in asst:
+                    r.err(f"outlet persisted an image file URL: {asst!r:.180}")
+                elif "uri.amap.com" not in asst:
+                    r.err(f"outlet dropped the Gaode link: {asst!r:.180}")
                 elif "见下图" not in asst:
                     r.err(f"outlet stripped too much: {asst!r:.180}")
                 else:
-                    r.ok("live outlet strips truncated data-URI markdown")
+                    r.ok("live outlet strips data-URI image and keeps the Gaode link")
     finally:
         if probe_id:
             requests.delete(f"{OPENWEBUI_URL}/api/v1/chats/{probe_id}", headers=h, timeout=30)
@@ -161,6 +169,8 @@ def main() -> int:
                 has_map_text = True
             if isinstance(content, str) and ("data:image" in content or "iVBORw0KGgo" in content):
                 content_leak = True
+            if isinstance(content, str) and "/api/v1/files/" in content and "路线概览图" in content:
+                r.err(f"chat {CHAT_ID} still has a replacement image markdown")
         if content_leak:
             r.err(f"chat {CHAT_ID} visible content still has data-URI junk")
         else:
@@ -169,6 +179,8 @@ def main() -> int:
             r.ok("note: Responses output blob may still store the original URI; visible content is clean")
         if has_map_text:
             r.ok("chat still has the useful route text")
+        if "uri.amap.com" in blob or "micropigeon.com/nav" in blob:
+            r.ok("chat kept the previous Gaode / nav links")
 
     print(f"{len(r.oks)} ok / {len(r.errors)} err")
     return 1 if r.errors else 0
