@@ -72,7 +72,7 @@
 
 重建成功 = **SPEC.md** + **`docs/open-webui-rebuild-archive.md` §2** + `scripts/verify_stack.py` 全绿，而非与某一天的字节一致。
 
-UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～ST-12，ST-Live，ST-NL，ST-FILE，ST-OPS）。下文 §2.1/§2.2 是早期草稿，**不要**当第二套契约；现网 Banner 是 **一条** `usage-guide-v3`，不是双条 v2。
+UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～ST-12，ST-14，ST-Live，ST-NL，ST-FILE，ST-OPS）。下文 §2.1/§2.2 是早期草稿，**不要**当第二套契约；现网 Banner 是 **一条** `usage-guide-v3`，不是双条 v2。
 
 ### 2.1 用户体验（What users should see）— 草稿，以 SPEC 为准
 
@@ -80,7 +80,7 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 
 ### 2.2 稳定性约束（What must NOT happen）— 草稿，以 SPEC 为准
 
-见 SPEC ST-1～ST-12。摘要：Sonar/图像不带非法 tools；valves 只 merge；Task=Grok 4.6；全局 Image Gen 关；跨模型 reasoning 重试；Fable unsigned thinking；Follow-up 关。
+见 SPEC ST-1～ST-12、ST-14。摘要：Sonar/图像不带非法 tools；valves 只 merge；Task=Grok 4.6；全局 Image Gen 关；跨模型 reasoning 重试；Fable unsigned thinking；Follow-up 关；助手 inline data-URI markdown persist-or-strip。
 
 ### 2.3 能力范围（What we intentionally do NOT promise）
 
@@ -101,6 +101,7 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 | `gpt-image-*` chat endpoint 错误 | 图像模型走错 API | Pipe 或等价逻辑：**Images API 路由** |
 | `seedream-5` OpenRouter 500 | 同左 | `_is_openrouter_images_api_model` 类逻辑 + resolution 映射 |
 | 多轮图像 131072 token | 历史多图整段进上下文 | image **context guard** + chat 路径 context compression |
+| 助手回复出现 `[图](data:image/png;base64,iVBORw0KGgo…` | 文本模型把 PNG 写成未闭合 markdown；ST-13 Images API persist 管不到 | Guard **outlet/stream** persist-or-strip（`DATA_URI_OUTLET_V1`）；旧消息用 `--sanitize-chat` |
 | Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑 guard 逻辑 |
 | `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
 | valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |

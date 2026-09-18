@@ -5,8 +5,8 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-09-01**（对齐重建存档探针） |
-| OWUI | **0.11.0**（`GET /api/version`）；镜像钉死 `e97bf9531916` |
+| 记录日期 | **2026-09-18**（ST-14 data-URI outlet；Pipe 指纹未改） |
+| OWUI | **0.11.3**（`GET /api/version`）；镜像钉死 `e97bf9531916` |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
 | Pipe content SHA256（前 12） | `7415c2e4347a`（更早：`a0b95c2cf90d` → S2′ 前 `081c3773444c`） |
@@ -23,6 +23,7 @@
 | Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关**；Follow-up **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |
 | ST-11 Fable | Pipe marker `FABLE_UNSIGNED_SUMMARY_V1`（sha `7415c2e4347a`） |
+| ST-14 data-URI outlet | Guard `openrouter_image_context_guard` marker `DATA_URI_OUTLET_V1`（content-only；inlet 仍只修图像模型） |
 | HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；5× OpenRouter slot **全 `enable=false`** |
 | ST-1 Sonar | **2026-08-21**：两档 Sonar `builtin_tools=false`（堵住 UI native FC 注入 `get_current_timestamp`） |
 | VPS 维护 / L0 | **已执行** `apply_ops_l0` + `verify_ops_l0`（2026-08-21，5 ok）；K1/K2 冻结 |
@@ -31,4 +32,4 @@
 
 ## Pipe 更新后
 
-见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`（若 marker 已在则 no-op）。重放 ST-11：`python3 scripts/patch_pipe_fable_thinking_replay.py`（若 marker 已在则 no-op）。
+见 `AGENTS.md` → **Pipe 更新 Runbook**。更新后重填本表。重放 S2′：`python3 scripts/patch_pipe_cross_model_reasoning.py`（若 marker 已在则 no-op）。重放 ST-11：`python3 scripts/patch_pipe_fable_thinking_replay.py`（若 marker 已在则 no-op）。重放 ST-14：`python3 scripts/patch_image_context_data_uri_outlet.py`（若 `DATA_URI_OUTLET_V1` 已在则 no-op）。

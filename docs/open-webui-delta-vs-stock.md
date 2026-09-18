@@ -171,7 +171,7 @@
 | id | active | priority（代码默认 / valves） | 作用 |
 |----|--------|-------------------------------|------|
 | `openrouter_image_tool_guard` | **true** | **1** | 对 image/video 模型 **剥离** `tools`、`builtin_tools`、`server_tools` |
-| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位 |
+| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位。**ST-14**：`stream`/`outlet` 对所有模型 persist-or-strip 助手 inline `data:image` markdown（含未闭合括号） |
 | `openrouter_search_native_tool_guard` | **true** | **99**（valves **100**） | 对 Sonar/Perplexity 等 **最后** 再剥 tools，防其他 Filter 晚注入 |
 
 **相对 Stock**：不存在；为修复 `No endpoints found that support tool use` 与 131072 token 溢出。
@@ -328,12 +328,14 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 | `scripts/verify_stack.py` | Wave 0 契约验收 |
 | `scripts/verify_live_baseline.py` | L1 STT/TTS + 屏享指引验收 |
 | `scripts/patch_pipe_fable_thinking_replay.py` | ST-11 Fable unsigned thinking |
+| `scripts/patch_image_context_data_uri_outlet.py` | ST-14 Guard stream/outlet persist-or-strip `data:image` markdown |
+| `scripts/verify_data_uri_outlet.py` | ST-14 验收 |
 
 **环境变量**：`OPENWEBUI_URL`、`OPENWEBUI_PASSWORD`、`OPENWEBUI_USERNAME`（优先于 email 登录）。
 
 ### 8.3 仓库已入库（勿再当「讨论中」）
 
-`SPEC.md`、`AGENTS.md`、`scripts/verify_stack.py`、`docs/VERSIONS.md`、`docs/open-webui-rebuild-archive.md` 均已在 git。未合入 main 的专题 PR 内容在 2026-09 整合进同一套契约（ST-11 Fable、ST-12 Follow-up、Banner v3、文件录入 plan）。
+`SPEC.md`、`AGENTS.md`、`scripts/verify_stack.py`、`docs/VERSIONS.md`、`docs/open-webui-rebuild-archive.md` 均已在 git。未合入 main 的专题 PR 内容在 2026-09 整合进同一套契约（ST-11 Fable、ST-12 Follow-up、ST-14 data-URI outlet、Banner v3、文件录入 plan）。
 
 ---
 
