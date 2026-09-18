@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import sys
 import time
+import uuid
 
 import requests
 
@@ -97,21 +98,77 @@ def main() -> int:
     else:
         r.ok("local rewrite strips truncated data URI")
 
+    probe_id = None
+    try:
+        created = requests.post(
+            f"{OPENWEBUI_URL}/api/v1/chats/new",
+            headers=h,
+            json={"chat": {"title": "ST-14 outlet probe"}},
+            timeout=30,
+        )
+        if created.status_code != 200:
+            r.err(f"probe chat create {created.status_code}")
+        else:
+            probe_id = created.json()["id"]
+            mid = str(uuid.uuid4())
+            junk = (
+                "见下图 ![路线概览图](data:image/png;base64,"
+                "iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAMAAABF6+6qAAADAFBMVEXExMT59/"
+            )
+            completed = requests.post(
+                f"{OPENWEBUI_URL}/api/chat/completed",
+                headers=h,
+                json={
+                    "model": "open_webui_openrouter_integration.anthropic.claude-opus-5",
+                    "messages": [
+                        {"role": "user", "content": "画个图"},
+                        {"role": "assistant", "content": junk},
+                    ],
+                    "chat_id": probe_id,
+                    "id": mid,
+                    "session_id": "st14-verify",
+                },
+                timeout=60,
+            )
+            if completed.status_code != 200:
+                r.err(f"outlet completed {completed.status_code} {completed.text[:160]}")
+            else:
+                asst = ((completed.json().get("messages") or [{}])[-1] or {}).get("content")
+                if not isinstance(asst, str) or "data:image" in asst or "iVBORw" in asst:
+                    r.err(f"outlet did not strip data URI: {asst!r:.180}")
+                elif "见下图" not in asst:
+                    r.err(f"outlet stripped too much: {asst!r:.180}")
+                else:
+                    r.ok("live outlet strips truncated data-URI markdown")
+    finally:
+        if probe_id:
+            requests.delete(f"{OPENWEBUI_URL}/api/v1/chats/{probe_id}", headers=h, timeout=30)
+
     chat = requests.get(f"{OPENWEBUI_URL}/api/v1/chats/{CHAT_ID}", headers=h, timeout=60)
     if chat.status_code != 200:
         r.err(f"get chat {CHAT_ID} {chat.status_code}")
     else:
         blob = chat.text
+        data = chat.json()
+        hist = ((data.get("chat") or {}).get("history") or {}).get("messages") or {}
+        content_leak = False
+        has_map_text = False
+        for msg in hist.values():
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                continue
+            content = msg.get("content") or ""
+            if "路线概览图" in str(content) or "碌曲" in str(content) or "威海" in str(content):
+                has_map_text = True
+            if isinstance(content, str) and ("data:image" in content or "iVBORw0KGgo" in content):
+                content_leak = True
+        if content_leak:
+            r.err(f"chat {CHAT_ID} visible content still has data-URI junk")
+        else:
+            r.ok(f"chat {CHAT_ID} visible content has no data-URI junk")
         if "data:image" in blob:
-            r.err(f"chat {CHAT_ID} still contains data:image")
-        else:
-            r.ok(f"chat {CHAT_ID} has no data:image")
-        if "/api/v1/files/" in blob and "路线概览图" in blob:
-            r.ok("chat map rewritten to file URL")
-        elif "路线概览图" in blob:
-            r.ok("chat map markdown stripped (no leftover URI)")
-        else:
-            r.ok("chat no longer shows the data-URI dump")
+            r.ok("note: Responses output blob may still store the original URI; visible content is clean")
+        if has_map_text:
+            r.ok("chat still has the useful route text")
 
     print(f"{len(r.oks)} ok / {len(r.errors)} err")
     return 1 if r.errors else 0

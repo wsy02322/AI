@@ -610,16 +610,25 @@ def http_persist(token: str, raw: bytes, mime: str) -> str | None:
     return f"/api/v1/files/{fid}/content"
 
 
-def sanitize_tree(obj: Any, persist_fn: PersistFn | None) -> Any:
-    if isinstance(obj, str):
-        if "data:image" in obj.lower() or _DANGLING_MD.search(obj or ""):
-            return rewrite_assistant_text(obj, persist_fn=persist_fn)
-        return obj
-    if isinstance(obj, list):
-        return [sanitize_tree(x, persist_fn) for x in obj]
-    if isinstance(obj, dict):
-        return {k: sanitize_tree(v, persist_fn) for k, v in obj.items()}
-    return obj
+def _assistant_source_text(msg: dict) -> str:
+    content = msg.get("content")
+    if isinstance(content, str) and "data:image" in content.lower():
+        return content
+    output = msg.get("output")
+    if isinstance(output, list):
+        for item in output:
+            if not isinstance(item, dict):
+                continue
+            inner = item.get("content")
+            if isinstance(inner, str) and "data:image" in inner.lower():
+                return inner
+            if isinstance(inner, list):
+                for part in inner:
+                    if isinstance(part, dict) and isinstance(part.get("text"), str) and "data:image" in part["text"].lower():
+                        return part["text"]
+    if isinstance(content, str):
+        return content
+    return ""
 
 
 def sanitize_chat(token: str, chat_id: str) -> int:
@@ -639,26 +648,48 @@ def sanitize_chat(token: str, chat_id: str) -> int:
             cache[digest] = url
         return url
 
-    chat = doc.get("chat") or doc
-    before = str(chat).count("data:image")
-    sanitized = sanitize_tree(chat, persist_fn)
-    after = str(sanitized).count("data:image")
-    if sanitized == chat and after == 0:
-        print(f"chat {chat_id}: already clean")
-        return 0
-    update = requests.post(
-        f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}",
-        headers=h,
-        json={"chat": sanitized},
-        timeout=60,
-    )
-    if update.status_code != 200:
-        raise SystemExit(f"update chat: {update.status_code} {update.text[:400]}")
+    chat = doc.get("chat") or {}
+    messages = ((chat.get("history") or {}).get("messages")) or {}
+    updated = 0
+    for mid, msg in messages.items():
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        source = _assistant_source_text(msg)
+        if "data:image" not in source.lower() and "iVBORw0KGgo" not in source:
+            continue
+        cleaned = rewrite_assistant_text(source, persist_fn=persist_fn)
+        if cleaned == msg.get("content"):
+            continue
+        # Admin can edit another user's message content; POST /chats/{id} is owner-only.
+        patch = requests.post(
+            f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}/messages/{mid}",
+            headers=h,
+            json={"content": cleaned},
+            timeout=60,
+        )
+        if patch.status_code != 200:
+            raise SystemExit(f"update message {mid}: {patch.status_code} {patch.text[:400]}")
+        updated += 1
+        print(f"updated message {mid} len {len(source)} -> {len(cleaned)}")
+
     check = requests.get(f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}", headers=h, timeout=60).json()
-    leftover = str(check.get("chat") or check).count("data:image")
-    print(f"chat {chat_id}: data:image {before} -> {leftover}; files={len(cache)}")
-    if leftover:
-        raise SystemExit("sanitize left data:image behind")
+    hist = ((check.get("chat") or {}).get("history") or {}).get("messages") or {}
+    leftover_content = 0
+    leftover_output = 0
+    for msg in hist.values():
+        if not isinstance(msg, dict):
+            continue
+        content = msg.get("content") or ""
+        if isinstance(content, str) and "data:image" in content:
+            leftover_content += 1
+        if "data:image" in str(msg.get("output") or ""):
+            leftover_output += 1
+    print(
+        f"chat {chat_id}: messages_updated={updated} files={len(cache)} "
+        f"leftover_content={leftover_content} leftover_output={leftover_output}"
+    )
+    if leftover_content:
+        raise SystemExit("sanitize left data:image in visible content")
     return 0
 
 

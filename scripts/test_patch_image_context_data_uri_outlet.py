@@ -80,7 +80,14 @@ class RewriteTests(unittest.TestCase):
         out = rewrite_assistant_text(text, persist_fn=None)
         self.assertEqual(out, "")
 
-    def test_invalid_junk_stripped(self) -> None:
+    def test_truncated_png_without_iend_is_not_persisted(self) -> None:
+        # PNG magic in base64 but no IEND trailer → strip, do not persist garbage.
+        text = "见下图 ![路线概览图](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAMAAABF6+6q)"
+        called = []
+        out = rewrite_assistant_text(text, persist_fn=lambda raw, mime: called.append(1) or "/x")
+        self.assertEqual(called, [])
+        self.assertNotIn("data:image", out)
+        self.assertNotIn("/x", out)
         text = "见下图 [路线概览图](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAA"
         out = rewrite_assistant_text(text)
         self.assertNotIn("data:image", out)
