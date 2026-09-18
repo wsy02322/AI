@@ -12,6 +12,7 @@ Fix: content-only patch of global Filter `openrouter_image_context_guard`.
 - stream + outlet run on every model
 - strip `data:image` markdown (closed or not); never persist to /api/v1/files
 - leave http(s) links and image-model `/api/v1/files/` markdown alone
+- V3: stream deltas without data:image are returned unchanged (do not rstrip / dangling-strip)
 
 Does not touch valves / API_KEY / models/sync / Banner.
 """
@@ -30,8 +31,10 @@ import requests
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 GUARD_ID = "openrouter_image_context_guard"
-MARKER = "DATA_URI_OUTLET_V2"
+MARKER = "DATA_URI_OUTLET_V3"
+MARKER_V2 = "DATA_URI_OUTLET_V2"
 MARKER_V1 = "DATA_URI_OUTLET_V1"
+_LAYOUT_GLUE_SIGNS = ("---#", "||---|", "|| **")
 
 PersistFn = Callable[[bytes, str], str | None]
 
@@ -120,17 +123,76 @@ def iter_inline_images(text: str) -> list[tuple[bytes, str, str]]:
 
 
 def rewrite_assistant_text(text: str, persist_fn: PersistFn | None = None) -> str:
-    """Strip inline data-URI markdown. persist_fn is ignored (ST-14 V2: no replacement image)."""
+    """Strip inline data-URI markdown. persist_fn is ignored (ST-14: no replacement image)."""
     del persist_fn
     if not isinstance(text, str):
         return text
     if "data:image" not in text.lower():
-        return _DANGLING_MD.sub("", text).rstrip()
+        return text
     rewritten = _MD_DATA_URI.sub("", text)
     rewritten = _BARE_DATA_URI.sub("", rewritten)
     rewritten = _DANGLING_MD.sub("", rewritten)
     rewritten = re.sub(r"\n{3,}", "\n\n", rewritten).rstrip()
     return rewritten
+
+
+def rewrite_stream_delta(text: str) -> str:
+    """Stream-safe strip: never rstrip, never dangling-match without data:image."""
+    if not isinstance(text, str) or not text:
+        return text
+    if "data:image" not in text.lower():
+        return text
+    rewritten = _MD_DATA_URI.sub("", text)
+    rewritten = _BARE_DATA_URI.sub("", rewritten)
+    rewritten = _DANGLING_MD.sub("", rewritten)
+    return rewritten
+
+
+def looks_glued_markdown(text: str) -> bool:
+    return isinstance(text, str) and any(sign in text for sign in _LAYOUT_GLUE_SIGNS)
+
+
+def repair_glued_markdown(text: str) -> str:
+    """Re-insert newlines eaten by ST-14 V2 stream rstrip(). Idempotent on clean markdown."""
+    if not isinstance(text, str) or not text:
+        return text
+    s = text
+    s = re.sub(r"-{3,}(#{1,6})", r"\n\n---\n\n\1", s)
+    s = re.sub(r"\|\|", "|\n|", s)
+    s = re.sub(r"([\u4e00-\u9fff。；：])(\|(?:[^\n|]*\|){2,})", r"\1\n\n\2", s)
+    s = re.sub(
+        r"(?<=[^\n])(?<![/#])(#{1,6})(?=\s+[\dA-Ha-z\u4e00-\u9fff]|[\dA-Ha-z\u4e00-\u9fff\u2460-\u2473])",
+        r"\n\n\1",
+        s,
+    )
+    s = re.sub(r"^(#{1,6})(?=[^\s#])", r"\1 ", s, flags=re.M)
+    s = re.sub(r"([：:。；;])(\d+\.\s)", r"\1\n\2", s)
+    s = re.sub(r"(\*\*)(\d+\.\s)", r"\1\n\2", s)
+    s = re.sub(r"([。：；，、）*\u4e00-\u9fff])-\s*(?=[\u4e00-\u9fff*])", r"\1\n- ", s)
+    s = re.sub(
+        r"(#{1,6}[^\S\n]+(?:路线|吃肉|道路事项|道路|住宿与吃肉))(?=[^\s\n#])",
+        r"\1\n\n",
+        s,
+    )
+    s = re.sub(r"(#{1,6}[^\S\n]+重点)(?=[\u4e00-\u9fff*])", r"\1\n\n", s)
+    parts: list[str] = []
+    last = 0
+    bold_count = 0
+    for match in re.finditer(r"\*\*", s):
+        if bold_count % 2 == 1:
+            after = s[match.end() : match.end() + 1]
+            if after and "\u4e00" <= after <= "\u9fff":
+                parts.append(s[last : match.end()])
+                parts.append("\n\n")
+                last = match.end()
+        bold_count += 1
+    parts.append(s[last:])
+    s = "".join(parts)
+    s = re.sub(r"(\|)\s*(?=\d+月)", r"\1\n\n", s)
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    if text.endswith("\n"):
+        return s.strip("\n") + "\n"
+    return s.strip("\n")
 
 
 def rewrite_content(content: Any, persist_fn: PersistFn | None = None) -> Any:
@@ -168,7 +230,8 @@ def looks_like_b64_chunk(text: str) -> bool:
 
 
 HELPERS = r'''
-# DATA_URI_OUTLET_V2 — strip assistant inline data:image markdown; keep http(s) links.
+# DATA_URI_OUTLET_V3 — strip assistant inline data:image markdown; keep http(s) links.
+# Stream deltas must return unchanged text when there is no data:image (do not rstrip).
 _OUTLET_MD_DATA_URI = re.compile(
     r"!?\[([^\]]*)\]\((data:image/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+)\)?",
     re.I,
@@ -190,7 +253,7 @@ def _outlet_rewrite_text(text: str, persist_map=None) -> str:
     if not isinstance(text, str):
         return text
     if "data:image" not in text.lower():
-        return _OUTLET_DANGLING_MD.sub("", text).rstrip()
+        return text
     rewritten = _OUTLET_MD_DATA_URI.sub("", text)
     rewritten = _OUTLET_BARE_DATA_URI.sub("", rewritten)
     rewritten = _OUTLET_DANGLING_MD.sub("", rewritten)
@@ -269,7 +332,7 @@ METHODS = r'''
             if dropping and "data:image" not in text.lower() and not _OUTLET_LOOKS_B64.match(text):
                 _OUTLET_DROP.discard(key)
             rewritten = _outlet_rewrite_text(text, {})
-            if "data:image" in text.lower() or rewritten != text:
+            if "data:image" in text.lower():
                 if key:
                     if len(_OUTLET_DROP) > 128:
                         _OUTLET_DROP.clear()
@@ -353,35 +416,56 @@ def content_sha12(content: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:12]
 
 
+def _upgrade_v1_to_v2(content: str) -> str:
+    content = content.replace(
+        '                return f"![{alt}]({url})"',
+        '                return ""',
+    )
+    content = content.replace(
+        '                return f"![image]({url})"',
+        '                return ""',
+    )
+    content = content.replace(
+        "async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:\n        if not raw or not user_id:\n            return None",
+        "async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:\n        return None\n        if not raw or not user_id:\n            return None",
+    )
+    content = content.replace(MARKER_V1, MARKER_V2)
+    content = content.replace(
+        "persist-or-strip assistant inline data-URI markdown (ST-14).",
+        "strip assistant inline data-URI markdown; keep http(s) links (ST-14).",
+    )
+    content = content.replace(
+        "persist-or-strip assistant inline data:image markdown.",
+        "strip assistant inline data:image markdown; keep http(s) links.",
+    )
+    if MARKER_V2 not in content:
+        raise RuntimeError("V1→V2 upgrade failed to insert marker")
+    return content
+
+
+def _upgrade_v2_to_v3(content: str) -> str:
+    content = content.replace(
+        '    if "data:image" not in text.lower():\n        return _OUTLET_DANGLING_MD.sub("", text).rstrip()\n',
+        '    if "data:image" not in text.lower():\n        return text\n',
+    )
+    content = content.replace(
+        '            if "data:image" in text.lower() or rewritten != text:\n',
+        '            if "data:image" in text.lower():\n',
+    )
+    content = content.replace(MARKER_V2, MARKER)
+    if MARKER not in content:
+        raise RuntimeError("V2→V3 upgrade failed to insert marker")
+    return content
+
+
 def patch_content(original: str) -> str:
     if MARKER in original:
         return original
-    if MARKER_V1 in original:
-        content = original
-        content = content.replace(
-            '                return f"![{alt}]({url})"',
-            '                return ""',
-        )
-        content = content.replace(
-            '                return f"![image]({url})"',
-            '                return ""',
-        )
-        content = content.replace(
-            "async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:\n        if not raw or not user_id:\n            return None",
-            "async def _outlet_persist_image(self, raw: bytes, mime: str, user_id: str | None) -> str | None:\n        return None\n        if not raw or not user_id:\n            return None",
-        )
-        content = content.replace(MARKER_V1, MARKER)
-        content = content.replace(
-            "persist-or-strip assistant inline data-URI markdown (ST-14).",
-            "strip assistant inline data-URI markdown; keep http(s) links (ST-14).",
-        )
-        content = content.replace(
-            "persist-or-strip assistant inline data:image markdown.",
-            "strip assistant inline data:image markdown; keep http(s) links.",
-        )
-        if MARKER not in content:
-            raise RuntimeError("V1→V2 upgrade failed to insert marker")
-        return content
+    content = original
+    if MARKER_V1 in content:
+        content = _upgrade_v1_to_v2(content)
+    if MARKER_V2 in content:
+        return _upgrade_v2_to_v3(content)
     if "class Filter:" not in original:
         raise RuntimeError("guard missing class Filter")
     if "def inlet(" not in original:
@@ -504,6 +588,54 @@ def sanitize_chat(token: str, chat_id: str) -> int:
     return 0
 
 
+def repair_layout_chat(token: str, chat_id: str) -> int:
+    h = headers(token)
+    resp = requests.get(f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}", headers=h, timeout=60)
+    if resp.status_code != 200:
+        raise SystemExit(f"get chat: {resp.status_code} {resp.text[:300]}")
+    doc = resp.json()
+    chat = doc.get("chat") or {}
+    messages = ((chat.get("history") or {}).get("messages")) or {}
+    updated = 0
+    for mid, msg in messages.items():
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        source = msg.get("content")
+        if not looks_glued_markdown(source if isinstance(source, str) else ""):
+            continue
+        repaired = repair_glued_markdown(source)
+        if repaired == source:
+            continue
+        patch = requests.post(
+            f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}/messages/{mid}",
+            headers=h,
+            json={"content": repaired},
+            timeout=60,
+        )
+        if patch.status_code != 200:
+            raise SystemExit(f"update message {mid}: {patch.status_code} {patch.text[:400]}")
+        updated += 1
+        print(
+            f"repaired message {mid} len {len(source)} -> {len(repaired)} "
+            f"nl {source.count(chr(10))} -> {repaired.count(chr(10))}"
+        )
+
+    check = requests.get(f"{OPENWEBUI_URL}/api/v1/chats/{chat_id}", headers=h, timeout=60).json()
+    hist = ((check.get("chat") or {}).get("history") or {}).get("messages") or {}
+    leftover = 0
+    for mid, msg in hist.items():
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        content = msg.get("content") or ""
+        if looks_glued_markdown(content if isinstance(content, str) else ""):
+            leftover += 1
+            print(f"still glued {mid}")
+    print(f"chat {chat_id}: layout_repaired={updated} leftover_glued={leftover}")
+    if leftover:
+        raise SystemExit("layout repair left glued markdown")
+    return 0
+
+
 def apply_guard(token: str, dry_run: bool = False) -> int:
     h = headers(token)
     fn = requests.get(f"{OPENWEBUI_URL}/api/v1/functions/id/{GUARD_ID}", headers=h, timeout=60)
@@ -535,7 +667,7 @@ def apply_guard(token: str, dry_run: bool = False) -> int:
     )
     if resp.status_code != 200:
         raise SystemExit(f"update guard: {resp.status_code} {resp.text[:500]}")
-    print("guard content updated DATA_URI_OUTLET_V2 (content-only; valves untouched)")
+    print("guard content updated DATA_URI_OUTLET_V3 (content-only; valves untouched)")
     return 0
 
 
@@ -545,6 +677,7 @@ def main() -> int:
     parser.add_argument("--from-file", default="")
     parser.add_argument("--write-patched", default="")
     parser.add_argument("--sanitize-chat", default="")
+    parser.add_argument("--repair-layout-chat", default="")
     args = parser.parse_args()
 
     if args.from_file:
@@ -563,6 +696,8 @@ def main() -> int:
     rc = apply_guard(token, dry_run=args.dry_run)
     if args.sanitize_chat and not args.dry_run:
         rc = sanitize_chat(token, args.sanitize_chat) or rc
+    if args.repair_layout_chat and not args.dry_run:
+        rc = repair_layout_chat(token, args.repair_layout_chat) or rc
     return rc
 
 

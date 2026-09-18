@@ -171,7 +171,7 @@
 | id | active | priority（代码默认 / valves） | 作用 |
 |----|--------|-------------------------------|------|
 | `openrouter_image_tool_guard` | **true** | **1** | 对 image/video 模型 **剥离** `tools`、`builtin_tools`、`server_tools` |
-| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位。**ST-14 V2**：`stream`/`outlet` 对所有模型剥助手 inline `data:image` markdown，保留 http(s) 链接，不落文件图 |
+| `openrouter_image_context_guard` | **true** | **2** | 多轮图像：仅保留当前用户消息 + 上一轮 assistant 图；其余历史图替换占位。**ST-14 V3**：`stream`/`outlet` 对所有模型剥助手 inline `data:image` markdown，保留 http(s) 链接，不落文件图；stream **不**剥 delta 末尾换行 |
 | `openrouter_search_native_tool_guard` | **true** | **99**（valves **100**） | 对 Sonar/Perplexity 等 **最后** 再剥 tools，防其他 Filter 晚注入 |
 
 **相对 Stock**：不存在；为修复 `No endpoints found that support tool use` 与 131072 token 溢出。

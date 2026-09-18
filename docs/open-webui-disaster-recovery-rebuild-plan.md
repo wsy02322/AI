@@ -101,7 +101,8 @@ UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～S
 | `gpt-image-*` chat endpoint 错误 | 图像模型走错 API | Pipe 或等价逻辑：**Images API 路由** |
 | `seedream-5` OpenRouter 500 | 同左 | `_is_openrouter_images_api_model` 类逻辑 + resolution 映射 |
 | 多轮图像 131072 token | 历史多图整段进上下文 | image **context guard** + chat 路径 context compression |
-| 助手回复出现 `[图](data:image/png;base64,iVBORw0KGgo…` | 文本模型把 PNG 写成未闭合 markdown；ST-13 Images API persist 管不到 | Guard **outlet/stream** 剥 data-URI、保留 http(s) 链接（`DATA_URI_OUTLET_V2`）；旧消息用 `--sanitize-chat` |
+| 助手回复出现 `[图](data:image/png;base64,iVBORw0KGgo…` | 文本模型把 PNG 写成未闭合 markdown；ST-13 Images API persist 管不到 | Guard **outlet/stream** 剥 data-URI、保留 http(s) 链接（`DATA_URI_OUTLET_V3`）；旧消息用 `--sanitize-chat` |
+| 助手回复标题/表格粘成 `---#`、`||---` | ST-14 V2 对每个 stream delta `.rstrip()`，吃掉片段末尾换行 | Guard **V3**：无 `data:image` 的 delta 原样返回；旧粘连消息用 `--repair-layout-chat` |
 | Pipe 更新后 Sonar 又坏 | auto-install 覆盖 Filter | `AUTO_INSTALL_*=false` + 重跑 guard 逻辑 |
 | `model/update` 500 | 缺 `access_grants` 等字段 | 带完整 payload 或 Admin UI |
 | valves 更新后全站断 | **全量覆盖** valves | **仅 merge** 变更字段 |

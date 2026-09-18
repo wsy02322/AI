@@ -13,11 +13,14 @@ import requests
 from patch_image_context_data_uri_outlet import (
     GUARD_ID,
     MARKER,
+    looks_glued_markdown,
     rewrite_assistant_text,
+    rewrite_stream_delta,
 )
 
 OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 CHAT_ID = os.environ.get("ST14_CHAT_ID", "10079dd9-278d-4b7c-8aef-5c9cdc7ff29c")
+LAYOUT_CHAT_ID = os.environ.get("ST14_LAYOUT_CHAT_ID", "d77f1cfd-5983-4ec9-91e9-478cf4c86ca4")
 
 
 def _login_candidates() -> list[str]:
@@ -82,6 +85,14 @@ def main() -> int:
             r.err(f"guard missing {MARKER}")
         else:
             r.ok(f"guard has {MARKER}")
+        if 'return _OUTLET_DANGLING_MD.sub("", text).rstrip()' in content:
+            r.err("guard still rstrip()s stream text without data:image")
+        else:
+            r.ok("guard does not rstrip non-data-URI stream text")
+        if "or rewritten != text" in content:
+            r.err("guard DROP still triggers on rewritten != text")
+        else:
+            r.ok("guard DROP only follows data:image")
         if "async def outlet(" not in content or "async def stream(" not in content:
             r.err("guard missing stream/outlet")
         else:
@@ -97,6 +108,12 @@ def main() -> int:
         r.err("local rewrite still leaks truncated data URI")
     else:
         r.ok("local rewrite strips truncated data URI")
+
+    newline_chunk = "返回威海。\n"
+    if rewrite_stream_delta(newline_chunk) != newline_chunk:
+        r.err("stream rewrite ate a trailing newline")
+    else:
+        r.ok("stream rewrite keeps trailing newlines")
 
     probe_id = None
     try:
@@ -181,6 +198,30 @@ def main() -> int:
             r.ok("chat still has the useful route text")
         if "uri.amap.com" in blob or "micropigeon.com/nav" in blob:
             r.ok("chat kept the previous Gaode / nav links")
+
+    layout = requests.get(f"{OPENWEBUI_URL}/api/v1/chats/{LAYOUT_CHAT_ID}", headers=h, timeout=60)
+    if layout.status_code != 200:
+        r.err(f"get layout chat {LAYOUT_CHAT_ID} {layout.status_code}")
+    else:
+        hist = ((layout.json().get("chat") or {}).get("history") or {}).get("messages") or {}
+        glued = 0
+        has_table = False
+        for msg in hist.values():
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                continue
+            content = msg.get("content") or ""
+            if not isinstance(content, str):
+                continue
+            if looks_glued_markdown(content):
+                glued += 1
+            if "| 日期 |" in content and "|---|---|---|---|" in content:
+                has_table = True
+        if glued:
+            r.err(f"layout chat {LAYOUT_CHAT_ID} still has {glued} glued assistant message(s)")
+        else:
+            r.ok(f"layout chat {LAYOUT_CHAT_ID} has no glued ---# / table rows")
+        if has_table:
+            r.ok("layout chat restored a markdown date table")
 
     print(f"{len(r.oks)} ok / {len(r.errors)} err")
     return 1 if r.errors else 0
