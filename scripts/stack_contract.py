@@ -101,8 +101,9 @@ PIPE_PATCH_MARKERS = [
 ]
 
 # ST-14: image context Guard outlet strips assistant data-URI markdown; keeps http(s) links.
+# V3: stream must not rstrip deltas (V2 glued headings/tables).
 GUARD_PATCH_MARKERS = {
-    "openrouter_image_context_guard": ["DATA_URI_OUTLET_V2"],
+    "openrouter_image_context_guard": ["DATA_URI_OUTLET_V3"],
 }
 
 # Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
