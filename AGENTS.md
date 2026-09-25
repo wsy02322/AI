@@ -45,6 +45,7 @@
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
 | `scripts/apply_public_latest_aliases.py` | 有 `~…-latest` 别名的 public 模型改挂该别名（自动更新） |
+| `scripts/apply_confirmed_series_picker.py` | 选择器只留确认过的系列；Astra 保持 public；置顶 Opus / Banana Pro / Sol Latest / Astra Latest |
 | `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |

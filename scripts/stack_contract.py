@@ -12,10 +12,10 @@ DEFAULT_MODELS = DEFAULT_MODEL_PRIMARY
 TASK_MODEL = DEFAULT_MODEL_PRIMARY
 
 PINNED_MODELS = [
-    f"{PIPE}.perplexity.sonar-pro-search",
-    f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.~anthropic.claude-opus-latest",
-    f"{PIPE}.openai.gpt-5.6-sol-pro",
+    f"{PIPE}.google.gemini-3-pro-image",
+    f"{PIPE}.~openai.gpt-sol-latest",
+    f"{PIPE}.~openai.gpt-astra-latest",
 ]
 
 SONAR_MODEL_IDS = [

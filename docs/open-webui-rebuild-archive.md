@@ -58,8 +58,8 @@
 
 | 面 | 现状 |
 |----|------|
-| 新对话默认 | 单模型 `open_webui_openrouter_integration.x-ai.grok-4.6`（不默认双栏 compare） |
-| 置顶四格 | Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
+| 新对话默认 | 单模型 `open_webui_openrouter_integration.~x-ai.grok-latest`（不默认双栏 compare） |
+| 置顶四格 | Opus Latest、Nano Banana Pro、Sol Latest、Astra Latest |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
 | 搜索 | 只用两档 Sonar。原生 Web Search **关**。OR Web Tools **停用** |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
@@ -71,7 +71,7 @@
 
 | 键 | 现网值 |
 |----|--------|
-| `ui.default_models` | `open_webui_openrouter_integration.x-ai.grok-4.6` |
+| `ui.default_models` | `open_webui_openrouter_integration.~x-ai.grok-latest` |
 | `ui.default_pinned_models` | 上述四格 Pipe id（逗号拼接） |
 | `direct.enable` / `ENABLE_DIRECT_CONNECTIONS` | `false` |
 | `features.enable_web_search` / `retrieval.web.ENABLE_WEB_SEARCH` | `false` |

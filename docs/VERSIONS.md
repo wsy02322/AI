@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-09-25**（public 改挂 OpenRouter `~…-latest`；默认 `~x-ai/grok-latest`） |
+| 记录日期 | **2026-09-25**（选择器只留确认系列；置顶 Opus / Banana Pro / Sol Latest / Astra Latest） |
 | OWUI | **0.11.0**（`GET /api/version`）；镜像钉死 `e97bf9531916` |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |

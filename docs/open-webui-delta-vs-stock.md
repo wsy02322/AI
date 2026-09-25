@@ -77,7 +77,7 @@
 
 | 项 | Stock | 本实例 |
 |----|-------|--------|
-| `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Sonar Pro Search、Sonar Deep Research、Claude Opus 5、GPT-5.6 Sol Pro |
+| `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Opus Latest、Nano Banana Pro、Sol Latest、Astra Latest |
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
