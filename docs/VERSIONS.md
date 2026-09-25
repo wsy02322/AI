@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-09-01**（对齐重建存档探针） |
+| 记录日期 | **2026-09-25**（public 改挂 OpenRouter `~…-latest`；默认 `~x-ai/grok-latest`） |
 | OWUI | **0.11.0**（`GET /api/version`）；镜像钉死 `e97bf9531916` |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
@@ -20,7 +20,7 @@
 | 上次 `verify_notebook_youtube.py` | **2026-08-21 全绿**（12 ok / 0 err）：RAG OpenRouter；YouTube Notebook 有 shown 时间线；口播被 YouTube 数据中心风控拦住 |
 | 上次 `verify_compare_cross_model.py` | **2026-08-26 全绿**（5 ok / 0 err）：Opus 跟在 Grok persist marker 后 200；`usage.input_tokens` = 2× 状态栏 Input（内部重试一次）；同模型 Grok 续聊 200；`PERSIST_REASONING_TOKENS` 仍为默认 conversation |
 | 上次 `verify_fable_thinking_replay.py` | **2026-08-26 全绿**（7 ok / 0 err）：Fable 第 1 轮 thinking `output` 带 `signature` + `format=anthropic-claude-v1`；续聊 200，无 `cannot be modified` |
-| Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **Grok 4.6**；全局 Image Gen **关**；Follow-up **关** |
+| Wave 0 已应用到实例 | capabilities；默认聊天 + Task = **`~x-ai/grok-latest`**；全局 Image Gen **关**；Follow-up **关** |
 | S2′ | Pipe content-only；**未**关全局 persist |
 | ST-11 Fable | Pipe marker `FABLE_UNSIGNED_SUMMARY_V1`（sha `7415c2e4347a`） |
 | HTTPS / catalog | `WEBUI_URL=https://micropigeon.com`；5× OpenRouter slot **全 `enable=false`** |
