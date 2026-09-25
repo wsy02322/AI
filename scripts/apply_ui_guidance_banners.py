@@ -21,16 +21,18 @@ PIPE = "open_webui_openrouter_integration"
 
 BANNERS = [
     {
-        "id": "usage-guide-v3",
+        "id": "usage-guide-v8",
         "type": "info",
         "title": "",
         "content": (
-            "<b>Web search only on Perplexity Sonar. Images only on an image model.</b> "
-            "<b>Reasoning depth</b>: Input box → <b>Valves</b>. "
-            "<b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar."
+            "🌐 Text chat models can search the web and read pages. "
+            "🔗 GitHub: use a github.com URL, not api.github.com. "
+            "🖼️ Images: GPT Image 2.5 Sunburst or Flare. "
+            "🧠 Reasoning depth: Input box → Valves. "
+            "📝 Settings → General → System Prompt may also affect image models and Perplexity sonar."
         ),
         "dismissible": False,
-        "timestamp": 1787100005,
+        "timestamp": 1789900008,
     },
 ]
 
@@ -181,8 +183,8 @@ def verify(h: dict[str, str]) -> int:
     ).json().get("ui.prompt_suggestions") or []
     ids = [b.get("id") for b in banners]
     print("verify banners", ids)
-    if len(banners) != 1 or "usage-guide-v3" not in ids:
-        print("ERROR want single usage-guide-v3 banner")
+    if len(banners) != 1 or "usage-guide-v8" not in ids:
+        print("ERROR want single usage-guide-v8 banner")
         errors += 1
     if any(bid in ids for bid in ("usage-pick-model-v2", "usage-reasoning-depth-v2")):
         print("ERROR legacy dual banners still present")
@@ -204,10 +206,10 @@ def verify(h: dict[str, str]) -> int:
         errors += 1
     else:
         print("ok suggestions empty")
-    guide = next((b for b in banners if b.get("id") == "usage-guide-v3"), {})
+    guide = next((b for b in banners if b.get("id") == "usage-guide-v8"), {})
     guide_html = str(guide.get("content") or "")
-    if "Web search only on Perplexity Sonar" not in guide_html:
-        print("ERROR guide banner missing Sonar/image lead")
+    if "GPT Image 2.5 Sunburst or Flare" not in guide_html:
+        print("ERROR guide banner missing Sunburst/Flare image line")
         errors += 1
     if "Reasoning depth" not in guide_html:
         print("ERROR guide banner missing Reasoning depth")
@@ -237,7 +239,7 @@ def verify(h: dict[str, str]) -> int:
     if hit:
         print("ERROR guide banner still has", hit)
         errors += 1
-    elif guide_html and "Web search only on Perplexity Sonar" in guide_html:
+    elif guide_html and "GPT Image 2.5 Sunburst or Flare" in guide_html:
         print("ok guide banner merged English")
     listed = {
         m["id"]: m

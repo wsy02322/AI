@@ -13,7 +13,7 @@ TASK_MODEL = DEFAULT_MODEL_PRIMARY
 
 PINNED_MODELS = [
     f"{PIPE}.~anthropic.claude-opus-latest",
-    f"{PIPE}.google.gemini-3-pro-image",
+    f"{PIPE}.openai.gpt-image-2.5-sunburst",
     f"{PIPE}.~openai.gpt-sol-latest",
     f"{PIPE}.~openai.gpt-astra-latest",
 ]
@@ -101,7 +101,7 @@ PIPE_PATCH_MARKERS = [
 ]
 
 # Live UX (2026-09-01): one banner, no empty-chat chips, reply Follow-up off.
-BANNER_IDS = ["usage-guide-v3"]
+BANNER_IDS = ["usage-guide-v8"]
 SUGGESTIONS_COUNT = 0
 TASK_FOLLOW_UP_ENABLE = False
 

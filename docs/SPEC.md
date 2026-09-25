@@ -32,11 +32,11 @@ P0-D 旗舰是 **YouTube 真理解**（ASR 回退 + 视觉时间线 + 可点击 
 
 | ID | 必须 |
 |----|------|
-| UX-1 | **四格置顶**：Opus Latest、Nano Banana Pro、Sol Latest、Astra Latest。Sonar 仍在选择器里，不占置顶 |
-| UX-2 | 英文指引：**一条** Banner `usage-guide-v3`（Sonar/图像分流 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
+| UX-1 | **四格置顶**：Opus Latest、GPT Image 2.5 Sunburst、Sol Latest、Astra Latest。Flare 仍在选择器里。Sonar 仍在选择器里，不占置顶 |
+| UX-2 | 英文指引：**一条** Banner `usage-guide-v8`（文本模型可联网；图像用 GPT Image 2.5 Sunburst 或 Flare；Valves Reasoning depth；System Prompt 会影响图像与 Sonar）+ 关键 Description；**无**空对话 chips（OWUI 点击即发送） |
 | UX-3 | Integrations **无** OR Web Tools / OR Image Gen / OWUI Web Search；保留 Direct Uploads；图像模型可有 native image filter |
 | UX-4 | **19 个 public** 维持（对比用）；不缩到 6。picker 额外 **active**：`gemini-3.1-pro-preview`、`gemini-3.7-flash`（不并进 19 名单）。`granite-4.2-8b`、`mercury-2.5-preview` **不** active。已有 OpenRouter `~…-latest` 别名的 public 模型，public 挂在别名上（自动指向该家族最新），固定版本关掉 |
-| UX-5 | 新对话默认 **单模型**：`~x-ai/grok-latest`（自动更新）；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth。置顶四格为 Opus Latest、Nano Banana Pro、Sol Latest、Astra Latest |
+| UX-5 | 新对话默认 **单模型**：`~x-ai/grok-latest`（自动更新）；**不**默认双栏 compare（用户自行开对比）；难题仍可调 Reasoning depth。置顶四格为 Opus Latest、GPT Image 2.5 Sunburst、Sol Latest、Astra Latest |
 | UX-6 | **路线 S**：作图 = 选图像模型。**全局原生 Image Gen 关闭**（`ENABLE_IMAGE_GENERATION=false`）；Sol/Opus 的 `image_generation` capability 保持 false |
 | UX-7 | 回复下方 **Follow-up 建议芯片关闭**（易误触）。空对话 `prompt_suggestions` 保持 **空**。不关 Autocomplete / Title |
 

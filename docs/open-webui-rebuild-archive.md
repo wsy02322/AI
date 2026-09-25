@@ -59,7 +59,7 @@
 | 面 | 现状 |
 |----|------|
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.~x-ai.grok-latest`（不默认双栏 compare） |
-| 置顶四格 | Opus Latest、Nano Banana Pro、Sol Latest、Astra Latest |
+| 置顶四格 | Opus Latest、GPT Image 2.5 Sunburst、Sol Latest、Astra Latest |
 | 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
 | 搜索 | 只用两档 Sonar。原生 Web Search **关**。OR Web Tools **停用** |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
@@ -106,11 +106,11 @@
 
 | id | 内容（HTML） |
 |----|----------------|
-| `usage-guide-v3` | `<b>Web search only on Perplexity Sonar. Images only on an image model.</b> <b>Reasoning depth</b>: Input box → <b>Valves</b>. <b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar.` ；`dismissible: false` |
+| `usage-guide-v8` | `🌐 Text chat models can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images: GPT Image 2.5 Sunburst or Flare. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.` ；`dismissible: false` |
 
 现网 `ui.prompt_suggestions` = **`[]`**。
 
-仓库 `scripts/apply_ui_guidance_banners.py` **已对齐** v3 + 空 chips。重跑会写回现网这份指引（不是双条 v2）。若用户后来又改了 Banner，先对照本表再决定是否覆盖。
+仓库 `scripts/apply_ui_guidance_banners.py` **已对齐** v8 + 空 chips。重跑会写回现网这份指引（不是 v3，也不是双条 v2）。若用户后来又改了 Banner，先对照本表再决定是否覆盖。
 
 ### 3.4 Pipe / Filter
 
@@ -197,7 +197,7 @@ Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_too
 6. `python3 scripts/restore_public_grants.py`（**禁止**空 `POST /api/v1/models/sync`）  
 7. `python3 scripts/apply_model_catalog_visibility.py`（21 = 19 public + 2 Gemini）  
 8. `python3 scripts/apply_wave0.py`（capabilities + Task=Grok 4.6 + **Follow-up 关** + 全局 Image Gen 关）  
-9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v3` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
+9. `python3 scripts/apply_ui_guidance_banners.py`（`usage-guide-v8` + 空 chips）。TTS/STT/RAG 按 §3.2 **merge**，不覆盖 key。  
 10. Knowledge：建「YouTube Notebook」；`apply_notebook_n1.py`。历史 YouTube 文件只能从 **DB 备份** 回来。  
 11. 若新 Pipe 丢了 Images API / Seedream / 跨模型 reasoning / Fable：按 continuity plan **模式**补，或 `patch_pipe_cross_model_reasoning.py` / `patch_pipe_fable_thinking_replay.py`（已有 marker 则 no-op）。  
 12. 验收：`verify_ops_l0.py`、`verify_stack.py`、`verify_live_baseline.py`、`verify_compare_cross_model.py`、`verify_fable_thinking_replay.py`、`verify_notebook_youtube.py`。  

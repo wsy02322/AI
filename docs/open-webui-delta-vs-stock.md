@@ -77,7 +77,7 @@
 
 | 项 | Stock | 本实例 |
 |----|-------|--------|
-| `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Opus Latest、Nano Banana Pro、Sol Latest、Astra Latest |
+| `DEFAULT_PINNED_MODELS` | 空或自选 | **4 个 Pipe 模型**：Opus Latest、GPT Image 2.5 Sunburst、Sol Latest、Astra Latest |
 | `DEFAULT_MODELS` | 自选 | **`grok-4.6` 单默认**（不默认双栏 compare；用户自行开对比） |
 | `MODEL_ORDER_LIST` | — | **10 项**；置顶 Pipe 四格 + 若干直连模型 |
 
@@ -279,7 +279,7 @@ Pipe 默认多将纯图像模型设为仅管理员；下列已设 `access_grants
 
 | id | type | 作用 |
 |----|------|------|
-| `usage-guide-v3` | info | Sonar/图像分流 + Valves Reasoning depth + System Prompt 会影响图像与 Sonar |
+| `usage-guide-v8` | info | 文本模型可联网；图像为 GPT Image 2.5 Sunburst 或 Flare；Valves Reasoning depth；System Prompt 会影响图像与 Sonar |
 
 已废弃：拼写错误 `resoning` banner；双条 `usage-pick-model-v2` / `usage-reasoning-depth-v2`。**不要**重跑旧脚本把 v3 盖回去。
 

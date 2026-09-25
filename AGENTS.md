@@ -45,8 +45,8 @@
 | `scripts/apply_plan_a_hide_integrations.py` | Pipe 更新后 Integrations 又露出来 |
 | `scripts/apply_model_catalog_visibility.py` | picker = 19 public + 两个 extra Gemini；其余 Pipe catalog 禁用 |
 | `scripts/apply_public_latest_aliases.py` | 有 `~…-latest` 别名的 public 模型改挂该别名（自动更新） |
-| `scripts/apply_confirmed_series_picker.py` | 选择器只留确认过的系列；Astra 保持 public；置顶 Opus / Banana Pro / Sol Latest / Astra Latest |
-| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v3` + Description + **空** chips + DEFAULT_MODELS |
+| `scripts/apply_confirmed_series_picker.py` | 选择器只留确认过的系列；Astra 保持 public；置顶 Opus / Sunburst / Sol Latest / Astra Latest |
+| `scripts/apply_ui_guidance_banners.py` | **一条** `usage-guide-v8` + Description + **空** chips + DEFAULT_MODELS |
 | `scripts/restore_public_grants.py` | catalog 恢复后重建 19 public `access_grants`（不调用 sync） |
 | `scripts/verify_live_baseline.py` | L1：TTS/STT 配置、短 TTS、Grok smoke、屏享 Banner |
 | `scripts/run_ga_a_trial.py` | GA-A：MiniMax TTS vs gpt-audio（不改 Call/public；写 `open-webui-gpt-audio-trial-plan.md` §5） |
@@ -63,7 +63,7 @@
 2. **Merge** valves：见 SPEC ST-4～ST-6（`apply_plan_a_hide_integrations.py` 会 merge）  
 3. 确认 3 个 Guard 仍 global active：`image_tool_guard`、`image_context_guard`、`search_native_tool_guard`  
 4. `python3 scripts/apply_plan_a_hide_integrations.py`  
-5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v3` + 空 chips；**不要**写回已废弃的双条 v2 Banner）  
+5. `python3 scripts/apply_ui_guidance_banners.py`（现网契约 = **一条** `usage-guide-v8` + 空 chips；**不要**写回 v3 或已废弃的双条 v2 Banner）  
 6. `python3 scripts/apply_wave0.py`（含 Follow-up 关）  
 7. `python3 scripts/patch_pipe_cross_model_reasoning.py`（S2′ marker 已在则 no-op）  
 8. 若 Pipe 丢了 Fable marker：`python3 scripts/patch_pipe_fable_thinking_replay.py`（已有 `FABLE_UNSIGNED_SUMMARY_V1` 则 no-op）  

@@ -11,7 +11,7 @@
 | Pipe 名称 | Open WebUI OpenRouter Integration |
 | Pipe content SHA256（前 12） | `7415c2e4347a`（更早：`a0b95c2cf90d` → S2′ 前 `081c3773444c`） |
 | Pipe 补丁探针 | `_is_openrouter_images_api_model`、`seedream-5`、`middle-out`、`apply_chat_context_transforms`、`COMPARE_CROSS_MODEL_REASONING_V1`、`FABLE_UNSIGNED_SUMMARY_V1` **均应存在** |
-| Banner | **一条** `usage-guide-v3`（不可 dismiss） |
+| Banner | **一条** `usage-guide-v8`（不可 dismiss；图像写 Sunburst 或 Flare） |
 | 空对话 chips | **0**（`ui.prompt_suggestions=[]`） |
 | Follow-up | **关**（`ENABLE_FOLLOW_UP_GENERATION=false`）；Autocomplete / Title 仍开 |
 | 上次 `verify_stack.py` | **2026-09-01**：Banner v3、chips=0、Follow-up 关、Fable marker、19 public。picker 契约改为 **21**（保留 `gemini-3.1-pro-preview` / `gemini-3.7-flash`；去掉 Granite / Mercury） |
