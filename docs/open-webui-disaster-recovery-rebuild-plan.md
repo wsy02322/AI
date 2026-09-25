@@ -72,7 +72,7 @@
 
 重建成功 = **SPEC.md** + **`docs/open-webui-rebuild-archive.md` §2** + `scripts/verify_stack.py` 全绿，而非与某一天的字节一致。
 
-UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～ST-12，ST-Live，ST-NL，ST-FILE，ST-OPS）。下文 §2.1/§2.2 是早期草稿，**不要**当第二套契约；现网 Banner 是 **一条** `usage-guide-v3`，不是双条 v2。
+UX / ST 编号以 **`docs/SPEC.md` 现行条文**为准（UX-1～UX-7，ST-1～ST-12，ST-Live，ST-NL，ST-FILE，ST-OPS）。下文 §2.1/§2.2 是早期草稿，**不要**当第二套契约；现网 Banner 是 **一条** `usage-guide-v8`，不是 v3，也不是双条 v2。
 
 ### 2.1 用户体验（What users should see）— 草稿，以 SPEC 为准
 

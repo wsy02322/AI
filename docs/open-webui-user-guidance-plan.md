@@ -1,6 +1,6 @@
 # In-app user guidance (English)
 
-> **Live (2026-09-01)**: one non-dismissible banner `usage-guide-v3`; model descriptions; **empty** `prompt_suggestions`.  
+> **Live (2026-09-25)**: one non-dismissible banner `usage-guide-v8`; model descriptions; **empty** `prompt_suggestions`.  
 > **Contract**: SPEC UX-2 / UX-7. Apply script: `scripts/apply_ui_guidance_banners.py`.  
 > **Language**: English only for user-facing copy.  
 > **History**: 2026-08-19 dual `usage-*-v2` banners + 4 chips were an intermediate apply. **Do not replay that.** Clicking a Suggested chip always sends a message on the current model.
@@ -9,12 +9,10 @@
 
 ## Current live copy
 
-### Banner `usage-guide-v3` (`dismissible: false`)
+### Banner `usage-guide-v8` (`dismissible: false`)
 
-```html
-<b>Web search only on Perplexity Sonar. Images only on an image model.</b>
-<b>Reasoning depth</b>: Input box → <b>Valves</b>.
-<b>Settings → General → System Prompt</b> may also affect image models and Perplexity sonar.
+```text
+🌐 Text chat models can search the web and read pages. 🔗 GitHub: use a github.com URL, not api.github.com. 🖼️ Images: GPT Image 2.5 Sunburst or Flare. 🧠 Reasoning depth: Input box → Valves. 📝 Settings → General → System Prompt may also affect image models and Perplexity sonar.
 ```
 
 No extra bars. Deep Research wait time stays on the Deep model **description**, not a second banner.
