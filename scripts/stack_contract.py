@@ -4,9 +4,9 @@ from __future__ import annotations
 
 PIPE = "open_webui_openrouter_integration"
 
-# New-chat default: single flagship; users opt into compare manually.
-DEFAULT_MODEL_PRIMARY = f"{PIPE}.x-ai.grok-4.6"
-DEFAULT_MODEL_SECONDARY = f"{PIPE}.anthropic.claude-opus-5"
+# New-chat default: auto-updating Grok Latest alias (OpenRouter ~x-ai/grok-latest).
+DEFAULT_MODEL_PRIMARY = f"{PIPE}.~x-ai.grok-latest"
+DEFAULT_MODEL_SECONDARY = f"{PIPE}.~anthropic.claude-opus-latest"
 DEFAULT_MODELS = DEFAULT_MODEL_PRIMARY
 # Background tasks: same as default chat.
 TASK_MODEL = DEFAULT_MODEL_PRIMARY
@@ -14,7 +14,7 @@ TASK_MODEL = DEFAULT_MODEL_PRIMARY
 PINNED_MODELS = [
     f"{PIPE}.perplexity.sonar-pro-search",
     f"{PIPE}.perplexity.sonar-deep-research",
-    f"{PIPE}.anthropic.claude-opus-5",
+    f"{PIPE}.~anthropic.claude-opus-latest",
     f"{PIPE}.openai.gpt-5.6-sol-pro",
 ]
 
