@@ -60,7 +60,7 @@
 |----|------|
 | 新对话默认 | 单模型 `open_webui_openrouter_integration.~x-ai.grok-latest`（不默认双栏 compare） |
 | 置顶四格 | Opus Latest、GPT Image 2.5 Sunburst、Sol Latest、Astra Latest |
-| 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false` |
+| 作图 | **路线 S**：切图像模型即作图。全局 `ENABLE_IMAGE_GENERATION=false`。Google 当前档公开 Nano Banana 2.1（`google.gemini-nano-banana-2.1`）；Nano Banana 2 关闭；Nano Banana Pro 仍公开 |
 | 搜索 | 只用两档 Sonar。原生 Web Search **关**。OR Web Tools **停用** |
 | 语音 / 屏享 | Live **L1**：stock Call overlay + Whisper + MiniMax TTS。**不是** S2S |
 | Notebook | **N1**：Knowledge「YouTube Notebook」+ OpenRouter embedding。N2+ Studio **未做** |
@@ -138,9 +138,9 @@ Filter **priority 数字越小越先执行**；剥 tools 的 Guard 要靠后。
 
 与 `scripts/stack_contract.py` 的 `PUBLIC_MODEL_IDS` 一致。现网这 19 个 **均 public + is_active**。
 
-聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-5.6-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max`  
+聊天 / 推理：`x-ai.grok-4.6`、`openai.gpt-6.1-sol-pro`、`openai.gpt-5.6-sol`、`anthropic.claude-opus-5`、`anthropic.claude-fable-5`、`deepseek.deepseek-v4-pro-0813`、`moonshotai.kimi-k3`、`qwen.qwen3.8-max`  
 搜索：`perplexity.sonar-pro-search`、`perplexity.sonar-deep-research`  
-图像：`google.gemini-3-pro-image`、`google.gemini-3.1-flash-image`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
+图像：`google.gemini-3-pro-image`、`google.gemini-nano-banana-2.1`、`openai.gpt-image-2`、`openai.gpt-5.4-image-2`、`bytedance-seed.seedream-5-0-pro`、`bytedance-seed.seedream-5-0-lite`、`microsoft.mai-image-2.5-pro`、`qwen.qwen-image-3-pro`、`x-ai.grok-imagine-image-2.0`
 
 Sonar / 纯图像：`code_interpreter=false`、`web_search=false`、`builtin_tools=false`；纯图像另 `terminal=false`。filterIds 含 `openrouter_direct_uploads`，图像另加对应 `openrouter_image_filter_*`。**不要**挂 `openrouter_web_tools` / `openrouter_image_gen`。
 

@@ -25,7 +25,7 @@ SONAR_MODEL_IDS = [
 
 IMAGE_MODEL_IDS = [
     f"{PIPE}.google.gemini-3-pro-image",
-    f"{PIPE}.google.gemini-3.1-flash-image",
+    f"{PIPE}.google.gemini-nano-banana-2.1",
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
@@ -42,12 +42,12 @@ PUBLIC_MODEL_IDS = [
     f"{PIPE}.bytedance-seed.seedream-5-0-pro",
     f"{PIPE}.deepseek.deepseek-v4-pro-0813",
     f"{PIPE}.google.gemini-3-pro-image",
-    f"{PIPE}.google.gemini-3.1-flash-image",
+    f"{PIPE}.google.gemini-nano-banana-2.1",
     f"{PIPE}.microsoft.mai-image-2.5-pro",
     f"{PIPE}.moonshotai.kimi-k3",
     f"{PIPE}.openai.gpt-5.4-image-2",
     f"{PIPE}.openai.gpt-5.6-sol",
-    f"{PIPE}.openai.gpt-5.6-sol-pro",
+    f"{PIPE}.openai.gpt-6.1-sol-pro",
     f"{PIPE}.openai.gpt-image-2",
     f"{PIPE}.perplexity.sonar-deep-research",
     f"{PIPE}.perplexity.sonar-pro-search",
@@ -67,7 +67,7 @@ EXTRA_ACTIVE_MODEL_IDS = [
 ACTIVE_MODEL_IDS = PUBLIC_MODEL_IDS + EXTRA_ACTIVE_MODEL_IDS
 
 CHAT_KEEP_CODE_INTERPRETER = [
-    f"{PIPE}.openai.gpt-5.6-sol-pro",
+    f"{PIPE}.openai.gpt-6.1-sol-pro",
     f"{PIPE}.anthropic.claude-opus-5",
 ]
 

@@ -5,7 +5,7 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-09-25**（选择器只留确认系列；置顶 Opus / Banana Pro / Sol Latest / Astra Latest） |
+| 记录日期 | **2026-10-09**（Nano Banana 2.1 替换 Banana 2；Sol Pro 换 GPT-6.1；置顶仍是 Opus / Sunburst / Sol Latest / Astra Latest） |
 | OWUI | **0.11.0**（`GET /api/version`）；镜像钉死 `e97bf9531916` |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
