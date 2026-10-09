@@ -46,8 +46,8 @@ DESCRIPTIONS = {
     f"{PIPE}.perplexity.sonar-deep-research": (
         "PERPLEXITY is the only model with live web search. DEEP REPORT — long sourced briefs. Typically 2–10 minutes. Keep this tab open; do not refresh or switch models."
     ),
-    f"{PIPE}.openai.gpt-5.6-sol-pro": (
-        "DEFAULT CHAT and hard reasoning. For difficult tasks: Valves → Reasoning depth → high or xhigh. Not live web search."
+    f"{PIPE}.openai.gpt-6.1-sol-pro": (
+        "Hard reasoning. Can search the web. For difficult tasks: Valves → Reasoning depth → high or xhigh."
     ),
     f"{PIPE}.anthropic.claude-opus-5": (
         "Strong reasoning and long writing. Not live web; use Sonar Pro Search for current news. Raise Reasoning depth for hard problems."
@@ -55,7 +55,7 @@ DESCRIPTIONS = {
     f"{PIPE}.google.gemini-3-pro-image": (
         "PRIMARY IMAGE MODEL. Switch here before asking for pictures. Multi-turn edits may drift slightly."
     ),
-    f"{PIPE}.google.gemini-3.1-flash-image": (
+    f"{PIPE}.google.gemini-nano-banana-2.1": (
         "FASTER IMAGE MODEL. Switch here before asking for pictures."
     ),
     f"{PIPE}.openai.gpt-image-2": (

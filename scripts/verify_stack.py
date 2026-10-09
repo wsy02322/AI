@@ -263,7 +263,7 @@ def verify(h: dict[str, str]) -> int:
         for mid, label in (
             (DEFAULT_MODEL_PRIMARY, "default-grok"),
             (DEFAULT_MODEL_SECONDARY, "default-opus"),
-            (f"{PIPE}.openai.gpt-5.6-sol-pro", "sol-pro"),
+            (f"{PIPE}.openai.gpt-6.1-sol-pro", "sol-pro"),
             (f"{PIPE}.perplexity.sonar-pro-search", "sonar-search"),
         ):
             payload = {
