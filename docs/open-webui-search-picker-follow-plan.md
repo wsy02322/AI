@@ -12,7 +12,9 @@ Live picker 一更新，联网搜索会掉。挂载写在每一条模型行的 `
 
 原则不变：公开文本挂薄过滤器 `openrouter_text_web_search`，新对话默认开；Sonar、图像、视频不挂。引擎仍按家族，不按冻住的版本号。
 
-合适的处理是把「按当前公开文本重挂」收进同一次选择器清理。只把勾补上还不够：2026-10-09 把过滤器强行加到三个 Latest 上，它们没有发出搜索。过门要看到 Grok Latest 和 Sol Latest 真的搜到网址。
+合适的处理是把「按当前公开文本重挂」收进选择器清理脚本本身，每次换代自动带上。过门要看到 Grok Latest 和 Sol Latest 真的搜到网址。
+
+2026-10-09 曾把 `filter_ids` 写进请求去测三个 Latest，它们没有搜。这次测试不能说明别名坏了：可切换的过滤器只有先挂在模型行上，请求里的 `filter_ids` 才会生效。三条能搜的具体型号本来就挂着，三个 Latest 没挂，所以过滤器多半根本没跑。Pipe 改动只在「挂上之后仍不搜」时才考虑。
 
 ---
 
@@ -50,15 +52,19 @@ Live picker 一更新，联网搜索会掉。挂载写在每一条模型行的 `
 
 Sonar 两档和全部图像模型未挂。这是对的。Sonar Pro Search 自己返回了同一个收盘数字。
 
-把过滤器写进请求后再测，三条具体型号仍会搜。三个 Latest 没有搜索事件：
-
-- Grok Latest 只说要去查，没有数字
-- Sol Latest 表示不能联网
-- Gemini Pro Latest 没有搜索记录，并给出和 7765.36 对不上的数字
+把过滤器写进请求后再测，三条具体型号仍会搜，三个 Latest 没有搜索事件。原因见 §0：Latest 行没挂过滤器，请求里的 `filter_ids` 不会让它生效。
 
 宽的 `openrouter_web_tools` 与 Open WebUI 自带网页搜索仍关。
 
-现网 Function 列表里没有高德、Google Routes、`x_recent_search`。它们和搜索是同一挂载面，但本计划不把那三样一起施工。
+挂载有三层，换代时三层都会掉：
+
+| 字段 | 作用 | Astra Pro / Qwen | GPT-6.1 Sol Pro | 各 Latest |
+|------|------|------------------|-----------------|-----------|
+| `filterIds` 含 `openrouter_text_web_search` | 模型可用搜索 | 有 | 有 | 无 |
+| `defaultFilterIds` 含同一个 | 新对话默认开 | 有 | **无** | 无 |
+| `toolIds` | 高德 / Google Routes / `x_recent_search` | 有 | **无** | 无 |
+
+三样工具在 `/api/v1/tools/` 里都在（`amap_drive_route`、`google_drive_route`、`x_recent_search`），不是被删了，只是没挂到新行。GPT-6.1 Sol Pro 这一行是 2026-10-09 换代时只补了 `filterIds`，所以新对话里它的搜索默认是关的，路线和 X 工具也没有。
 
 ---
 
@@ -66,28 +72,27 @@ Sonar 两档和全部图像模型未挂。这是对的。Sonar Pro Search 自己
 
 ### 顶级（建议）
 
-选择器清理派生「当前公开文本」= 保持公开的行，去掉 Sonar 和图像。给这些行挂上薄搜索并默认开。已经挂对的三条不动引擎。
+选择器脚本派生「当前公开文本」= KEEP 里去掉 Sonar 和图像，每次运行都对齐三层：`filterIds`、`defaultFilterIds` 加薄搜索，`toolIds` 加三样工具。保留每行已有的其他过滤器。Sonar 和图像若被带上则剥掉。以后型号换代不必另开一轮。
 
-Latest 若仍发不出搜索，在 Pipe 里让 `~…-latest` 的 Search 与 Fetch 和同家族具体型号一样送到 OpenRouter。不改引擎表：OpenAI / Google / xAI 仍是原厂；OpenAI 仍是 `max_tool_calls=3`；Anthropic 仍是 `auto`；DeepSeek、Kimi、Qwen 仍落到 Exa。
+先挂一条 Grok Latest 做探针，过了再铺到其余公开文本。
 
-不做完探针就当默认 Grok 已能搜。
+引擎表不动：OpenAI / Google / xAI 仍是原厂；OpenAI 仍是 `max_tool_calls=3`；Anthropic 仍是 `auto`；DeepSeek、Kimi、Qwen 仍落到 Exa。Latest 的 id 里仍有 `openai.`、`google.`、`x-ai.`，分类对得上。
 
-### 更稳、先停住
+只有挂上之后 Latest 仍不发搜索，才看 Pipe：抓那条请求，判断是工具没注入，还是 400 后被 `SERVER_TOOL_FAIL_RETRY_V1` 剥掉工具重试，再做最小 content-only 改动。
 
-只保证三条已经能搜的具体型号继续挂着。Latest 维持不搜，直到别名路径有一条带网址的成功记录。
+### 更稳
 
-代价：新对话默认的 Grok Latest，以及置顶的 Sol Latest，和首页「文本模型可以联网」不一致。这是临时状态，不是新的产品决定。
+只补搜索两层，不补工具。代价：Latest 和 Sol Pro 能搜网页，但中国路线、海外路线、X 帖子仍缺，和已过门的 W1 / W4 / W5 不一致。
 
 ---
 
 ## 4. 确认后的做法
 
-1. 用一条 Grok Latest 请求抓失败形态：工具有没有注入，OpenRouter 是否 400 后被 `SERVER_TOOL_FAIL_RETRY_V1` 剥掉工具再重试。先看这一条，再改 Pipe。
-2. 在选择器脚本里用当前 KEEP 派生公开文本，写入 `filterIds`（保留该行已有的 Direct Uploads 等），`defaultFilterIds` 含 `openrouter_text_web_search`。Sonar 和图像若被带上则剥掉。不删模型行，不做空的 `models/sync`，不全量覆盖 valves。
-3. 别名探针失败时，只做让 Latest 走通 Search+Fetch 的最小 Pipe 改动。content-only，不碰阀门。
-4. 验收：
+1. 只给 Grok Latest 挂三层，用一条短问探针（过滤器已挂，请求带 `filter_ids`）。有搜索事件和 https 来源就继续；没有就停下，查 Pipe，不铺开。
+2. 选择器脚本加「对齐公开文本挂载」一步，写三层，铺到 KEEP 的全部公开文本。改模型时带 `access_grants`；不删模型行，不做空的 `models/sync`，不全量覆盖 valves，不跑全量 catalog refresh。
+3. 验收：
    - Grok Latest、Sol Latest 各一次短问，有搜索事件和一条 https 来源
-   - GPT-6.1 Sol Pro 仍会搜
+   - GPT-6.1 Sol Pro 新对话默认开搜索（`defaultFilterIds` 含过滤器）且仍会搜
    - 一个图像模型（Nano Banana 2.1 或 Sunburst）没有搜索事件
    - Sonar Pro Search 仍能自己返回带来源的短答
    - 置顶、默认模型、Banner `usage-guide-v8`、Follow-up 关，都不改
@@ -100,5 +105,5 @@ Latest 若仍发不出搜索，在 Pipe 里让 `~…-latest` 的 Search 与 Fetc
 - 把过滤器改成全局
 - 改引擎（含把 OpenAI 改回 Exa）、抬 `$0.05`、做 W7 / Search Controller
 - 用全量 catalog refresh 挂搜索
-- 本轮顺手补高德、Google Routes、X 工具
+- 新建或改写高德、Google Routes、X 工具本身（只挂载，不动内容和钥匙）
 - 未看到 Latest 的搜索事件就改首页文案
