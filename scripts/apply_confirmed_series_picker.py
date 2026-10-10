@@ -24,6 +24,29 @@ OPENWEBUI_URL = os.environ.get("OPENWEBUI_URL", "").rstrip("/")
 OPENWEBUI_PASSWORD = os.environ.get("OPENWEBUI_PASSWORD")
 PUBLIC_GRANT = {"principal_type": "user", "principal_id": "*", "permission": "read"}
 
+SEARCH_FILTER = "openrouter_text_web_search"
+TEXT_TOOL_IDS = [
+    "amap_drive_route",
+    "google_drive_route",
+    "x_recent_search",
+]
+SONAR_SHORT = {
+    "perplexity.sonar-pro-search",
+    "perplexity.sonar-deep-research",
+}
+IMAGE_SHORT = {
+    "bytedance-seed.seedream-5-0-lite",
+    "bytedance-seed.seedream-5-0-pro",
+    "google.gemini-nano-banana-2.1",
+    "google.gemini-3-pro-image",
+    "microsoft.mai-image-2.5-pro",
+    "openai.gpt-image-2.5-flare",
+    "openai.gpt-image-2.5-sunburst",
+    "openai.gpt-5.4-image-2",
+    "qwen.qwen-image-3-pro",
+    "x-ai.grok-imagine-image-2.0",
+}
+
 KEEP_SHORT = [
     "perplexity.sonar-pro-search",
     "perplexity.sonar-deep-research",
@@ -199,6 +222,96 @@ def tune_swapped_skus(h: dict[str, str]) -> None:
     print(f"tune {sol.get('name')} filters={filters}")
 
 
+def text_shorts() -> list[str]:
+    return [short for short in KEEP_SHORT if short not in SONAR_SHORT and short not in IMAGE_SHORT]
+
+
+def align_model_attachments(h: dict[str, str], short: str, *, search: bool) -> None:
+    """Public text gets search default-on plus route/X tools. Sonar and images lose those."""
+    model = get_model(h, full_id(short))
+    if search and not is_public(model.get("access_grants") or []):
+        model["access_grants"] = [PUBLIC_GRANT]
+    meta = dict(model.get("meta") or {})
+    filters = [fid for fid in (meta.get("filterIds") or []) if fid]
+    defaults = [fid for fid in (meta.get("defaultFilterIds") or []) if fid]
+    tools = [tid for tid in (meta.get("toolIds") or []) if tid]
+    if search:
+        if SEARCH_FILTER not in filters:
+            filters.append(SEARCH_FILTER)
+        if SEARCH_FILTER not in defaults:
+            defaults.append(SEARCH_FILTER)
+        for tid in TEXT_TOOL_IDS:
+            if tid not in tools:
+                tools.append(tid)
+    else:
+        filters = [fid for fid in filters if fid != SEARCH_FILTER]
+        defaults = [fid for fid in defaults if fid != SEARCH_FILTER]
+        tools = [tid for tid in tools if tid not in TEXT_TOOL_IDS]
+    meta["filterIds"] = filters
+    if defaults:
+        meta["defaultFilterIds"] = defaults
+    else:
+        meta.pop("defaultFilterIds", None)
+    if tools:
+        meta["toolIds"] = tools
+    else:
+        meta.pop("toolIds", None)
+    update_meta(h, model, meta)
+    print(f"align {short} search={search} filters={filters} default={defaults} tools={tools}")
+
+
+def reload_runtime_models(h: dict[str, str]) -> list[dict[str, Any]]:
+    """Overlay DB meta into the chat model cache.
+
+    POST /model/update writes the row only. Chat reads app.state.MODELS, so a
+    toggleable filter stays invisible until get_all_models runs. GET /api/models
+    without refresh does that overlay. refresh=true is intentionally not used:
+    it re-fetches the pipe catalog and can turn new SKUs back on.
+    """
+    keep = {full_id(short) for short in KEEP_SHORT}
+    data: list[dict[str, Any]] = []
+    for _ in range(3):
+        resp = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=180)
+        if resp.status_code != 200:
+            raise RuntimeError(f"runtime models: {resp.status_code} {resp.text[:240]}")
+        data = resp.json().get("data") or []
+    extras = [
+        summary
+        for summary in data
+        if str(summary.get("id") or "").startswith(f"{PIPE}.") and summary.get("id") not in keep
+    ]
+    for summary in extras:
+        model_id = summary["id"]
+        model = get_model(h, model_id)
+        if is_public(model.get("access_grants") or []):
+            set_public(h, model_id, model.get("name") or model_id, False)
+            model = get_model(h, model_id)
+        set_active(h, model, False)
+        print(f"off extra {model.get('name')}")
+    if extras:
+        resp = requests.get(f"{OPENWEBUI_URL}/api/models", headers=h, timeout=180)
+        if resp.status_code != 200:
+            raise RuntimeError(f"runtime models: {resp.status_code} {resp.text[:240]}")
+        data = resp.json().get("data") or []
+    print(f"runtime models {len(data)}")
+    return data
+
+
+def align_public_text(
+    h: dict[str, str],
+    shorts: list[str] | None = None,
+    *,
+    strip_others: bool = True,
+) -> None:
+    wanted = set(shorts or text_shorts())
+    for short in KEEP_SHORT:
+        if short in wanted:
+            align_model_attachments(h, short, search=True)
+        elif strip_others and short in SONAR_SHORT | IMAGE_SHORT:
+            align_model_attachments(h, short, search=False)
+    reload_runtime_models(h)
+
+
 def apply_picker(h: dict[str, str]) -> None:
     keep = {full_id(short) for short in KEEP_SHORT}
     listed = requests.get(f"{OPENWEBUI_URL}/api/v1/models", headers=h, timeout=180).json().get("data") or []
@@ -227,6 +340,7 @@ def apply_picker(h: dict[str, str]) -> None:
             set_public(h, model_id, model.get("name") or short, True)
         print(f"keep {model.get('name')}")
     tune_swapped_skus(h)
+    align_public_text(h)
 
 
 def apply_pins(h: dict[str, str]) -> None:
@@ -309,11 +423,51 @@ def verify(h: dict[str, str]) -> int:
     if "openrouter_text_web_search" not in filters:
         print(f"ERR sol pro filters {filters}")
         errors += 1
+    for short in text_shorts():
+        model = get_model(h, full_id(short))
+        meta = model.get("meta") or {}
+        filters = meta.get("filterIds") or []
+        defaults = meta.get("defaultFilterIds") or []
+        tools = meta.get("toolIds") or []
+        if SEARCH_FILTER not in filters or SEARCH_FILTER not in defaults:
+            print(f"ERR text search attach {short} filters={filters} default={defaults}")
+            errors += 1
+        if any(tid not in tools for tid in TEXT_TOOL_IDS):
+            print(f"ERR text tools {short} tools={tools}")
+            errors += 1
+    for short in (*SONAR_SHORT, *IMAGE_SHORT):
+        model = get_model(h, full_id(short))
+        meta = model.get("meta") or {}
+        filters = meta.get("filterIds") or []
+        tools = meta.get("toolIds") or []
+        if SEARCH_FILTER in filters or any(tid in tools for tid in TEXT_TOOL_IDS):
+            print(f"ERR non-text has search/tools {short}")
+            errors += 1
     return errors
 
 
 def main() -> int:
+    only = None
+    align_text = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--align-text" and len(sys.argv) == 2:
+            align_text = True
+        elif sys.argv[1] == "--align-only" and len(sys.argv) >= 3:
+            only = sys.argv[2:]
+            unknown = [short for short in only if short not in text_shorts()]
+            if unknown:
+                raise SystemExit(f"not public text: {unknown}")
+        else:
+            raise SystemExit(
+                "usage: apply_confirmed_series_picker.py [--align-text | --align-only <short> ...]"
+            )
     h = headers(signin())
+    if align_text:
+        align_public_text(h)
+        return 0
+    if only is not None:
+        align_public_text(h, only, strip_others=False)
+        return 0
     apply_picker(h)
     apply_pins(h)
     errors = verify(h)
