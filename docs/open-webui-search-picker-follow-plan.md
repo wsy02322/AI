@@ -1,7 +1,7 @@
 # 选择器换代时，薄搜索跟着公开文本走
 
-> **状态**：计划。未确认不改实例、不改 Pipe、不改过滤器。  
-> **日期**：2026-10-09  
+> **状态**：已执行（2026-10-10）。公开文本三层已挂上，探针见 §6。未改 Pipe、未改过滤器代码、未改 Banner。  
+> **日期**：2026-10-09 成稿，2026-10-10 执行  
 > **原则来源**：ST-14 / C2 / W0–W6。见 `docs/open-webui-text-web-search-plan.md`、`docs/open-webui-search-quality-top-plan.md`。本文件不改那些决定。
 
 ---
@@ -107,3 +107,23 @@ Sonar 两档和全部图像模型未挂。这是对的。Sonar Pro Search 自己
 - 用全量 catalog refresh 挂搜索
 - 新建或改写高德、Google Routes、X 工具本身（只挂载，不动内容和钥匙）
 - 未看到 Latest 的搜索事件就改首页文案
+
+---
+
+## 6. 执行记录（2026-10-10）
+
+顶级档已落到实例。脚本是 `scripts/apply_confirmed_series_picker.py --align-text`：KEEP 里的公开文本写三层，Sonar 和图像只剥搜索与三样工具，图像过滤器原样保留。
+
+`POST /api/v1/models/model/update` 只写数据库。聊天读内存里的模型表 `app.state.MODELS`。挂载之后用普通 `GET /api/models` 把数据库里的 `filterIds` 叠进这张表。`refresh=true` 仍不用，它会重新拉 Pipe 目录。选择器仍是 24，没有新 SKU 被打开。
+
+Grok Latest 在缓存刷新前的短问没有搜索事件。刷新之后：
+
+| 探针 | 结果 | 费用 |
+|------|------|------|
+| Grok Latest | 搜索事件，5 个站点，`https://finance.yahoo.com/quote/%5ESPX/`，收盘 7811.54 | $0.014 |
+| Sol Latest | 搜索事件，收盘 7811.54，`https://www.wsj.com/market-data/quotes/index/SPX/historical-prices` | $0.067 |
+| GPT-6.1 Sol Pro | `defaultFilterIds` 含过滤器，搜索事件，同一收盘 | $0.020 |
+| Sunburst | 无搜索事件 | $0.018 |
+| Sonar Pro Search | 自己的来源，`https://www.spglobal.com/spdji/en/indices/equity/sp-500/`，同一收盘 | $0.018 |
+
+置顶仍是 Opus Latest、Sunburst、Sol Latest、Astra Latest。默认聊天和任务仍是 Grok Latest。Banner 仍是 `usage-guide-v8`。Follow-up 仍关。首页文案未改。
