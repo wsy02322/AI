@@ -5,8 +5,9 @@
 
 | 项 | 值 |
 |----|-----|
-| 记录日期 | **2026-10-09**（Nano Banana 2.1 替换 Banana 2；Sol Pro 换 GPT-6.1；置顶仍是 Opus / Sunburst / Sol Latest / Astra Latest） |
-| OWUI | **0.11.0**（`GET /api/version`）；镜像钉死 `e97bf9531916` |
+| 记录日期 | **2026-10-10**（公开文本重挂薄搜索；置顶仍是 Opus / Sunburst / Sol Latest / Astra Latest） |
+| OWUI | **0.11.3**（`GET /api/version`，2026-10-10）；镜像钉死 `e97bf9531916` |
+| 薄搜索挂载 | **2026-10-10**：公开文本 `filterIds` + `defaultFilterIds` = `openrouter_text_web_search`，`toolIds` = 高德 / Google Routes / X。Sonar 与图像不挂。挂载后 `GET /api/models`（不要 `refresh=true`）刷新聊天缓存。Grok Latest、Sol Latest 短问有搜索事件和 https |
 | Pipe id | `open_webui_openrouter_integration` |
 | Pipe 名称 | Open WebUI OpenRouter Integration |
 | Pipe content SHA256（前 12） | `7415c2e4347a`（更早：`a0b95c2cf90d` → S2′ 前 `081c3773444c`） |
